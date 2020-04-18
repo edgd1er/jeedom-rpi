@@ -2,6 +2,7 @@ Forked from https://github.com/CodaFog/jeedom-rpi
 
 updated base image, added https support, healtcheck, handle services with supervisor.
 
+Please note that jeedom version (V3 ot v4) will be downloaded during install, so the core project is not requested in that branch. 
 
 # jeedom-rpi
 
