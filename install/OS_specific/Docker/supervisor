@@ -1,0 +1,16 @@
+/var/log/supervisor/*.log {
+	daily
+	missingok
+	rotate 14
+	copytruncate
+	compress
+	delaycompress
+	notifempty
+	create 640 root adm
+	sharedscripts
+	postrotate
+                if /usr/bin/supervisorctl status  > /dev/null ; then \
+                    /usr/bin/supervisorctl reload > /dev/null; \
+                fi;
+	endscript
+}
