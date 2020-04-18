@@ -32,3 +32,4 @@ tmp/*
 !tmp/.htaccess
 
 !.htaccess
+!/*.tar.gz
