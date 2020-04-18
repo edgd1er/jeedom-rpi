@@ -1,0 +1,61 @@
+version: '3.5'
+services:
+  web:
+    image: edgd1er/jeedom-rpi:amd86-latest
+    restart: unless-stopped
+    build:
+      context: Docker
+      dockerfile: Dockerfile
+      args:
+        DISTRO: "amd64-debian"
+        #DISTRO: armv7hf-debian
+        VERSION: release
+        #version: v4-stable
+        aptcacher: 192.168.53.208
+    expose:
+      - "80"
+      - "443"
+    ports:
+      - "9180:80"
+      - "9443:443"
+    tmpfs:
+        - /run:rw,size=10M
+        - /tmp:rw,size=64M
+        - /var/log:rw,size=32M
+        - /var/www/html/log:rw,size=32M
+    environment:
+      - TZ=Europe/Paris
+      - ROOT_PASSWORD=rootPassword
+      - MYSQL_JEEDOM_HOST=mysql
+      - MYSQL_JEEDOM_PORT=3306
+      - MYSQL_JEEDOM_DBNAME=jeedom_test
+      - MYSQL_JEEDOM_USERNAME=jeedom
+      - MYSQL_JEEDOM_PASSWD=jeedom
+      - MYSQL_ERASE=N
+      - APACHE_HTTP=80
+      - APACHE_HTTPS=443
+    #   devices:
+    #   - "/dev/ttyUSB0:/dev/ttyUSB0
+    #   - "/dev/ttyACM0:/dev/ttyACM0"
+    #   - "/dev/ttyAMA0:/dev/ttyAMA0"
+    depends_on:
+      - mysql
+  mysql:
+    #image: hypriot/rpi-mysql
+    image: mariadb/server
+    restart: unless-stopped
+    expose:
+      - "3306"
+    ports:
+      - "3316:3306"
+    environment:
+      - TZ=Europe/Paris
+      - MYSQL_ROOT_PASSWORD=changeIt
+      - MYSQL_DATABASE=jeedom_test
+      - MYSQL_USER=jeedom
+      - MYSQL_PASSWORD=jeedom
+    volumes:
+      - ./Docker/allow_root_access.sql:/docker-entrypoint-initdb.d/allow_root_access.sql
+      #- jeedom_mysql:/var/lib/mysql
+      #- /root/DOCKER_CONFIG/jeedom/sqldata:/var/lib/mysql
+      #- /media/usb1/docker/jeedom/sqldata:/var/lib/mysql

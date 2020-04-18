@@ -1,0 +1,2 @@
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%'
+      IDENTIFIED BY 'changeIt' WITH GRANT OPTION;
