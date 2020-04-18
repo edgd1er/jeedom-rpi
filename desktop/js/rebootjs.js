@@ -1,1 +1,0 @@
-var rebooti = '1';
