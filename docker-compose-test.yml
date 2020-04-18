@@ -1,10 +1,13 @@
 version: '3.5'
 services:
   web:
+    #image: edgd1er/jeedom-rpi:armhf-latest
     image: edgd1er/jeedom-rpi:amd86-latest
     build:
+      dockerfile: Dockerfile
       args:
         DISTRO: "amd64-debian"
+        #DISTRO: armv7hf-debian
         VERSION: release
         #version: v4-stable
         aptcacher: 192.168.53.208
