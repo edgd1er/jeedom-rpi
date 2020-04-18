@@ -8,15 +8,36 @@ on:
 
 jobs:
 
-  build:
+  build_armhf:
+    env:
+      VERSION=release
+      DISTRO=armv7hf-debian
+      TAG=v3-armhf-latest
 
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Docker login
-      run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }}
-    - name: Build the Docker image armhf 
-      run: docker build -f Docker/Dockerfile.armhf --build-arg VERSION=v4-stable --build-arg DISTRO=armv7hf-debian -t edgd1er/jeedom-rpi:v3-armhf-latest ./Docker
-    - name: Docker Push
-      run: docker push ${{ secrets.DOCKER_USER }}/jeedom-rpi:v4-armhf-latest
+      - uses: actions/checkout@v2
+      - name: Docker login
+        run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build the Docker image armhf
+        run: docker build -f Docker/Dockerfile.armhf --build-arg VERSION=$VERSION --build-arg DISTRO=$DISTRO -t edgd1er/jeedom-rpi:$TAG ./Docker
+      - name: Docker Push
+        run: docker push ${{ secrets.DOCKER_USER }}/jeedom-rpi:$TAG
+
+  build_amd64:
+    env:
+      VERSION=release
+      DISTRO=amd64-debian
+      TAG=v3-amd64-latest
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Docker login
+        run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build the Docker image armhf
+        run: docker build -f Docker/Dockerfile --build-arg VERSION=$VERSION --build-arg DISTRO=$DISTRO -t edgd1er/jeedom-rpi:$TAG ./Docker
+      - name: Docker Push
+        run: docker push ${{ secrets.DOCKER_USER }}/jeedom-rpi:$TAG
