@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Docker login
         run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build the Docker image armhf
+      - name: Build the Docker image amd64
         run: docker build -f Docker/Dockerfile --build-arg VERSION=$VERSION --build-arg DISTRO=$DISTRO -t edgd1er/jeedom-rpi:$TAG ./Docker
       - name: Docker Push
         run: docker push ${{ secrets.DOCKER_USER }}/jeedom-rpi:$TAG
