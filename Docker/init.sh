@@ -57,24 +57,15 @@ echo "root:${ROOT_PASSWORD}" | chpasswd
 
 echo "Listen 80" >/etc/apache2/ports.conf
 echo "Listen 443" >>/etc/apache2/ports.conf
-sed -i -E "s/\<VirtualHost \*:(.*)\>/VirtualHost \*:80/" /etc/apache2/sites-enabled/000-default.conf
-sed -i -E "s/\<VirtualHost \*:(.*)\>/VirtualHost \*:${APACHE_HTTPS_PORT}/" /etc/apache2/sites-enabled/default-ssl.conf
+sed -i -E "s/\<VirtualHost \*:(.*)\>/VirtualHost \*:80/" /etc/apache2/sites-available/000-default.conf
 a2enmod ssl
+sed -i -E "s/\<VirtualHost \*:(.*)\>/VirtualHost \*:${APACHE_HTTPS_PORT}/" /etc/apache2/sites-available/default-ssl.conf
 a2ensite default-ssl
 
 
 if [ -f /var/www/html/core/config/common.config.php ]; then
   echo 'Jeedom is already install'
 else
-  "by default send apache logs to stdout/err"
-  if [[ ! -e /var/log/apache2/access.log ]];then
-    mkdir -p /var/log/apache2/
-    ln -sf /proc/self/fd/1 /var/log/apache2/access.log
-  fi
-  if [[ ! -e /var/log/apache2/error.log ]]; then
-    mkdir -p /var/log/apache2/
-    ln -sf /proc/self/fd/1 /var/log/apache2/error.log
-  fi
   #generate db param
   WEBSERVER_HOME=/var/www/html
   #S8 =  db param done when running docker.
@@ -99,11 +90,17 @@ chmod 777 /dev/tty*
 #chmod 755 -R /var/www/html
 #chown -R www-data:www-data /var/www/html
 #needed when using tempfs
-mkdir -p /var/log/supervisor/ -p /run/lock/
+mkdir -p /var/log/supervisor/ -p /run/lock/ -p /var/log/apache2/
+
+echo "by default send apache logs to stdout/err"
+  if [[ ! -e /var/log/apache2/access.log ]];then
+    mkdir -p /var/log/apache2/
+    #ln -sf /proc/self/fd/1 /var/log/apache2/access.log
+  fi
+  if [[ ! -e /var/log/apache2/error.log ]]; then
+    mkdir -p /var/log/apache2/
+    #ln -sf /proc/self/fd/1 /var/log/apache2/error.log
+  fi
 
 supervisorctl start apache2
 #/usr/bin/supervisord -c", "/etc/supervisor/supervisord.conf"]
-
-while true; do
-  sleep 1000
-done
