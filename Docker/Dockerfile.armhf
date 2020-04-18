@@ -1,0 +1,81 @@
+ARG DISTRO
+# balenalib/<hw>-<distro>-<lang_stack>:<lang_ver>-<distro_ver>-(build|run)-<yyyymmdd>
+FROM balenalib/${DISTRO}:buster-run
+RUN [ "cross-build-start" ]
+MAINTAINER edgd1er@hotmail.com
+
+ENV SHELL_ROOT_PASSWORD password
+ENV APACHE_HTTP_PORT 80
+ENV APACHE_HTTPS_PORT 443
+ENV SSH_PORT 22
+ENV MODE_HOST 0
+ENV MYSQL_ROOT_PASSWD password
+ENV MYSQL_JEEDOM_HOST localhost
+ENV MYSQL_JEEDOM_PASSWD jeedom
+ENV MYSQL_JEEDOM_DBNAME jeedom
+ENV MYSQL_JEEDOM_USERNAME jeedom
+ENV MYSQL_JEEDOM_PORT 3306
+ARG VERSION
+ARG DISTRO
+ARG aptcacher
+
+#add apt-cacher setting if present:
+RUN if [ -n ${aptcacher} ]; then echo "Acquire::http::Proxy \"http://${aptcacher}:3142\";" >/etc/apt/apt.conf.d/01proxy && \
+    echo "Acquire::https::Proxy \"http://${aptcacher}:3142\";" >>/etc/apt/apt.conf.d/01proxy ; fi
+#Massive apt install of jeedom requirements to optimise downloadsdocke
+RUN echo "using distro: $DISTRO with jeedom VERSION: $VERSION" && \
+  apt-get update && apt-get install -y wget aufs-tools automake \
+	build-essential curl apt-transport-https software-properties-common \
+    && add-apt-repository non-free  && apt update && apt-get install -y supervisor \
+	python3 python3-pip nmap xvfb \
+    ntp ca-certificates unzip sudo cron locate tar telnet wget logrotate fail2ban dos2unix ntpdate htop \
+    iotop vim iftop smbclient git python python-pip libexpat1 ssl-cert \
+    cutycapt duplicity at ffmpeg libsox-fmt-mp3 sox libttspico-utils espeak mariadb-client mariadb-common \
+    #mbrola removed (not available for armhf )
+    #add server apache
+    apache2 apache2-utils libexpat1 ssl-cert \
+    #cannot install php as php5 or 7 might be option. leave install.sh install needed php package
+    && apt-get -y remove brltty net-tools && apt-get upgrade -y && apt-get autoremove  \
+    && mkdir -p /var/run/sshd -p /var/log/supervisor \
+    # get from stable master install files
+    && wget -qO /root/.bashrc -q https://raw.githubusercontent.com/jeedom/core/$VERSION/install/bashrc \
+    && wget -qO /root/install_docker.sh -q https://raw.githubusercontent.com/jeedom/core/$VERSION/install/install.sh \
+    && wget -qO /etc/motd https://raw.githubusercontent.com/jeedom/core/$VERSION/install/motd  \
+    && chmod +x /root/install_docker.sh \
+    && echo "root:${SHELL_ROOT_PASSWORD}" | chpasswd \
+    ## cut mysql server configuration
+    && sed -i 's/systemctl stop mysql/exit 0/' ./root/install_docker.sh \
+    # set jeedom version v3 or v4
+    && sed -i "s/VERSION=V4-stable/VERSION=${VERSION}/g" ./root/install_docker.sh
+    # step 2 install mainpackage
+RUN /root/install_docker.sh -s 2 -v ${VERSION}\
+    # step 3 install mysql server
+    # install apache
+    && /root/install_docker.sh -s 4 -v ${VERSION} \
+    # s5 install php
+    && /root/install_docker.sh -s 5 -v ${VERSION} \
+    # s6 install jeedom download
+    && /root/install_docker.sh -s 6 -v ${VERSION} \
+	#Step 7 = apache SSL + php conf + mysql server conf
+    /root/install_docker.sh -s 7 -v ${VERSION} \
+    # Next steps are executed in init.
+    #S8 =  db param done when running docker.
+    #S9 =  install.php done when running docker.
+    #s10 = post install (cron )
+    && /root/install_docker.sh -s 10 -v ${VERSION} \
+    #S11 = check
+    && apt-get autoremove --purge && apt-get clean && apt-get autoclean \
+    && rm -rf /var/lib/apt/lists/*
+
+# ssh server for dev
+#RUN apt install -y openssh-server \
+#    && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+#    && sed -i 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' /etc/pam.d/sshd \
+COPY install/OS_specific/Docker/init.sh /root/init.sh
+COPY install/OS_specific/Docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY install/OS_specific/Docker/supervisor /etc/logrotate.d/supervisor
+RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/
+#VOLUME ["/tmp", "/var/log","/var/www/html/log/"]
+#CMD ["/root/init.sh"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+RUN [ "cross-build-end" ]
