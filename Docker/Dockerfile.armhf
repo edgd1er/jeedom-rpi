@@ -71,11 +71,13 @@ RUN /root/install_docker.sh -s 2 -v ${VERSION}\
 #RUN apt install -y openssh-server \
 #    && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 #    && sed -i 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' /etc/pam.d/sshd \
-COPY install/OS_specific/Docker/init.sh /root/init.sh
-COPY install/OS_specific/Docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY install/OS_specific/Docker/supervisor /etc/logrotate.d/supervisor
+COPY init.sh /root/init.sh
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY supervisor /etc/logrotate.d/supervisor
 RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/
 #VOLUME ["/tmp", "/var/log","/var/www/html/log/"]
 #CMD ["/root/init.sh"]
+HEALTHCHECK --interval=5s --timeout=3s --retries=3 \
+ CMD curl --fail http://localhost:8080 || exit 1
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 RUN [ "cross-build-end" ]
