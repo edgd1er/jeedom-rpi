@@ -10,9 +10,9 @@ jobs:
 
   build_armhf:
     env:
-      VERSION=release
-      DISTRO=armv7hf-debian
-      TAG=v3-armhf-latest
+      VERSION: release
+      DISTRO: armv7hf-debian
+      TAG: v3-armhf-latest
 
     runs-on: ubuntu-latest
 
@@ -27,9 +27,9 @@ jobs:
 
   build_amd64:
     env:
-      VERSION=release
-      DISTRO=amd64-debian
-      TAG=v3-amd64-latest
+      VERSION: release
+      DISTRO: amd64-debian
+      TAG: v3-amd64-latest
 
     runs-on: ubuntu-latest
 
