@@ -13,7 +13,7 @@ services:
         DISTRO: armv7hf-debian
         #V3
         VERSION: release
-        #version: v4-stable
+        #version: V4-stable
         #aptcacher: 192.168.53.208
     expose:
       - "80"
