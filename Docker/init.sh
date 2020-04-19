@@ -17,7 +17,7 @@ mysql_sql() {
 }
 
 #not need when in mysql is in another container ( db, user are created then env values)
-step_8_mysql_create_db(){
+step_8_mysql_create_db() {
   echo "---------------------------------------------------------------------"
   echo "${JAUNE}commence l'étape 8 configuration de mysql ${NORMAL}"
   mysql_sql "DROP USER '${MYSQL_JEEDOM_USERNAME}'@'%';"
@@ -62,7 +62,6 @@ a2enmod ssl
 sed -i -E "s/\<VirtualHost \*:(.*)\>/VirtualHost \*:${APACHE_HTTPS_PORT}/" /etc/apache2/sites-available/default-ssl.conf
 a2ensite default-ssl
 
-
 if [ -f /var/www/html/core/config/common.config.php ]; then
   echo 'Jeedom is already install'
 else
@@ -81,14 +80,18 @@ else
   if [[ $VERSION == "release" ]]; then
     #S9 =  install.php done when running docker.
     /root/install_docker.sh -s 9
+    #s10 = post install (cron ) /s11 for v4
+    /root/install_docker.sh -s 10
     #s11 = jeedom check
     /root/install_docker.sh -s 11
-    else
+  else
     #s10 jeedom_installation
-   /root/install_docker.sh -s 10
+    /root/install_docker.sh -s 10
+    #s10 = post install (cron ) /s11 for v4
+    /root/install_docker.sh -s 11
     #s12 = jeedom_check
-   /root/install_docker.sh -s 12
-   fi
+    /root/install_docker.sh -s 12
+  fi
 fi
 
 echo 'All init complete'
@@ -100,14 +103,13 @@ chmod 777 /dev/tty*
 mkdir -p /var/log/supervisor/ -p /run/lock/ -p /var/log/apache2/
 
 echo "by default send apache logs to stdout/err"
-  if [[ ! -e /var/log/apache2/access.log ]];then
-    mkdir -p /var/log/apache2/
-    #ln -sf /proc/self/fd/1 /var/log/apache2/access.log
-  fi
-  if [[ ! -e /var/log/apache2/error.log ]]; then
-    mkdir -p /var/log/apache2/
-    #ln -sf /proc/self/fd/1 /var/log/apache2/error.log
-  fi
+if [[ ! -e /var/log/apache2/access.log ]]; then
+  mkdir -p /var/log/apache2/
+  #ln -sf /proc/self/fd/1 /var/log/apache2/access.log
+fi
+if [[ ! -e /var/log/apache2/error.log ]]; then
+  mkdir -p /var/log/apache2/
+  #ln -sf /proc/self/fd/1 /var/log/apache2/error.log
+fi
 
 supervisorctl start apache2
-#["/usr/bin/supervisord -c", "/etc/supervisor/supervisord.conf"]
