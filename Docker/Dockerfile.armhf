@@ -18,6 +18,7 @@ ENV MYSQL_JEEDOM_PORT 3306
 ARG VERSION
 ARG DISTRO
 ARG aptcacher
+ENV VERSION=${VERSION}
 
 #add apt-cacher setting if present:
 RUN if [ -n ${aptcacher} ]; then echo "Acquire::http::Proxy \"http://${aptcacher}:3142\";" >/etc/apt/apt.conf.d/01proxy && \
@@ -62,7 +63,7 @@ RUN /root/install_docker.sh -s 2 -v ${VERSION}\
     #S8 =  db param done when running docker.
     #S9 =  install.php done when running docker.
     #s10 = post install (cron ) /s11 for v4
-    && if [ $VERSION == "release" ]; then /root/install_docker.sh -s 10 -v ${VERSION} \
+    && if [ $VERSION = "release" ]; then /root/install_docker.sh -s 10 -v ${VERSION} \
     else /root/install_docker.sh -s 11 -v ${VERSION}; fi ; \
     #S11 = check
     apt-get autoremove --purge && apt-get clean && apt-get autoclean \
@@ -79,6 +80,6 @@ RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/
 #VOLUME ["/tmp", "/var/log","/var/www/html/log/"]
 #CMD ["/root/init.sh"]
 HEALTHCHECK --interval=5s --timeout=3s --retries=3 \
- CMD curl --fail http://localhost:8080 || exit 1
+ CMD curl --fail http://localhost/here.html | [[ $(grep -c ok) -eq 1 ]] && exit 0 || exit 1
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 RUN [ "cross-build-end" ]
