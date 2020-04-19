@@ -1,4 +1,4 @@
-name: Docker Image CI armhf && amd64 v3
+name: Docker CI armhf+amd64 v3
 
 on:
   push:
