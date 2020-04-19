@@ -88,6 +88,7 @@ else
    /root/install_docker.sh -s 10
     #s12 = jeedom_check
    /root/install_docker.sh -s 12
+   fi
 fi
 
 echo 'All init complete'
@@ -109,4 +110,4 @@ echo "by default send apache logs to stdout/err"
   fi
 
 supervisorctl start apache2
-#/usr/bin/supervisord -c", "/etc/supervisor/supervisord.conf"]
+#["/usr/bin/supervisord -c", "/etc/supervisor/supervisord.conf"]
