@@ -60,10 +60,11 @@ RUN /root/install_docker.sh -s 2 -v ${VERSION}\
     # Next steps are executed in init.
     #S8 =  db param done when running docker.
     #S9 =  install.php done when running docker.
-    #s10 = post install (cron )
-    && /root/install_docker.sh -s 10 -v ${VERSION} \
+    #s10 = post install (cron ) /s11 for v4
+    && if [ $VERSION == "release" ]; then /root/install_docker.sh -s 10 -v ${VERSION} \
+    else /root/install_docker.sh -s 11 -v ${VERSION}; fi ; \
     #S11 = check
-    && apt-get autoremove --purge && apt-get clean && apt-get autoclean \
+    apt-get autoremove --purge && apt-get clean && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/*
 
 # ssh server for dev

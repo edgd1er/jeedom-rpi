@@ -78,10 +78,16 @@ else
   done
   step_8_jeedom_configuration
   #tempo
-  #S9 =  install.php done when running docker.
-  /root/install_docker.sh -s 9
-  #s11 = jeedom check
-  /root/install_docker.sh -s 11
+  if [[ $VERSION == "release" ]]; then
+    #S9 =  install.php done when running docker.
+    /root/install_docker.sh -s 9
+    #s11 = jeedom check
+    /root/install_docker.sh -s 11
+    else
+    #s10 jeedom_installation
+   /root/install_docker.sh -s 10
+    #s12 = jeedom_check
+   /root/install_docker.sh -s 12
 fi
 
 echo 'All init complete'
