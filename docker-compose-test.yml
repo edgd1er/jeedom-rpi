@@ -9,7 +9,7 @@ services:
         DISTRO: "amd64-debian"
         #DISTRO: armv7hf-debian
         VERSION: release
-        #version: v4-stable
+        #version: V4-stable
         aptcacher: 192.168.53.208
     #   devices:
     #   - "/dev/ttyUSB0:/dev/ttyUSB0

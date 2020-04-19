@@ -27,7 +27,7 @@ jobs:
 
   build_amd64:
       env:
-        VERSION: v4-stable
+        VERSION: V4-stable
         DISTRO: amd64-debian
         TAG: v4-amd64-latest
 
