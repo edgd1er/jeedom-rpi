@@ -1,8 +1,8 @@
 version: '3.5'
 services:
   web:
-    image: edgd1er/jeedom-rpi:armhf-latest
-    #image: edgd1er/jeedom-rpi:amd86-latest
+    image: edgd1er/jeedom-rpi:v3-armhf-latest
+    #image: edgd1er/jeedom-rpi:v3-amd86-latest
     restart: unless-stopped
     build:
       context: Docker
