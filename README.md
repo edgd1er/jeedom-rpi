@@ -2,7 +2,7 @@ Forked from https://github.com/CodaFog/jeedom-rpi
 
 updated base image, added https support, healtcheck, handle services with supervisor.
 
-Please note that jeedom version (V3 ot v4) will be downloaded during install, so the core project is not requested in that branch. 
+Please note that jeedom version (V3 or v4) will be downloaded during install, so the core project is not requested in that branch. 
 
 # jeedom-rpi
 
@@ -11,7 +11,11 @@ Please note that jeedom version (V3 ot v4) will be downloaded during install, so
 
 A Jeedom Docker image for Raspberry Pi based on balenalib and Hypriot mysql images.
 
-This readme shows a **Dockerfile** of a dockerized [Jeedom](https://www.jeedom.com) based on a balena image. The mysql database is based on linuxserver mariadb image.
+This readme shows a **Dockerfile** of a dockerized [Jeedom](https://www.jeedom.com) based on a balena image. 
+The mysql database is based on linuxserver mariadb image on a distinct container.
+
+Jeedom major version is given as a parameter, minor version is the latest from release(v3) or V4-stable branches, at the timeof building
+a amd64 version is proposed to test on intel cpu the container.
 
 Docker Hub: https://hub.docker.com/r/edgd1er/jeedom-rpi
 
