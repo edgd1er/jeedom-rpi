@@ -32,4 +32,6 @@ tmp/*
 !tmp/.htaccess
 
 !.htaccess
-!/*.tar.gz
+*.tar.gz
+*.sh
+!gen_image.sh
