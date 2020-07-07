@@ -81,3 +81,5 @@ RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/
 HEALTHCHECK --interval=5s --timeout=3s --retries=3 \
  CMD curl --fail http://localhost/here.html | [[ $(grep -c ok) -eq 1 ]] && exit 0 || exit 1
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
+RUN if [ -f /etc/apt/apt.conf.d/01proxy ]; then rm /etc/apt/apt.conf.d/01proxy; fi
