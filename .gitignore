@@ -35,3 +35,4 @@ tmp/*
 *.tar.gz
 *.sh
 !gen_image.sh
+!gen_image_buildx.sh
