@@ -5,7 +5,7 @@
 ##Functions
 
 mysql_sql() {
-  if [ "localhost" = "${MYSQL_JEEDOM_HOST}" ]; then
+  if [ "localhost" == "${MYSQL_JEEDOM_HOST}" ]; then
     echo "$@" | mysql -uroot -P${MYSQL_JEEDOM_PORT}
   else
     echo "$@" | mysql -u${MYSQL_JEEDOM_USERNAME} -p${MYSQL_JEEDOM_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT}
