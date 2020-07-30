@@ -24,6 +24,8 @@ services:
       - /tmp:rw,size=64M
       - /var/log:rw,size=32M
       - /var/www/html/log:rw,size=32M
+    volumes:
+      - ./:/var/www/html/backup/
     environment:
       - TZ=Europe/Paris
       - ROOT_PASSWORD=example
