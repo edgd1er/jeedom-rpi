@@ -22,7 +22,7 @@ ENV VERSION=${VERSION}
 RUN if [ -n ${aptcacher} ]; then echo "Acquire::http::Proxy \"http://${aptcacher}:3142\";" >/etc/apt/apt.conf.d/01proxy && \
     echo "Acquire::https::Proxy \"http://${aptcacher}:3142\";" >>/etc/apt/apt.conf.d/01proxy ; fi
 #Massive apt install of jeedom requirements to optimise downloads
-RUN echo "using distro: $DISTRO with jeedom VERSION: $VERSION" && \
+RUN echo "install jeedom VERSION: $VERSION" && \
   apt-get update && apt-get install -y wget aufs-tools automake \
 	build-essential curl apt-transport-https software-properties-common \
     && add-apt-repository non-free  && apt update && apt-get install -y supervisor \
