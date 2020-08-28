@@ -27,7 +27,7 @@ RUN echo "using distro: $DISTRO with jeedom VERSION: $VERSION" && \
   apt-get update && apt-get install -y wget aufs-tools automake \
 	build-essential curl apt-transport-https software-properties-common \
     && add-apt-repository non-free  && apt update && apt-get install -y supervisor \
-	python3 python3-pip nmap xvfb \
+	python3 python3-pip nmap xvfb librsync-dev gettext python-dev \
     ntp ca-certificates unzip sudo cron locate tar telnet wget logrotate fail2ban dos2unix ntpdate htop \
     iotop vim iftop smbclient git python python-pip libexpat1 ssl-cert \
     cutycapt duplicity at ffmpeg libsox-fmt-mp3 sox libttspico-utils espeak mariadb-client mariadb-common \
