@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#set -x
+set -x
 
 ##Functions
 
@@ -20,10 +20,10 @@ mysql_sql() {
 step_8_mysql_create_db() {
   echo "---------------------------------------------------------------------"
   echo "${JAUNE}commence l'étape 8 configuration de mysql ${NORMAL}"
-  mysql_sql "DROP USER '${MYSQL_JEEDOM_USERNAME}'@'%';"
-  mysql_sql "CREATE USER '${MYSQL_JEEDOM_USERNAME}'@'%' IDENTIFIED BY '${MYSQL_JEEDOM_PASSWD}';"
-  mysql_sql "DROP DATABASE IF EXISTS ${MYSQL_JEEDOM_DBNAME};"
-  mysql_sql "CREATE DATABASE ${MYSQL_JEEDOM_DBNAME};"
+  #mysql_sql "DROP USER '${MYSQL_JEEDOM_USERNAME}'@'%';"
+  #mysql_sql "CREATE USER '${MYSQL_JEEDOM_USERNAME}'@'%' IDENTIFIED BY '${MYSQL_JEEDOM_PASSWD}';"
+  #mysql_sql "DROP DATABASE IF EXISTS ${MYSQL_JEEDOM_DBNAME};"
+  #mysql_sql "CREATE DATABASE ${MYSQL_JEEDOM_DBNAME};"
   mysql_sql "GRANT ALL PRIVILEGES ON ${MYSQL_JEEDOM_DBNAME}.* TO '${MYSQL_JEEDOM_USERNAME}'@'%';"
 }
 
@@ -69,17 +69,25 @@ else
   WEBSERVER_HOME=/var/www/html
   #S8 =  db param done when running docker.
   while true; do
-    result=$(mysql_sql "show databases;")
-    if [[ "${result}" =~ ${MYSQL_JEEDOM_DBNAME} ]]; then
+    result=$(mysql_sql "show grants for 'jeedom'@'%';")
+    if [[ $(echo ${result} | grep -c "GRANT ALL PRIV") -gt 0 ]]; then
+      echo -e "result: ${result}"
       break
     fi
-    sleep 2
+    sleep 5
   done
+  #mysql is not local to jeedom container
+  #step_8_mysql_create_db
   step_8_jeedom_configuration
+  while true; do
+    mysql -u${MYSQL_JEEDOM_USERNAME} -p${MYSQL_JEEDOM_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} ${MYSQL_JEEDOM_DBNAME} < ${WEBSERVER_HOME}/install/install.sql
+    [[ $? -eq 0 ]] && break
+    sleep 5
+  done
   #tempo
-  if [[ $VERSION == "release" ]]; then
+  if [[ "release" == "$VERSION" ]]; then
     #S9 =  install.php done when running docker.
-    /root/install_docker.sh -s 9
+    bash -x /root/install_docker.sh -s 9
     #s10 = post install (cron ) /s11 for v4
     /root/install_docker.sh -s 10
     #s11 = jeedom check
