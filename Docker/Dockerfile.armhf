@@ -64,7 +64,8 @@ RUN /root/install_docker.sh -s 2 -v ${VERSION}\
     #S9 =  install.php done when running docker.
     #s10 = post install (cron ) /s11 for v4
     && if [ $VERSION == "release" ]; then /root/install_docker.sh -s 10 -v ${VERSION} \
-    else /root/install_docker.sh -s 11 -v ${VERSION}; fi ; \ #S11 = check
+    #S11 = check
+    else /root/install_docker.sh -s 11 -v ${VERSION}; fi ; \
     apt-get autoremove --purge && apt-get clean && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/*
 
