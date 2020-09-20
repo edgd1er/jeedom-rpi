@@ -8,7 +8,7 @@ on:
     tags:
 
 env:
-  IMAGE: edgd1er/jeedom-rpi
+  IMAGE: jeedom-rpi
   TAG: v4-latest
   VERSION: V4-stable
   DISTRO: debian
