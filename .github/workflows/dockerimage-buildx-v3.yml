@@ -37,10 +37,10 @@ jobs:
         run: echo ${{ steps.buildx.outputs.platforms }}
       - name: Buildx, build locally
         run: |
+          # removed linux/arm64
           docker buildx build \
           --cache-from "type=local,src=/tmp/.buildx-cache" \
           --cache-to "type=local,dest=/tmp/.buildx-cache" \
-          # removed linux/arm64
           --platform linux/amd64,linux/arm/v6,linux/arm/v7 \
           --output "type=image,push=false" \
           --build-arg VERSION=${VERSION} --build-arg DISTRO=${DISTRO} --build-arg aptcacher="" -t ${IMAGE}:${TAG} \
