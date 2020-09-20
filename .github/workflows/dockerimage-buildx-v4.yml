@@ -43,7 +43,7 @@ jobs:
           # removed linux/arm64
           --platform linux/amd64,linux/arm/v6,linux/arm/v7 \
           --output "type=image,push=false" \
-          --build-arg VERSION=${{VERSION}} --build-arg DISTRO=${{DISTRO}} --build-arg aptcacher="" -t ${IMAGE}:${TAG} \
+          --build-arg VERSION=${VERSION} --build-arg DISTRO=${DISTRO} --build-arg aptcacher="" -t ${IMAGE}:${TAG} \
           --file ./Docker/Dockerfile.buildx ./Docker
       - name: Login to Docker hub
         uses: docker/login-action@v1
@@ -58,8 +58,8 @@ jobs:
           # removed linux/arm64
           --platform linux/amd64,linux/arm/v6,linux/arm/v7 \
           --output "type=image,push=true" \
-          --build-arg VERSION=${{VERSION}} --build-arg DISTRO=${{DISTRO}} --build-arg aptcacher="" -t ${IMAGE}:${TAG} \
+          --build-arg VERSION=${VERSION} --build-arg DISTRO=${DISTRO} --build-arg aptcacher="" -t ${IMAGE}:${TAG} \
           --file ./Docker/Dockerfile.buildx ./Docker
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{IMAGE}}:${{TAG}}
+          docker buildx imagetools inspect ${IMAGE}:${TAG}
