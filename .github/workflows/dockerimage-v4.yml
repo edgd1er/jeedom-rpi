@@ -9,6 +9,7 @@ on:
 jobs:
 
   build_armhf:
+    run_if: false
     env:
       VERSION: release
       DISTRO: armv7hf-debian
@@ -17,19 +18,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Docker login
-      run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }}
-    - name: Build the Docker image armhf
-      run: docker build -f Docker/Dockerfile.armhf --build-arg VERSION=$VERSION --build-arg DISTRO=$DISTRO -t edgd1er/jeedom-rpi:$TAG ./Docker
-    - name: Docker Push
-      run: docker push ${{ secrets.DOCKER_USER }}/jeedom-rpi:$TAG
+      - uses: actions/checkout@v2
+      - name: Docker login
+        run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build the Docker image armhf
+        run: docker build -f Docker/Dockerfile.armhf --build-arg VERSION=$VERSION --build-arg DISTRO=$DISTRO -t edgd1er/jeedom-rpi:$TAG ./Docker
+      - name: Docker Push
+        run: docker push ${{ secrets.DOCKER_USER }}/jeedom-rpi:$TAG
 
   build_amd64:
-      env:
-        VERSION: V4-stable
-        DISTRO: amd64-debian
-        TAG: v4-amd64-latest
+    run_if: false
+    env:
+      VERSION: V4-stable
+      DISTRO: amd64-debian
+      TAG: v4-amd64-latest
 
       runs-on: ubuntu-latest
 

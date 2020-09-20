@@ -7,8 +7,8 @@ on:
     branches: [ master ]
 
 jobs:
-
   build_armhf:
+    run_if: false
     env:
       VERSION: release
       DISTRO: armv7hf-debian
@@ -26,6 +26,7 @@ jobs:
         run: docker push ${{ secrets.DOCKER_USER }}/jeedom-rpi:$TAG
 
   build_amd64:
+    run_if: false
     env:
       VERSION: release
       DISTRO: amd64-debian
