@@ -26,7 +26,6 @@ jobs:
         run: docker push ${{ secrets.DOCKER_USER }}/jeedom-rpi:$TAG
 
   build_amd64:
-    run_if: false
     env:
       VERSION: V4-stable
       DISTRO: amd64-debian
