@@ -52,14 +52,14 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Docker Buildx (push)
         run: |
+          # removed linux/arm64
           docker buildx build \
           --cache-from "type=local,src=/tmp/.buildx-cache" \
           --cache-to "type=local,dest=/tmp/.buildx-cache" \
-          # removed linux/arm64
           --platform linux/amd64,linux/arm/v6,linux/arm/v7 \
           --output "type=image,push=true" \
           --build-arg VERSION=${VERSION} --build-arg DISTRO=${DISTRO} --build-arg aptcacher="" -t ${IMAGE}:${TAG} \
           --file ./Docker/Dockerfile.buildx ./Docker
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{IMAGE}}:${{TAG}}
+          docker buildx imagetools inspect ${IMAGE}:${TAG}
