@@ -1,15 +1,14 @@
 name: Docker CI armhf+amd64 v4
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+#on:
+#  push:
+#    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
 
 jobs:
 
   build_armhf:
-    run_if: false
     env:
       VERSION: release
       DISTRO: armv7hf-debian
