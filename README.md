@@ -9,6 +9,9 @@ Please note that jeedom version (V3 or v4) will be downloaded during install, so
 ![Docker CI armhf+amd64 v3](https://github.com/edgd1er/jeedom-rpi/workflows/Docker%20CI%20armhf+amd64%20v3/badge.svg?branch=master)
 ![Docker CI armhf+amd64 v4](https://github.com/edgd1er/jeedom-rpi/workflows/Docker%20CI%20armhf+amd64%20v4/badge.svg?branch=master)
 
+![.github/workflows/dockerimage-buildx-v3.yml](https://github.com/edgd1er/jeedom-rpi/workflows/.github/workflows/dockerimage-buildx-v3.yml/badge.svg)
+![.github/workflows/dockerimage-buildx-v4.yml](https://github.com/edgd1er/jeedom-rpi/workflows/.github/workflows/dockerimage-buildx-v4.yml/badge.svg)
+
 A Jeedom Docker image for Raspberry Pi based on balenalib and Hypriot mysql images.
 
 This readme shows a **Dockerfile** of a dockerized [Jeedom](https://www.jeedom.com) based on a balena image. 
