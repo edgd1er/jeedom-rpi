@@ -34,13 +34,13 @@ jobs:
       DISTRO: amd64-debian
       TAG: v4-amd64-latest
 
-      runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-      steps:
-        - uses: actions/checkout@v2
-        - name: Docker login
-          run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }}
-        - name: Build the Docker image amd64
-          run: docker build -f Docker/Dockerfile --build-arg VERSION=$VERSION --build-arg DISTRO=$DISTRO -t ${{ secrets.DOCKER_USER }}/${IMAGE}:$TAG ./Docker
-        - name: Docker Push
-          run: docker push ${{ secrets.DOCKER_USER }}/${IMAGE}:$TAG
+    steps:
+      - uses: actions/checkout@v2
+      - name: Docker login
+        run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build the Docker image amd64
+        run: docker build -f Docker/Dockerfile --build-arg VERSION=$VERSION --build-arg DISTRO=$DISTRO -t ${{ secrets.DOCKER_USER }}/${IMAGE}:$TAG ./Docker
+      - name: Docker Push
+        run: docker push ${{ secrets.DOCKER_USER }}/${IMAGE}:$TAG
