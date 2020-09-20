@@ -36,7 +36,7 @@ RUN echo "install jeedom VERSION: $VERSION" && \
     #cannot install php as php5 or 7 might be option. leave install.sh install needed php package
     && apt-get -y remove brltty net-tools && apt-get upgrade -y && apt-get autoremove  \
     && mkdir -p /var/run/sshd -p /var/log/supervisor \
-    # get from stable master install files
+    # get from jeedom's stable master install files
     && wget -qO /root/.bashrc -q https://raw.githubusercontent.com/jeedom/core/$VERSION/install/bashrc \
     && wget -qO /root/install_docker.sh -q https://raw.githubusercontent.com/jeedom/core/$VERSION/install/install.sh \
     && wget -qO /etc/motd https://raw.githubusercontent.com/jeedom/core/$VERSION/install/motd  \
@@ -77,8 +77,8 @@ COPY supervisor /etc/logrotate.d/supervisor
 RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/
 #VOLUME ["/tmp", "/var/log","/var/www/html/log/"]
 #CMD ["/root/init.sh"]
-HEALTHCHECK --interval=5s --timeout=3s --retries=3 \
- CMD curl --fail http://localhost/here.html | [[ $(grep -c ok) -eq 1 ]] && exit 0 || exit 1
+HEALTHCHECK --interval=5s --timeout=3s --retries=3 --start-period=40s \
+ CMD curl -s --fail http://localhost/here.html || exit 1
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
 RUN if [ -n $aptcacher ]; then echo "" > /etc/apt/apt.conf.d/01proxy; fi
