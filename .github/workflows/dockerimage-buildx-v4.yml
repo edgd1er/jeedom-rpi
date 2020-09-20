@@ -1,0 +1,68 @@
+on:
+  pull_request:
+    branches: master
+  push:
+    branches: master
+    tags:
+
+env:
+  TAG: edgd1er/jeedom-rpi:v4-latest
+  VERSION: V4-stable
+  DISTRO: debian
+
+jobs:
+  buildx:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        uses: crazy-max/ghaction-docker-buildx@v3
+        with:
+          buildx-version: latest
+          qemu-version: latest
+      -
+        name: Cache Docker layers
+        uses: actions/cache@v2
+        id: cache
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      -
+        name: Available platforms
+        run: echo ${{ steps.buildx.outputs.platforms }}
+      -
+        name: Buildx, build locally
+        run: |
+          docker buildx build \
+          --cache-from "type=local,src=/tmp/.buildx-cache" \
+          --cache-to "type=local,dest=/tmp/.buildx-cache" \
+          --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64 \
+          --output "type=image,push=false" \
+          --build-arg VERSION=$VERSION --build-arg DISTRO=$DISTRO --build-arg aptcacher="" -t $TAG \
+          --file ./Docker/Dockerfile.buildx ./Docker
+      -
+        name: Login to Docker hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      -
+        name: Docker Buildx (push)
+        run: |
+          docker buildx build \
+          --cache-from "type=local,src=/tmp/.buildx-cache" \
+          --cache-to "type=local,dest=/tmp/.buildx-cache" \
+          --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64 \
+          --output "type=image,push=true" \
+          --build-arg VERSION=$VERSION --build-arg DISTRO=$DISTRO --build-arg aptcacher="" -t $TAG \
+          --file ./Docker/Dockerfile.buildx ./Docker
+        -
+          name: Inspect image
+          run: |
+            docker buildx imagetools inspect $TAG
