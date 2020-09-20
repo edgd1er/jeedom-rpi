@@ -78,7 +78,7 @@ COPY supervisor /etc/logrotate.d/supervisor
 RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/
 #VOLUME ["/tmp", "/var/log","/var/www/html/log/"]
 #CMD ["/root/init.sh"]
-HEALTHCHECK --interval=5s --timeout=3s --retries=3 --start-perdiod=40s \
+HEALTHCHECK --interval=5s --timeout=3s --retries=3 --start-period=40s \
  CMD curl -s --fail http://localhost/here.html || exit 1
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
