@@ -1,8 +1,8 @@
 name: Docker CI armhf+amd64 v3
 
-#on:
-#  push:
-#    branches: [ master ]
+on:
+  push:
+    branches: [ none ]
 #  pull_request:
 #    branches: [ master ]
 
