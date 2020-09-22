@@ -79,13 +79,13 @@ else
   #mysql is not local to jeedom container
   #step_8_mysql_create_db
   step_8_jeedom_configuration
-  while true; do
-    mysql -u${MYSQL_JEEDOM_USERNAME} -p${MYSQL_JEEDOM_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} ${MYSQL_JEEDOM_DBNAME} < ${WEBSERVER_HOME}/install/install.sql
-    [[ $? -eq 0 ]] && break
-    sleep 5
-  done
   #tempo
   if [[ "release" == "$VERSION" ]]; then
+    while true; do
+      mysql -u${MYSQL_JEEDOM_USERNAME} -p${MYSQL_JEEDOM_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} ${MYSQL_JEEDOM_DBNAME} <${WEBSERVER_HOME}/install/install.sql
+      [[ $? -eq 0 ]] && break
+      sleep 5
+    done
     #S9 =  install.php done when running docker.
     bash -x /root/install_docker.sh -s 9
     #s10 = post install (cron ) /s11 for v4
