@@ -16,12 +16,12 @@ ENV MYSQL_JEEDOM_USERNAME jeedom
 ENV MYSQL_JEEDOM_PORT 3306
 ARG VERSION
 ARG DISTRO
-ARG aptcacher
+ARG aptCacher
 ENV VERSION=${VERSION}
 
 #add apt-cacher setting if present:
-RUN if [ -n ${aptcacher} ]; then echo "Acquire::http::Proxy \"http://${aptcacher}:3142\";" >/etc/apt/apt.conf.d/01proxy && \
-    echo "Acquire::https::Proxy \"http://${aptcacher}:3142\";" >>/etc/apt/apt.conf.d/01proxy ; fi
+RUN if [ -n ${aptCacher} ]; then echo "Acquire::http::Proxy \"http://${aptCacher}:3142\";" >/etc/apt/apt.conf.d/01proxy && \
+    echo "Acquire::https::Proxy \"http://${aptCacher}:3142\";" >>/etc/apt/apt.conf.d/01proxy ; fi
 #Massive apt install of jeedom requirements to optimise downloadsdocke
 RUN echo "using distro: $DISTRO with jeedom VERSION: $VERSION" && \
   apt-get update && apt-get install -y wget aufs-tools automake \
