@@ -7,26 +7,27 @@ Please note that jeedom version (V3 or v4) will be downloaded during install, so
 # jeedom-rpi
 
 ![Docker CI armhf+amd64 v3](https://github.com/edgd1er/jeedom-rpi/workflows/Docker%20CI%20armhf+amd64%20v3/badge.svg?branch=master)
+
 ![Docker CI armhf+amd64 v4](https://github.com/edgd1er/jeedom-rpi/workflows/Docker%20CI%20armhf+amd64%20v4/badge.svg?branch=master)
 
 ![.github/workflows/dockerimage-buildx-v3.yml](https://github.com/edgd1er/jeedom-rpi/workflows/.github/workflows/dockerimage-buildx-v3.yml/badge.svg)
+
 ![.github/workflows/dockerimage-buildx-v4.yml](https://github.com/edgd1er/jeedom-rpi/workflows/.github/workflows/dockerimage-buildx-v4.yml/badge.svg)
 
-A Jeedom Docker image for Raspberry Pi based on balenalib and Hypriot mysql images.
+A Jeedom Docker image for Raspberry Pi based on debian image.
 
 This readme shows a **Dockerfile** of a dockerized [Jeedom](https://www.jeedom.com) based on a balena image. 
 The mysql database is based on linuxserver mariadb image on a distinct container.
 
 Jeedom major version is given as a parameter, minor version is the latest from release(v3) or V4-stable branches, at the timeof building
-a amd64 version is proposed to test on intel cpu the container.
+a amd64 version is also available to test on intel x64 cpu, the container.
 
 Docker Hub: https://hub.docker.com/r/edgd1er/jeedom-rpi
-
 
 ### Base Docker Images
 
 * [linuxserver/mariadb](https://hub.docker.com/r/linuxserver/mariadb)
-* [balenalib/armv7hf-debian:stretch-run](https://www.balena.io/docs/reference/base-images/base-images/?ref=dockerhub)
+* [https://hub.docker.com/_/debian](https://www.balena.io/docs/reference/base-images/base-images/?ref=dockerhub)
 
 
 ### Installation
@@ -41,26 +42,26 @@ example:
 
 2. Rename docker-compose-test.yml to docker-compose.yml and define values in environment section.(mysql database, architecture disribution (amd64-debian, armv7hf-debian ), jeedom version (release, v4-stable), aptcacher if apt-cache-ng is installed, empty string if not. release is latest v3.
 
-Values for armhf (-armhf.yml):
+version values for jeedom version: v3/v4
 
-    * web
-        * image: edgd1er/jeedom-rpi:armhf-latest
-    * mysql
+    * service web
+      image: edgd1er/jeedom-rpi:v4-latest
+
+values for mariadb: 
+
+    * service mysql: docker-compose-armhf.yaml
         * image: linuxserver/mariadb:arm32v7-latest
-values for x86 (-test.yml)
+    * service mysql: docker-compose-test.yaml
+        * image: linuxserver/mariadb:amd64-latest
 
-    * web
-        * image: edgd1er/jeedom-rpi:amd64-latest
-    * mysql
-        * image: mariadb/server
 3.a build and start the stack for rapsberry:
 ```
-    docker-compose -f docker-compose-armhf.yml build
+    docker-compose -f docker-compose-armhf.yml pull
     docker-compose -f docker-compose-armhf.yml up -d
 ```
 3.b Start the stack for x86:
 ```
-    docker-compose -f docker-compose-armhf.yml -f docker-compose-test.yml build
+    docker-compose -f docker-compose-armhf.yml -f docker-compose-test.yml pull
     docker-compose -f docker-compose-armhf.yml -f docker-compose-test.yml up -d
 ```
 4.Connect to your Raspberry IP or x86, at port 9180, or 9443 with a web browser and enjoy playing with Jeedom.
