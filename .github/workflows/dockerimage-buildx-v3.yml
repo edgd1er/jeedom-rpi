@@ -12,6 +12,7 @@ env:
   TAG: v3-latest
   VERSION: release
   DISTRO: debian
+  aptCacher:
 
 jobs:
   buildx:
@@ -35,22 +36,12 @@ jobs:
             ${{ runner.os }}-buildx-
       - name: Available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
-      - name: Buildx, build locally
-        run: |
-          # removed linux/arm64
-          docker buildx build \
-          --cache-from "type=local,src=/tmp/.buildx-cache" \
-          --cache-to "type=local,dest=/tmp/.buildx-cache" \
-          --platform linux/amd64,linux/arm/v6,linux/arm/v7 \
-          --output "type=image,push=false" \
-          --build-arg VERSION=${VERSION} --build-arg DISTRO=${DISTRO} --build-arg aptcacher="" -t ${{ secrets.DOCKER_USER }}/${IMAGE}:${TAG} \
-          --file ./Docker/Dockerfile.buildx ./Docker
       - name: Login to Docker hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Docker Buildx (push)
+          uses: docker/login-action@v1
+          with:
+            username: ${{ secrets.DOCKER_USER }}
+            password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Buildx, build locally
         run: |
           # removed linux/arm64
           docker buildx build \
