@@ -17,18 +17,18 @@ ENV MYSQL_JEEDOM_USERNAME jeedom
 ENV MYSQL_JEEDOM_PORT 3306
 ARG VERSION
 ARG DISTRO
-ARG aptcacher
+ARG aptCacher
 ENV VERSION=${VERSION}
 
 #add apt-cacher setting if present:
-RUN if [ -n ${aptcacher} ]; then echo "Acquire::http::Proxy \"http://${aptcacher}:3142\";" >/etc/apt/apt.conf.d/01proxy && \
-    echo "Acquire::https::Proxy \"http://${aptcacher}:3142\";" >>/etc/apt/apt.conf.d/01proxy ; fi
+RUN if [ -n ${aptCacher} ]; then echo "Acquire::http::Proxy \"http://${aptCacher}:3142\";" >/etc/apt/apt.conf.d/01proxy && \
+    echo "Acquire::https::Proxy \"http://${aptCacher}:3142\";" >>/etc/apt/apt.conf.d/01proxy ; fi
 #Massive apt install of jeedom requirements to optimise downloadsdocke
 RUN echo "using distro: $DISTRO with jeedom VERSION: $VERSION" && \
   apt-get update && apt-get install -y wget aufs-tools automake \
 	build-essential curl apt-transport-https software-properties-common \
     && add-apt-repository non-free  && apt update && apt-get install -y supervisor \
-	python3 python3-pip nmap xvfb iputils-ping \
+	python3 python3-pip nmap xvfb librsync-dev gettext python-dev \
     ntp ca-certificates unzip sudo cron locate tar telnet wget logrotate fail2ban dos2unix ntpdate htop \
     iotop vim iftop smbclient git python python-pip libexpat1 ssl-cert \
     cutycapt duplicity at ffmpeg libsox-fmt-mp3 sox libttspico-utils espeak mariadb-client mariadb-common \
@@ -63,7 +63,7 @@ RUN /root/install_docker.sh -s 2 -v ${VERSION}\
     #S8 =  db param done when running docker.
     #S9 =  install.php done when running docker.
     #s10 = post install (cron ) /s11 for v4
-    && if [ $VERSION == "release" ]; then /root/install_docker.sh -s 10 -v ${VERSION} \
+    && if [ $VERSION = "release" ]; then /root/install_docker.sh -s 10 -v ${VERSION} \
     #S11 = check
     else /root/install_docker.sh -s 11 -v ${VERSION}; fi ; \
     apt-get autoremove --purge && apt-get clean && apt-get autoclean \
@@ -80,9 +80,8 @@ RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/
 #VOLUME ["/tmp", "/var/log","/var/www/html/log/"]
 #CMD ["/root/init.sh"]
 HEALTHCHECK --interval=5s --timeout=3s --retries=3 --start-period=40s \
- CMD curl --fail http://localhost/here.html | [[ $(grep -c ok) -eq 1 ]] && exit 0 || exit 1
+ CMD curl -s --fail http://localhost/here.html || exit 1
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
 RUN if [ -f /etc/apt/apt.conf.d/01proxy ]; then rm /etc/apt/apt.conf.d/01proxy; fi
-
 RUN [ "cross-build-end" ]
