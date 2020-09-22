@@ -7,7 +7,8 @@ ARMDKRFILE=${DKRFILE}.armhf
 ARCHI=$(dpkg --print-architecture)
 IMAGE=jeedom-rpi
 
-aptcacher=$(ip route get 1 | awk '{print $7}')
+aptCacher=$(ip route get 1 | awk '{print $7}')
+aptCacher=
 
 #Fonctions
 
@@ -27,7 +28,7 @@ generateDockerfileARM
 # V3
 VERSION="release"
 #V4
-VERSION="V4-stable"
+#VERSION="V4-stable"
 
 # x86
 DISTRO="amd64-debian"
@@ -35,7 +36,7 @@ DISTRO="amd64-debian"
 TAG="edgd1er/jeedom-rpi:${VERS}-${DISTRO%%-*}-latest"
 
 if [ "$(uname -m | cut -c1-3)" != "arm" ]; then
-    docker build -f ${DKRFILE} --build-arg VERSION=$VERSION --build-arg DISTRO=$DISTRO --build-arg aptcacher=$aptcacher -t $TAG ./Docker
+    docker build --load -f ${DKRFILE} --build-arg VERSION=$VERSION --build-arg DISTRO=$DISTRO --build-arg aptCacher=$aptCacher -t $TAG ./Docker
     #[[ $? ]] && docker push $TAG
 fi
 
@@ -43,6 +44,9 @@ fi
 DISTRO="armv7hf-debian"
 [[ $VERSION == "release"  ]] && VERS="v3" || VERS="v4"
 TAG="edgd1er/jeedom-rpi:${VERS}-${DISTRO%%-*}-latest"
-docker build -f ${ARMDKRFILE} --build-arg VERSION=$VERSION --build-arg DISTRO=$DISTRO --build-arg aptcacher=$aptcacher -t $TAG ./Docker
+docker build --load -f ${ARMDKRFILE} --build-arg VERSION=$VERSION --build-arg DISTRO=$DISTRO --build-arg aptCacher=$aptCacher -t $TAG ./Docker
 #[[ $? ]] && docker push $TAG
 
+exit
+#Build
+#docker build --cpu-shares 512 -f Dockerfile.armhf -t edgd1er/jeedom-rpi:armhf-latest .
