@@ -23,7 +23,7 @@ RUN if [ -n ${aptCacher} ]; then echo "Acquire::http::Proxy \"http://${aptCacher
     echo "Acquire::https::Proxy \"http://${aptCacher}:3142\";" >>/etc/apt/apt.conf.d/01proxy ; fi
 #Massive apt install of jeedom requirements to optimise downloads
 RUN echo "install jeedom VERSION: $VERSION" && \
-  apt-get update && apt-get install -y wget aufs-tools automake \
+  apt-get update && apt-get install -y wget aufs-tools automake lsof \
 	build-essential curl apt-transport-https software-properties-common \
     && add-apt-repository non-free  && apt update && apt-get install -y supervisor \
 	python3 python3-pip nmap xvfb iputils-ping\
