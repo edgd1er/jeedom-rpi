@@ -20,12 +20,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
       - name: Set up Docker Buildx
         id: buildx
-        uses: crazy-max/ghaction-docker-buildx@v3
+        uses: docker/setup-buildx-action@v1
         with:
           buildx-version: latest
-          qemu-version: latest
       - name: Cache Docker layers
         uses: actions/cache@v2
         id: cache
@@ -41,16 +44,22 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Buildx, build locally
-        run: |
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          builder: buildx
+          context: /Docker
+          file: ./Docker/Dockerfile.buildx
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
           # removed linux/arm64
-          docker buildx build \
-          --cache-from "type=local,src=/tmp/.buildx-cache" \
-          --cache-to "type=local,dest=/tmp/.buildx-cache" \
-          --platform linux/amd64,linux/arm/v6,linux/arm/v7 \
-          --output "type=image,push=true" \
-          --build-arg VERSION=${VERSION} --build-arg DISTRO=${DISTRO} --build-arg aptcacher="" -t ${{ secrets.DOCKER_USER }}/${IMAGE}:${TAG} \
-          --file ./Docker/Dockerfile.buildx ./Docker
+          platforms: linux/amd64,linux/arm/v6,linux/arm/v7
+          push: true
+          build-arg: |
+            VERSION=${VERSION}
+            DISTRO=${DISTRO}
+            aptcacher=""
+          tags: ${{ secrets.DOCKER_USER }}/${IMAGE}:${TAG}
       - name: Inspect image
         run: |
           docker buildx imagetools inspect ${{ secrets.DOCKER_USER }}/${IMAGE}:${TAG}
