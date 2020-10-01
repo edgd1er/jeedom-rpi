@@ -60,10 +60,10 @@ jobs:
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7
           push: true
           build-args: |
-            VERSION=${VERSION}
-            DISTRO=${DISTRO}
+            VERSION=${{ env.VERSION }}
+            DISTRO=${{ env.DISTRO }}
             aptcacher=""
-          tags: ${{ secrets.DOCKER_USER }}/${IMAGE}:${TAG}
+          tags: ${{ secrets.DOCKER_USER }}/${{ env.IMAGE }}:${{ env.TAG }}
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ secrets.DOCKER_USER }}/${IMAGE}:${TAG}
+          docker buildx imagetools inspect ${{ secrets.DOCKER_USER }}/${{ env.IMAGE }}:${{ env.TAG }}
