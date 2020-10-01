@@ -28,7 +28,11 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v1
         with:
-          buildx-version: latest
+          version: latest
+          install: true
+          use: true
+      - name: Builder instance name
+        run: echo ${{ steps.buildx.outputs.name }}
       - name: Cache Docker layers
         uses: actions/cache@v2
         id: cache
@@ -47,7 +51,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
-          builder: buildx
+          builder: ${{ steps.buildx.outputs.name }}
           context: /Docker
           file: ./Docker/Dockerfile.buildx
           cache-from: type=local,src=/tmp/.buildx-cache
@@ -55,7 +59,7 @@ jobs:
           # removed linux/arm64
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7
           push: true
-          build-arg: |
+          build-args: |
             VERSION=${VERSION}
             DISTRO=${DISTRO}
             aptcacher=""
