@@ -52,7 +52,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           builder: ${{ steps.buildx.outputs.name }}
-          context: /Docker
+          context: ./Docker
           file: ./Docker/Dockerfile.buildx
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
