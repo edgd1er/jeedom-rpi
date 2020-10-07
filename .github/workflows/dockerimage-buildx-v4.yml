@@ -67,3 +67,16 @@ jobs:
       - name: Inspect image
         run: |
           docker buildx imagetools inspect ${{ secrets.DOCKER_USER }}/${{ env.IMAGE }}:${{ env.TAG }}
+      - name: Run Trivy vulnerability scanner
+          uses: aquasecurity/trivy-action@master
+          with:
+            image-ref: 'docker.io/${{ secrets.DOCKER_USER }}/${{ env.IMAGE }}:${{ env.TAG }}'
+            format: 'template'
+            template: '@/contrib/sarif.tpl'
+            output: 'trivy-results.sarif'
+            severity: 'CRITICAL,HIGH'
+
+            - name: Upload Trivy scan results to GitHub Security tab
+              uses: github/codeql-action/upload-sarif@v1
+              with:
+                sarif_file: 'trivy-results.sarif'
