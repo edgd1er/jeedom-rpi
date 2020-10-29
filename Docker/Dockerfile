@@ -1,6 +1,7 @@
 ARG DISTRO
 # balenalib/<hw>-<distro>-<lang_stack>:<lang_ver>-<distro_ver>-(build|run)-<yyyymmdd>
-FROM balenalib/${DISTRO}:buster-run
+#FROM balenalib/${DISTRO}:buster-run
+FROM debian:buster-slim
 MAINTAINER edgd1er@hotmail.com
 
 ENV SHELL_ROOT_PASSWORD password
@@ -66,7 +67,8 @@ RUN /root/install_docker.sh -s 2 -v ${VERSION}\
     #S11 = check
     else /root/install_docker.sh -s 11 -v ${VERSION}; fi ; \
     apt-get autoremove --purge && apt-get clean && apt-get autoclean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && sed -i "s#export APACHE_LOG_DIR=/var/log/apache2#export APACHE_LOG_DIR=/var/log/supervisor#" /etc/apache2/envvars
 
 # ssh server for dev
 #RUN apt install -y openssh-server \

@@ -1,20 +1,24 @@
 Forked from https://github.com/CodaFog/jeedom-rpi
 
-updated base image, added https support, healtcheck, handle services with supervisor.
-
-Please note that jeedom version (V3 or v4) will be downloaded during install, so the core project is not requested in that branch. 
-
 # jeedom-rpi
+![Docker CI buildx armhf+amd64 v3](https://github.com/edgd1er/jeedom-rpi/workflows/Docker%20CI%20buildx%20armhf+amd64%20v3/badge.svg?branch=master)
+![Docker CI buildx armhf+amd64 v4](https://github.com/edgd1er/jeedom-rpi/workflows/Docker%20CI%20buildx%20armhf+amd64%20v4/badge.svg?branch=master)
 
-![Docker CI armhf+amd64 v3](https://github.com/edgd1er/jeedom-rpi/workflows/Docker%20CI%20armhf+amd64%20v3/badge.svg?branch=master)
-
-![Docker CI armhf+amd64 v4](https://github.com/edgd1er/jeedom-rpi/workflows/Docker%20CI%20armhf+amd64%20v4/badge.svg?branch=master)
-
-![.github/workflows/dockerimage-buildx-v3.yml](https://github.com/edgd1er/jeedom-rpi/workflows/.github/workflows/dockerimage-buildx-v3.yml/badge.svg)
-
-![.github/workflows/dockerimage-buildx-v4.yml](https://github.com/edgd1er/jeedom-rpi/workflows/.github/workflows/dockerimage-buildx-v4.yml/badge.svg)
+[![GitHub issues](https://img.shields.io/github/issues/edgd1er/jeedom-rpi.svg)](https://GitHub.com/edgd1er/jeedom_rpi.js/issues/)
+[![Docker Stars](https://img.shields.io/docker/stars/edgd1er/jeedom-rpi.svg?maxAge=604800)](https://store.docker.com/community/images/edgd1er/jeedom-rpi)
+[![Docker Pulls](https://img.shields.io/docker/pulls/edgd1er/jeedom-rpi.svg?maxAge=604800)](https://store.docker.com/community/images/edgd1er/jeedom-rpi)
 
 A Jeedom Docker image for Raspberry Pi based on debian image.
+
+Difference from fork:
+- updated base image
+- added https support
+- healtcheck
+- handle services with supervisor.
+
+Please note that jeedom version (V3 or v4) will be downloaded during install, so the core project is not embedded.
+
+Images are build for arm/v6, arm/v7 and amd64
 
 This readme shows a **Dockerfile** of a dockerized [Jeedom](https://www.jeedom.com) based on a balena image. 
 The mysql database is based on linuxserver mariadb image on a distinct container.
@@ -104,6 +108,8 @@ services:
     ports:
       - "9180:80"
       - "9443:443"
+    volumes:
+        
     tmpfs:
       - /run:rw,size=10M
       - /tmp:rw,size=64M
