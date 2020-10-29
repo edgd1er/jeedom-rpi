@@ -15,16 +15,16 @@ Difference from fork:
 - added https support
 - healtcheck
 - handle services with supervisor.
+- able to redirect apache logs to stdout
 
 Please note that jeedom version (V3 or v4) will be downloaded during install, so the core project is not embedded.
 
 Images are build for arm/v6, arm/v7 and amd64
 
-This readme shows a **Dockerfile** of a dockerized [Jeedom](https://www.jeedom.com) based on a balena image. 
+This readme shows a **Dockerfile** of a dockerized [Jeedom](https://www.jeedom.com) based on a debian buster slim image. 
 The mysql database is based on linuxserver mariadb image on a distinct container.
 
-Jeedom major version is given as a parameter, minor version is the latest from release(v3) or V4-stable branches, at the timeof building
-a amd64 version is also available to test on intel x64 cpu, the container.
+Jeedom major version is given as a parameter, release if for jeedom v3, V4-stable for v4.
 
 Docker Hub: https://hub.docker.com/r/edgd1er/jeedom-rpi
 
@@ -39,29 +39,24 @@ Docker Hub: https://hub.docker.com/r/edgd1er/jeedom-rpi
 the docker-compose files are proposed as an example to build a running jeedom + mysql stack. mysql database is on a separate container. There is a docker-compose-test to overload the docker-compose-armhf.yml file to test building on a x86 cpu.
 example:
 ```bash
-    docker-compose -f docker-compose-armhf.yml -f docker-compose-test.yml build
+    docker-compose -f docker-compose-armhf.yml -f docker-compose-test.yml up -d
 ```
 
 1. Install [Docker](https://www.docker.com/) on your Raspberry pi.
 
-2. Rename docker-compose-test.yml to docker-compose.yml and define values in environment section.(mysql database, architecture disribution (amd64-debian, armv7hf-debian ), jeedom version (release, v4-stable), aptcacher if apt-cache-ng is installed, empty string if not. release is latest v3.
+2. Rename docker-compose-armhf.yml to docker-compose.yml and define values in environment section.(mysql database, architecture disribution (amd64-debian, armv7hf-debian ), jeedom version (release, v4-stable), aptcacher if apt-cache-ng is installed, empty string if not. release is latest v3.
 
 version values for jeedom version: v3/v4
 
     * service web
       image: edgd1er/jeedom-rpi:v4-latest
-
-values for mariadb: 
-
-    * service mysql: docker-compose-armhf.yaml
-        * image: linuxserver/mariadb:arm32v7-latest
-    * service mysql: docker-compose-test.yaml
-        * image: linuxserver/mariadb:amd64-latest
+      or
+      image: edgd1er/jeedom-rpi:v3-latest
 
 3.a build and start the stack for rapsberry:
 ```
-    docker-compose -f docker-compose-armhf.yml pull
-    docker-compose -f docker-compose-armhf.yml up -d
+    docker-compose -f docker-compose.yml pull
+    docker-compose -f docker-compose.yml up -d
 ```
 3.b Start the stack for x86:
 ```
@@ -70,9 +65,11 @@ values for mariadb:
 ```
 4.Connect to your Raspberry IP or x86, at port 9180, or 9443 with a web browser and enjoy playing with Jeedom.
 
-### Environnement variables
+### Environment variables
 
-The Jeedom user should be existing in the remote database. If the MYSQL_ERASE is set to yes, Mysql Root password should be in the command line that run the container. If the MYSQL_JEEDOM_DBNAME exists, it will then be dropped and recreated.
+The Jeedom user should be existing in the remote database. 
+Mysql Root password should be in the command line that run the container. If the MYSQL_JEEDOM_DBNAME exists, it will then be dropped and recreated.
+if LOGS_TO_STDOUT is set to yes, apache logs are sent to container's stdout.
 
 ```   - TZ=Europe/Paris
       - ROOT_PASSWORD shell root password
@@ -93,23 +90,12 @@ services:
     image: edgd1er/jeedom-rpi:armhf-latest
     #image: edgd1er/jeedom-rpi:amd86-latest
     restart: unless-stopped
-    build:
-      context: Docker
-      dockerfile: Dockerfile
-      args:
-        #DISTRO: "amd64-debian"
-        DISTRO: armv7hf-debian
-        VERSION: release
-        #version: v4-stable
-        #aptcacher: 192.168.53.208
     expose:
       - "80"
       - "443"
     ports:
       - "9180:80"
-      - "9443:443"
-    volumes:
-        
+      - "9443:443"            
     tmpfs:
       - /run:rw,size=10M
       - /tmp:rw,size=64M
@@ -130,8 +116,7 @@ services:
     depends_on:
       - mysql
   mysql:
-    #image: linuxserver/mariadb:arm32v7-latest
-    image: mariadb/server
+    image: linuxserver/mariadb:latest
     restart: unless-stopped
     expose:
       - "3306"
