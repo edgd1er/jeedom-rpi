@@ -1,3 +1,4 @@
-.git
 *.tar.gz
-sqldata
+sqldata/
+webdata/
+.github/
