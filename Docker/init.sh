@@ -2,6 +2,9 @@
 
 set -x
 
+#Variables
+LOGS_TO_STDOUT=${LOGS_TO_STDOUT:-"n"}
+
 ##Functions
 
 mysql_sql() {
@@ -111,13 +114,11 @@ chmod 777 /dev/tty*
 mkdir -p /var/log/supervisor/ -p /run/lock/ -p /var/log/apache2/
 
 echo "by default send apache logs to stdout/err"
-if [[ ! -e /var/log/apache2/access.log ]]; then
-  mkdir -p /var/log/apache2/
-  ln -sf /proc/self/fd/1 /var/log/apache2/access.log
-fi
-if [[ ! -e /var/log/apache2/error.log ]]; then
-  mkdir -p /var/log/apache2/
-  ln -sf /proc/self/fd/1 /var/log/apache2/error.log
+[[ ! -d /var/log/apache2 ]] && mkdir -p /var/log/apache2/ || echo
+
+if [[ ${LOGS_TO_STDOUT,,} =~ y ]]; then
+  ln -sf /proc/1/fd/1 /var/log/apache2/access.log
+  ln -sf /proc/1/fd/1 /var/log/apache2/error.log
 fi
 
 supervisorctl start apache2
