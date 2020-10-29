@@ -6,12 +6,11 @@ services:
     restart: unless-stopped
     build:
       context: Docker
-      #dockerfile: Dockerfile.armhf
       dockerfile: Dockerfile.buildx
       args:
-        DISTRO: "debian"
         #V3
         #VERSION: release
+        #v4
         VERSION: V4-stable
         aptCacher:
     expose:
@@ -33,8 +32,8 @@ services:
       - MYSQL_JEEDOM_DBNAME=jeedom_test
       - MYSQL_JEEDOM_USERNAME=jeedom
       - MYSQL_JEEDOM_PASSWD=jeedom
-    #   devices:
-    #   - "/dev/ttyUSB0:/dev/ttyUSB0
+    #devices:
+    # - "/dev/ttyUSB0:/dev/ttyUSB0"
     #   - "/dev/ttyACM0:/dev/ttyACM0"
     #   - "/dev/ttyAMA0:/dev/ttyAMA0"
     depends_on:
