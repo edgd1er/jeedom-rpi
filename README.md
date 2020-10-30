@@ -13,7 +13,7 @@ A Jeedom Docker image for Raspberry Pi based on debian image.
 Difference from fork:
 - updated base image
 - added https support
-- healtcheck
+- healthcheck
 - handle services with supervisor.
 - able to redirect apache logs to stdout
 
@@ -36,10 +36,12 @@ Docker Hub: https://hub.docker.com/r/edgd1er/jeedom-rpi
 
 ### Installation
 
-the docker-compose files are proposed as an example to build a running jeedom + mysql stack. mysql database is on a separate container. There is a docker-compose-test to overload the docker-compose-armhf.yml file to test building on a x86 cpu.
+the docker-compose files are proposed as an example to build a running jeedom + mysql stack. 
+mysql database is on a separate container.
 example:
+
 ```bash
-    docker-compose -f docker-compose-armhf.yml -f docker-compose-test.yml up -d
+    docker-compose -f docker-compose.yml up -d
 ```
 
 1. Install [Docker](https://www.docker.com/) on your Raspberry pi.
@@ -53,16 +55,11 @@ version values for jeedom version: v3/v4
       or
       image: edgd1er/jeedom-rpi:v3-latest
 
-3.a build and start the stack for rapsberry:
+3. build and start the stack:
 ```
-    docker-compose -f docker-compose.yml pull
-    docker-compose -f docker-compose.yml up -d
+    docker-compose -f docker-compose.yml up --build
 ```
-3.b Start the stack for x86:
-```
-    docker-compose -f docker-compose-armhf.yml -f docker-compose-test.yml pull
-    docker-compose -f docker-compose-armhf.yml -f docker-compose-test.yml up -d
-```
+
 4.Connect to your Raspberry IP or x86, at port 9180, or 9443 with a web browser and enjoy playing with Jeedom.
 
 ### Environment variables
@@ -80,6 +77,29 @@ if LOGS_TO_STDOUT is set to yes, apache logs are sent to container's stdout.
       - MYSQL_JEEDOM_PASSWD mysql username password
 ```
 
+### https support
+
+default certificates are defined in apache's configuration. Mounting or copying the file to /etc/
+
+```
+    volumes:
+      - ./webdata/cert.pem:/etc/ssl/certs/ssl-cert-snakeoil.pem:ro
+      - ./webdata/privkey.pem:/etc/ssl/private/ssl-cert-snakeoil.key:ro
+```
+### Volumes
+
+after each image update jeedom is installed, restoring a backup is the way to have a system as before the update.
+With docker, you may use volumes to keep data through image updates.
+No volumes are defined within the image. 
+
+|Container|volumes|content|
+|---------|-------|------|
+|Mysql|/config| database config+data|
+|jeedom|/var/log|system's logs|
+|jeedom|/var/www/html/log|jeedom plugins logs|
+|jeedom|/var/www/html/plugins|jeedom's plugins|
+|jeedom|/etc/ssl/certs/ssl-cert-snakeoil.pem|jeedom's https certificate|
+|jeedom|/etc/ssl/certs/ssl-cert-snakeoil.key|jeedom's https certificate|
 
 ### Example of a docker-compose
 
