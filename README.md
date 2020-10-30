@@ -65,7 +65,8 @@ version values for jeedom version: v3/v4
 ### Environment variables
 
 The Jeedom user should be existing in the remote database. 
-Mysql Root password should be in the command line that run the container. If the MYSQL_JEEDOM_DBNAME exists, it will then be dropped and recreated.
+Mysql Root password should be in the command line that run the container. If the MYSQL_JEEDOM_DBNAME schema does 
+not exists, it will created.
 if LOGS_TO_STDOUT is set to yes, apache logs are sent to container's stdout.
 
 ```   - TZ=Europe/Paris
