@@ -93,6 +93,8 @@ after each image update jeedom is installed, restoring a backup is the way to ha
 With docker, you may use volumes to keep data through image updates.
 No volumes are defined within the image. 
 
+/!\ **/var/www/html/logs** (plugins logs) and **/var/logs/** (system logs) may clutter the container. It should be mounted in a volume.
+
 |Container|volumes|content|
 |---------|-------|------|
 |Mysql|/config| database config+data|
