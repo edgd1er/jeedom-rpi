@@ -71,6 +71,7 @@ RUN /root/install_docker.sh -s 2 -v ${VERSION}\
 COPY init.sh /root/init.sh
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY supervisor /etc/logrotate.d/supervisor
+COPY jeedom_plugin /etc/logrotate.d/jeedom_plugin
 RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/
 #VOLUME ["/tmp", "/var/log","/var/www/html/log/"]
 
