@@ -1,0 +1,11 @@
+/var/www/html/log/*.[!g][!z] {
+  su www-data www-data
+	daily
+	missingok
+	rotate 7
+	copytruncate
+	compress
+	notifempty
+	create 640 www-data www-data
+	minsize 1M
+}
