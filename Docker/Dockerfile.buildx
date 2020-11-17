@@ -65,6 +65,7 @@ RUN /root/install_docker.sh -s 2 -v ${VERSION}\
     else /root/install_docker.sh -s 11 -v ${VERSION}; fi ; \
     #S11 = check
     apt-get autoremove --purge && apt-get clean && apt-get autoclean \
+    && update-ca-certificates --fresh \
     && rm -rf /var/lib/apt/lists/*
     # && sed -i "s#export APACHE_LOG_DIR=/var/log/apache2#export APACHE_LOG_DIR=/var/log/supervisor#" /etc/apache2/envvars
 
