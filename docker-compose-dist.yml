@@ -1,0 +1,84 @@
+version: '3.8'
+services:
+  mysql:
+    image: linuxserver/mariadb:latest
+    restart: unless-stopped
+    expose:
+      - "3306"
+    ports:
+      - "3316:3306"
+    environment:
+      - TZ=Europe/Paris
+      - MYSQL_ROOT_PASSWORD=changeIt
+      - MYSQL_DATABASE=jeedom
+      - MYSQL_USER=jeedom
+      - MYSQL_PASSWORD=changeIt
+    volumes:
+      - ./sqldata:/config
+      - run_mysql:/run
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+
+  web:
+    image: edgd1er/jeedom-rpi:v4-latest
+    restart: unless-stopped
+    expose:
+      - "22"
+      - "80"
+      - "443"
+    ports:
+      - "9180:80"
+      - "9443:443"
+    healthcheck:
+      test: curl -s --fail http://localhost/here.html || exit 1
+      interval: 1m30s
+      retries: 3
+      start_period: 40s
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - ./cert.pem:/etc/ssl/certs/ssl-cert-snakeoil.pem:ro
+      - ./privkey.pem:/etc/ssl/private/ssl-cert-snakeoil.key:ro
+      - ./log:/var/log:rw
+      - tmpfs_tmp:/tmp/
+      - tmpfs_cache:/var/cache/
+      - tmpfs_root_cache:/root/.cache
+    environment:
+      - TZ=Europe/Paris
+      - ROOT_PASSWORD=changeIt
+      - MYSQL_ROOT_PASSWD=changeIt
+      - MYSQL_JEEDOM_HOST=mysql
+      - MYSQL_JEEDOM_PORT=3306
+      - MYSQL_JEEDOM_DBNAME=jeedom
+      - MYSQL_JEEDOM_USERNAME=jeedom
+      - MYSQL_JEEDOM_PASSWD=changeIt
+      - LOGS_TO_STDOUT=y
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    depends_on:
+      - mysql
+
+volumes:
+  tmpfs_root_cache:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  tmpfs_cache:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  tmpfs_tmp:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  run_mysql:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs

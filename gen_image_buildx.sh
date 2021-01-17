@@ -3,11 +3,10 @@
 #Variables
 localDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 DKRFILE=${localDir}/Docker/Dockerfile.buildx
-ARMDKRFILE=${DKRFILE}.armhf
 ARCHI=$(dpkg --print-architecture)
 IMAGE=jeedom-rpi
-DUSER=edgd1er
-isMultiArch=$("${ARCHI}" != "armhf" ]] && (docker buildx ls | grep -c arm))
+DUSER=docker_login
+isMultiArch=[[ $("${ARCHI}" != "armhf" ]] && (docker buildx ls | grep -c arm))
 aptCacher=$(ip route get 1 | awk '{print $7}')
 #PROGRESS=plain  #text auto plain
 PROGRESS=auto  #text auto plain
@@ -39,7 +38,7 @@ if [ "${ARCHI}" == "armhf" ]; then
     PTF=linux/arm/v7
   else
     PTF=linux/amd64
-    #[[ $isMultiArch -gt 0 ]] && PTF=linux/arm/v7,linux/arm/v6,linux/amd64
+    [[ $isMultiArch -gt 0 ]] && PTF=linux/arm/v7,linux/arm/v6,linux/amd64
 fi
 
 # when building multi arch, load is not possible
