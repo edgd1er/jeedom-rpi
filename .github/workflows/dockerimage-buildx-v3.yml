@@ -2,9 +2,12 @@ name: Docker CI buildx armhf+amd64 v3
 
 on:
   pull_request:
-    branches: master
+    branches:
+      - master
   push:
-    branches: master, gh_pb
+    branches:
+      - master
+      - gh_pb
     tags:
 
 env:
@@ -12,7 +15,6 @@ env:
   TAG: v3-latest
   VERSION: release
   DISTRO: debian
-  aptCacher:
 
 jobs:
   buildx:
@@ -62,7 +64,6 @@ jobs:
           build-args: |
             VERSION=${{ env.VERSION }}
             DISTRO=${{ env.DISTRO }}
-            aptcacher=""
           tags: ${{ secrets.DOCKER_USER }}/${{ env.IMAGE }}:${{ env.TAG }}
       - name: Inspect image
         run: |
