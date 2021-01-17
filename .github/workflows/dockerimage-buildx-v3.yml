@@ -2,9 +2,12 @@ name: Docker CI buildx armhf+amd64 v3
 
 on:
   pull_request:
-    branches: master
+    branches:
+      - master
   push:
-    branches: master, gh_pb
+    branches:
+      - master
+      - gh_pb
     tags:
 
 env:
