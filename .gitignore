@@ -11,3 +11,5 @@ Thumbs.db
 
 webdata/
 sqldata/
+/docker-compose.yml
+/docker-compose-ph.yml
