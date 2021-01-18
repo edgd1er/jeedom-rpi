@@ -15,7 +15,6 @@ env:
   TAG: v3-latest
   VERSION: release
   DISTRO: debian
-  aptCacher:
 
 jobs:
   buildx:
@@ -65,7 +64,6 @@ jobs:
           build-args: |
             VERSION=${{ env.VERSION }}
             DISTRO=${{ env.DISTRO }}
-            aptcacher=""
           tags: ${{ secrets.DOCKER_USER }}/${{ env.IMAGE }}:${{ env.TAG }}
       - name: Inspect image
         run: |
