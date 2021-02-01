@@ -8,7 +8,7 @@ Forked from https://github.com/CodaFog/jeedom-rpi
 [![Docker Stars](https://img.shields.io/docker/stars/edgd1er/jeedom-rpi.svg?maxAge=604800)](https://store.docker.com/community/images/edgd1er/jeedom-rpi)
 [![Docker Pulls](https://img.shields.io/docker/pulls/edgd1er/jeedom-rpi.svg?maxAge=604800)](https://store.docker.com/community/images/edgd1er/jeedom-rpi)
 
-last build: 01/14/21
+last build: 02/01/21 (V4.1.18, V3.3.55)
 
 A Jeedom Docker image for Raspberry Pi based on debian image.
 
