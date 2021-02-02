@@ -82,7 +82,8 @@ if LOGS_TO_STDOUT is set to yes, apache logs are sent to container's stdout.
 
 ### https support
 
-default certificates are defined in apache's configuration. Mounting or copying the file to /etc/
+default certificates are generated during apache's configuration. Mounting or copying the file to /etc/ssl/certs
+as shown below will expose your certificates.
 
 ```
     volumes:

@@ -39,8 +39,9 @@ services:
       start_period: 40s
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
-      - ./cert.pem:/etc/ssl/certs/ssl-cert-snakeoil.pem:ro
-      - ./privkey.pem:/etc/ssl/private/ssl-cert-snakeoil.key:ro
+      # only needed if you want to set your own certificate.
+      #- ./cert.pem:/etc/ssl/certs/ssl-cert-snakeoil.pem:ro
+      #- ./privkey.pem:/etc/ssl/private/ssl-cert-snakeoil.key:ro
       - ./log:/var/log:rw
       - tmpfs_tmp:/tmp/
       - tmpfs_cache:/var/cache/
