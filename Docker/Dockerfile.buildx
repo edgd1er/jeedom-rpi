@@ -1,4 +1,32 @@
-FROM debian:buster-slim
+FROM debian:buster-slim as debian-jdm-base
+MAINTAINER edgd1er@hotmail.com
+
+ARG aptCacher
+
+#add apt-cacher setting if present:
+RUN if [ -n ${aptCacher} ]; then echo "Acquire::http::Proxy \"http://${aptCacher}:3142\";" >/etc/apt/apt.conf.d/01proxy && \
+    echo "Acquire::https::Proxy \"http://${aptCacher}:3142\";" >>/etc/apt/apt.conf.d/01proxy ; fi && \
+    #echo "Dir::Cache \"\";\nDir::Cache::archives \"\";" | tee /etc/apt/apt.conf.d/02nocache && \
+    echo "#/etc/dpkg/dpkg.cfg.d/01_nodoc\n\n# Delete locales\npath-exclude=/usr/share/locale/*\n\n# Delete man pages\npath-exclude=/usr/share/man/*\n\n# Delete docs\npath-exclude=/usr/share/doc/*\npath-include=/usr/share/doc/*/copyright" | tee /etc/dpkg/dpkg.cfg.d/03nodoc && \
+    #Massive apt install of jeedom requirements to optimise downloads
+    apt-get update && apt-get install -y wget aufs-tools automake lsof \
+	build-essential curl apt-transport-https software-properties-common \
+    && add-apt-repository non-free  && apt-get update && apt-get install -y supervisor \
+	python3 python3-pip nmap xvfb iputils-ping passwd usbutils usb.ids\
+    ntp ca-certificates unzip sudo cron locate tar telnet wget logrotate fail2ban dos2unix ntpdate htop \
+    iotop vim iftop smbclient git python python-pip libexpat1 ssl-cert \
+    cutycapt duplicity at ffmpeg libsox-fmt-mp3 sox libttspico-utils espeak mariadb-client mariadb-common \
+    #mbrola removed (not available for armhf )
+    #add server apache
+    apache2 apache2-utils libexpat1 ssl-cert ffmpeg\
+    #cannot install php as php5 or 7 might be option. leave install.sh install needed php package
+    && apt-get -y remove brltty net-tools && apt-get upgrade -y && apt-get autoremove  \
+    && mkdir -p /var/run/sshd -p /var/log/supervisor \
+    # clean caches
+    && apt-get -f autoremove --purge && apt-get autoclean \
+    && rm -rf /var/lib/apt/lists/*
+
+FROM debian-jdm-base
 MAINTAINER edgd1er@hotmail.com
 
 ENV SHELL_ROOT_PASSWORD password
@@ -13,28 +41,12 @@ ENV MYSQL_JEEDOM_DBNAME jeedom
 ENV MYSQL_JEEDOM_USERNAME jeedom
 ENV MYSQL_JEEDOM_PORT 3306
 ARG VERSION
-ARG aptCacher
 ENV VERSION=${VERSION}
+ARG XDEBUG
+ARG aptCacher
 
-#add apt-cacher setting if present:
-RUN if [ -n ${aptCacher} ]; then echo "Acquire::http::Proxy \"http://${aptCacher}:3142\";" >/etc/apt/apt.conf.d/01proxy && \
-    echo "Acquire::https::Proxy \"http://${aptCacher}:3142\";" >>/etc/apt/apt.conf.d/01proxy ; fi
-#Massive apt install of jeedom requirements to optimise downloads
-RUN echo "install jeedom VERSION: $VERSION" && \
-  apt-get update && apt-get install -y wget aufs-tools automake lsof \
-	build-essential curl apt-transport-https software-properties-common \
-    && add-apt-repository non-free  && apt update && apt-get install -y supervisor \
-	python3 python3-pip nmap xvfb iputils-ping  \
-    ntp ca-certificates unzip sudo cron locate tar telnet wget logrotate fail2ban dos2unix ntpdate htop \
-    iotop vim iftop smbclient git python python-pip libexpat1 ssl-cert \
-    cutycapt duplicity at ffmpeg libsox-fmt-mp3 sox libttspico-utils espeak mariadb-client mariadb-common \
-    #mbrola removed (not available for armhf )
-    #add server apache
-    apache2 apache2-utils libexpat1 ssl-cert \
-    #cannot install php as php5 or 7 might be option. leave install.sh install needed php package
-    && apt-get -y remove brltty net-tools && apt-get upgrade -y && apt-get autoremove  \
-    && mkdir -p /var/run/sshd -p /var/log/supervisor \
-    # get from jeedom's stable master install files
+# get from jeedom's stable master install files
+RUN echo "install jeedom VERSION: $VERSION" \
     && wget -qO /root/.bashrc -q https://raw.githubusercontent.com/jeedom/core/$VERSION/install/bashrc \
     && wget -qO /root/install_docker.sh -q https://raw.githubusercontent.com/jeedom/core/$VERSION/install/install.sh \
     && wget -qO /etc/motd https://raw.githubusercontent.com/jeedom/core/$VERSION/install/motd  \
@@ -43,9 +55,9 @@ RUN echo "install jeedom VERSION: $VERSION" && \
     ## cut mysql server configuration
     && sed -i 's/systemctl stop mysql/exit 0/' ./root/install_docker.sh \
     # set jeedom version v3 or v4
-    && sed -i "s/VERSION=V4-stable/VERSION=${VERSION}/g" ./root/install_docker.sh
+    && sed -i "s/VERSION=V4-stable/VERSION=${VERSION}/g" ./root/install_docker.sh \
     # step 2 install mainpackage
-RUN /root/install_docker.sh -s 2 -v ${VERSION}\
+    && /root/install_docker.sh -s 2 -v ${VERSION}\
     # step 3 install mysql server
     # install apache
     && /root/install_docker.sh -s 4 -v ${VERSION} \
@@ -60,15 +72,19 @@ RUN /root/install_docker.sh -s 2 -v ${VERSION}\
     #S9 =  install.php done when running docker.
     #s10 = post install (cron ) /s11 for v4
     && if [ $VERSION = "release" ]; then /root/install_docker.sh -s 10 -v ${VERSION} \
-    else /root/install_docker.sh -s 11 -v ${VERSION}; fi ; \
+    else /root/install_docker.sh -s 11 -v ${VERSION}; fi ;
     #S11 = check
-    apt-get autoremove --purge && apt-get clean && apt-get autoclean \
-    && update-ca-certificates --fresh \
+    #enable xdebug
+RUN if [ $XDEBUG = "1" ]; then apt-get update && apt-get install -y php-xdebug openssh-server; echo "[xdebug]\nxdebug.remote_enable=1\nxdebug.remote_host=127.0.0.1 \nxdebug.remote_port=9000\nxdebug.remote_enable=On\nxdebug.remote_connect_back=On\nxdebug.idekey=idekey" |tee -a $(find /etc -type f -iwholename  *apache2/php.ini -print); sed -i "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" /etc/ssh/sshd_config ; \
+    echo "<?php phpinfo() ?>" > /var/www/html/phpinfo.php ; echo "[program:sshd]\ncommand=/usr/sbin/sshd -D" > /etc/supervisor/conf.d/sshd.conf;fi; \
+    update-ca-certificates --fresh \
     && rm -rf /var/lib/apt/lists/*
+RUN apt-get autoremove --purge  #&& apt-get autoclean && apt-get clean
     # && sed -i "s#export APACHE_LOG_DIR=/var/log/apache2#export APACHE_LOG_DIR=/var/log/supervisor#" /etc/apache2/envvars
 
 COPY init.sh /root/init.sh
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY supervisord.conf /etc/supervisor/supervisord.conf
+COPY jeedom_apps.conf /etc/supervisor/conf.d/jeedom_apps.conf
 COPY supervisor /etc/logrotate.d/supervisor
 COPY jeedom_plugin /etc/logrotate.d/jeedom_plugin
 RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/
@@ -76,6 +92,6 @@ RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/
 
 HEALTHCHECK --interval=60s --timeout=3s --retries=3 --start-period=40s \
  CMD curl -s --fail http://localhost/here.html || exit 1
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
 
 RUN if [ -n $aptCacher ]; then echo "" > /etc/apt/apt.conf.d/01proxy; fi
