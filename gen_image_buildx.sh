@@ -46,7 +46,8 @@ WHERE="--load"
 # x86
 DISTRO="debian"
 [[ $VERSION == "release" ]] && VERS="v3" || VERS="v4"
-TAG="${DUSER}/${IMAGE}:${VERS}-latest"
+TAG="${IMAGE}:${VERS}-latest"
+[[ "docker_login" != ${DUSER} ]] && TAG=${DUSER}/${TAG}
 
 PTF=linux/arm/v7
 #build multi arch images
@@ -69,4 +70,9 @@ docker buildx build ${WHERE} --platform ${PTF} -f ${DKRFILE} --build-arg VERSION
 --build-arg DISTRO=$DISTRO $CACHE --progress $PROGRESS --build-arg aptCacher=$aptCacher \
 -t $TAG ./Docker
 
-docker manifest inspect $TAG | grep -E "architecture|variant"
+if [[ "docker_login" != ${DUSER} ]]; then
+  docker manifest inspect $TAG | grep -iE "architecture|variant"
+  else
+  docker inspect $TAG | grep -iE "architecture|variant"
+  docker image ls |grep jeedom
+fi
