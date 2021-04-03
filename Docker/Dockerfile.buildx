@@ -1,7 +1,25 @@
-FROM debian:buster-slim as debian-jdm-base
-MAINTAINER edgd1er@hotmail.com
+FROM debian:buster-slim
 
+ENV SHELL_ROOT_PASSWORD password
+ENV APACHE_HTTP_PORT 80
+ENV APACHE_HTTPS_PORT 443
+ENV SSH_PORT 22
+ENV MODE_HOST 0
+ENV MYSQL_ROOT_PASSWD password
+ENV MYSQL_JEEDOM_HOST localhost
+ENV MYSQL_JEEDOM_PASSWD jeedom
+ENV MYSQL_JEEDOM_DBNAME jeedom
+ENV MYSQL_JEEDOM_USERNAME jeedom
+ENV MYSQL_JEEDOM_PORT 3306
+ARG VERSION
+ENV VERSION=${VERSION}
+ARG XDEBUG
 ARG aptCacher
+
+EXPOSE 80
+EXPOSE 443
+
+LABEL maintainer=edgd1er@hotmail.com
 
 #add apt-cacher setting if present:
 RUN if [ -n ${aptCacher} ]; then echo "Acquire::http::Proxy \"http://${aptCacher}:3142\";" >/etc/apt/apt.conf.d/01proxy && \
@@ -23,30 +41,10 @@ RUN if [ -n ${aptCacher} ]; then echo "Acquire::http::Proxy \"http://${aptCacher
     && apt-get -y remove brltty net-tools && apt-get upgrade -y && apt-get autoremove  \
     && mkdir -p /var/run/sshd -p /var/log/supervisor \
     # clean caches
-    && apt-get -f autoremove --purge && apt-get autoclean \
-    && rm -rf /var/lib/apt/lists/*
-
-FROM debian-jdm-base
-MAINTAINER edgd1er@hotmail.com
-
-ENV SHELL_ROOT_PASSWORD password
-ENV APACHE_HTTP_PORT 80
-ENV APACHE_HTTPS_PORT 443
-ENV SSH_PORT 22
-ENV MODE_HOST 0
-ENV MYSQL_ROOT_PASSWD password
-ENV MYSQL_JEEDOM_HOST localhost
-ENV MYSQL_JEEDOM_PASSWD jeedom
-ENV MYSQL_JEEDOM_DBNAME jeedom
-ENV MYSQL_JEEDOM_USERNAME jeedom
-ENV MYSQL_JEEDOM_PORT 3306
-ARG VERSION
-ENV VERSION=${VERSION}
-ARG XDEBUG
-ARG aptCacher
-
-# get from jeedom's stable master install files
-RUN echo "install jeedom VERSION: $VERSION" \
+    && apt-get -f autoremove --purge && apt-get autoclean; \
+    #&& rm -rf /var/lib/apt/lists/* \
+    # get from jeedom's stable master install files
+    echo "install jeedom VERSION: $VERSION" \
     && wget -qO /root/.bashrc -q https://raw.githubusercontent.com/jeedom/core/$VERSION/install/bashrc \
     && wget -qO /root/install_docker.sh -q https://raw.githubusercontent.com/jeedom/core/$VERSION/install/install.sh \
     && wget -qO /etc/motd https://raw.githubusercontent.com/jeedom/core/$VERSION/install/motd  \
@@ -72,14 +70,13 @@ RUN echo "install jeedom VERSION: $VERSION" \
     #S9 =  install.php done when running docker.
     #s10 = post install (cron ) /s11 for v4
     && if [ $VERSION = "release" ]; then /root/install_docker.sh -s 10 -v ${VERSION} \
-    else /root/install_docker.sh -s 11 -v ${VERSION}; fi ;
+    else /root/install_docker.sh -s 11 -v ${VERSION}; fi ; \
     #S11 = check
     #enable xdebug
-RUN if [ $XDEBUG = "1" ]; then apt-get update && apt-get install -y php-xdebug openssh-server; echo "[xdebug]\nxdebug.remote_enable=1\nxdebug.remote_host=127.0.0.1 \nxdebug.remote_port=9000\nxdebug.remote_enable=On\nxdebug.remote_connect_back=On\nxdebug.idekey=idekey" |tee -a $(find /etc -type f -iwholename  *apache2/php.ini -print); sed -i "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" /etc/ssh/sshd_config ; \
+    if [ $XDEBUG = "1" ]; then apt-get update && apt-get install -y php-xdebug openssh-server; echo "[xdebug]\nxdebug.remote_enable=1\nxdebug.remote_host=127.0.0.1 \nxdebug.remote_port=9000\nxdebug.remote_enable=On\nxdebug.remote_connect_back=On\nxdebug.idekey=idekey" |tee -a $(find /etc -type f -iwholename  *apache2/php.ini -print); sed -i "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" /etc/ssh/sshd_config ; \
     echo "<?php phpinfo() ?>" > /var/www/html/phpinfo.php ; echo "[program:sshd]\ncommand=/usr/sbin/sshd -D" > /etc/supervisor/conf.d/sshd.conf;fi; \
-    update-ca-certificates --fresh \
-    && rm -rf /var/lib/apt/lists/*
-RUN apt-get autoremove --purge  #&& apt-get autoclean && apt-get clean
+    update-ca-certificates --fresh ; rm -rf /var/lib/apt/lists/* ; \
+    apt-get autoremove --purge  #&& apt-get autoclean && apt-get clean
     # && sed -i "s#export APACHE_LOG_DIR=/var/log/apache2#export APACHE_LOG_DIR=/var/log/supervisor#" /etc/apache2/envvars
 
 COPY init.sh /root/init.sh
@@ -87,11 +84,11 @@ COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY jeedom_apps.conf /etc/supervisor/conf.d/jeedom_apps.conf
 COPY supervisor /etc/logrotate.d/supervisor
 COPY jeedom_plugin /etc/logrotate.d/jeedom_plugin
-RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/
+RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/  ; \
 #VOLUME ["/tmp", "/var/log","/var/www/html/log/"]
+ if [ -n $aptCacher ]; then echo "" > /etc/apt/apt.conf.d/01proxy; fi
 
 HEALTHCHECK --interval=60s --timeout=3s --retries=3 --start-period=40s \
  CMD curl -s --fail http://localhost/here.html || exit 1
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
 
-RUN if [ -n $aptCacher ]; then echo "" > /etc/apt/apt.conf.d/01proxy; fi
