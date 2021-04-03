@@ -19,7 +19,7 @@ CACHE=""
 WHERE="--load"
 
 #exit on error
-set -xe
+set -e
 
 #fonctions
 enableMultiArch() {
@@ -29,19 +29,53 @@ enableMultiArch() {
   docker buildx inspect --bootstrap amd-arm
 }
 
+usage() {
+  echo -e "\n$0:\t [h,l,n,p,v,x]"
+  echo -e "\t-h\tHelp: cette aide"
+  echo -e "\t-l\tload: load into docker only"
+  echo -e "\t-n\tno-cache: force building from scratch"
+  echo -e "\t-p\tload: push to docker hub"
+  echo -e "\t-v\tVersion: 4 or 3"
+  echo -e "\t-x\tVerbose"
+}
+
 #Main
 [[ "$HOSTNAME" =~ holdom ]] && aptCacher=""
 [[ ! -f ${DKRFILE} ]] && echo -e "\nError, Dockerfile is not found\n" && exit 1
 [[ $isMultiArch -eq 0 ]] && echo -e "\nbuildx builder is not mutli arch (arm + x86_64)\n"
-#generateDockerfileARM
 
-# V3
-#VERSION="release"
-#V4
+#Main
+#defaults
 VERSION="V4-stable"
-WHERE="--push"
 WHERE="--load"
-#CACHE="--no-cache"
+CACHE=""
+
+#process options
+while getopts "hlnpv:x" option; do
+  case $option in
+  h)
+    usage
+    exit 1
+    ;;
+  l)
+    WHERE="--load"
+    ;;
+  n)
+    CACHE="--no-cache"
+    ;;
+  p)
+    WHERE="--push"
+    ;;
+  v)
+    [[ 4 -eq ${OPTARG} ]] && VERSION="V4-stable"
+    [[ 3 -eq ${OPTARG} ]] && VERSION="release"
+    ;;
+  x)
+    set -x
+    ;;
+  esac
+done
+
 
 # x86
 DISTRO="debian"
@@ -61,10 +95,7 @@ if [ "${ARCHI}" == "amd64" ]; then
   fi
 fi
 
-# when building multi arch, load is not possible
-#[[ $PTF =~ , ]] && WHERE="--push"
-
-echo -e "\nbuilding $TAG with version $VERSION on os $DISTRO using cache $CACHE and apt cache $aptCacher \n\n"
+echo -e "\nWhere: \e[32m$WHERE\e[0m,  building \e[32m$TAG\e[0m with version \e[32m$VERSION\e[0m on os \e[32m$DISTRO\e[0m using cache \e[32m$CACHE\e[0m and apt cache \e[32m$aptCacher\e[0m for platform \e[32m${PTF}\e[0m\n\n"
 
 docker buildx build ${WHERE} --platform ${PTF} -f ${DKRFILE} --build-arg VERSION=$VERSION \
 --build-arg DISTRO=$DISTRO $CACHE --progress $PROGRESS --build-arg aptCacher=$aptCacher \
