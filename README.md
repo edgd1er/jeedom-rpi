@@ -13,13 +13,24 @@ last build: 21/02/19 (V4.1.20, V3.3.55)
 A Jeedom Docker image for Raspberry Pi based on debian image.
 
 Difference from fork:
-- updated base image
+- update image, install a version at build time
+- use supervisor to handle cron, apache and logs. (allow proper shutdown through PID 1 signal)
+- image is ready to use 
+- updated base image (buster-slim)
 - added https support
 - healthcheck
 - handle services with supervisor.
 - able to redirect apache logs to stdout
+- at build time, can enable xdebug for dev purpose. 
 
-Please note that jeedom version (V3 or v4) will be downloaded during install, so the core project is not embedded.
+Please note that:
+- jeedom version (V3 or v4) will be downloaded during image building, so the core project is the version at build time.
+- upon upgrade, the jeedom_encryption key will be changed, and decryption of encrypted values will be impossible. You can either restore a jeedom backup, save that key and put it back, or have a SQL update query ready to reassign theese values:
+  apipro, apimarket, samba::backup::password, samba::backup::ip, samba::backup::username, ldap:password, ldap:host, ldap:username, dns::token, api
+  (field names are extracted from L27: jeedom_core:/core/class/config.class.php)
+  that key can be generated (genkey core/class/config.class.php) using: `cat /dev/urandom | tr -dc '0-9a-zA-Z' | fold -w 32 | head -1` and mounted as a binded volume
+  Plugins store encrypted values (enedis, may be others ..), so association will have to be done again.
+
 
 Images are build for arm/v6, arm/v7 and amd64
 
@@ -158,6 +169,14 @@ services:
       - ./Docker/allow_root_access.sql:/docker-entrypoint-initdb.d/allow_root_access.sql
       #- ./sqldata:/var/lib/mysql
 ```
+
+### Upgrade
+
+in Jeedom, application, static files and configurations are not always distinct. Container needs a strict separation between application, static files and configuration, either to mount a volume or use a bind volume.
+As a result, jeedom container upgrade is not transparent. many files (static and configurations) are losts. Here is a list of folder where either static or conf files are found:
+
+- /var/www/html/data/jeedom_encryption.key
+
 
 ### Github
 
