@@ -78,8 +78,6 @@ sed -i -E "s/\<VirtualHost \*:(.*)\>/VirtualHost \*:${APACHE_HTTPS_PORT}/" /etc/
 a2ensite default-ssl
 #fix jeedom install.sh for unattended install
 sed -i "s#^MYSQL_JEEDOM_PASSWD=\$.*#MYSQL_JEEDOM_PASSWD=\$\(tr -cd \'a-f0-9\' \< /dev/urandom \| head -c 15\)#" /root/install_docker.sh
-#apt-get for unattended install
-sed -i "s#apt install#apt-get install -y#" /root/install_docker.sh
 
 if [ -f /var/www/html/core/config/common.config.php ]; then
   echo 'Jeedom is already installed'

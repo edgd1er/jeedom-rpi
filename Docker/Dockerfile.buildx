@@ -33,22 +33,21 @@ RUN if [ -n ${aptCacher} ]; then echo "Acquire::http::Proxy \"http://${aptCacher
 	python3 python3-pip nmap xvfb iputils-ping passwd usbutils usb.ids\
     ntp ca-certificates unzip sudo cron locate tar telnet wget logrotate fail2ban dos2unix ntpdate htop \
     iotop vim iftop smbclient git python python-pip libexpat1 ssl-cert \
-    cutycapt duplicity at ffmpeg libsox-fmt-mp3 sox libttspico-utils espeak mariadb-client mariadb-common \
+    cutycapt duplicity at libsox-fmt-mp3 sox libttspico-utils mariadb-client mariadb-common \
     #mbrola removed (not available for armhf )
     #add server apache
-    apache2 apache2-utils libexpat1 ssl-cert ffmpeg\
+    apache2 apache2-utils libexpat1 ssl-cert \
     #cannot install php as php5 or 7 might be option. leave install.sh install needed php package
-    && apt-get -y remove brltty net-tools && apt-get upgrade -y && apt-get autoremove  \
+    && apt-get -y remove -y brltty net-tools && apt-get upgrade -y && apt-get autoremove  \
     && mkdir -p /var/run/sshd -p /var/log/supervisor \
-    # clean caches
-    && apt-get -f autoremove --purge && apt-get autoclean; \
-    #&& rm -rf /var/lib/apt/lists/* \
     # get from jeedom's stable master install files
     echo "install jeedom VERSION: $VERSION" \
     && wget -qO /root/.bashrc -q https://raw.githubusercontent.com/jeedom/core/$VERSION/install/bashrc \
     && wget -qO /root/install_docker.sh -q https://raw.githubusercontent.com/jeedom/core/$VERSION/install/install.sh \
     && wget -qO /etc/motd https://raw.githubusercontent.com/jeedom/core/$VERSION/install/motd  \
     && chmod +x /root/install_docker.sh \
+    #apt-get for unattended install
+    && sed -i "s#apt install#apt-get install -y#" /root/install_docker.sh \
     && echo "root:${SHELL_ROOT_PASSWORD}" | chpasswd \
     ## cut mysql server configuration
     && sed -i 's/systemctl stop mysql/exit 0/' ./root/install_docker.sh \
@@ -72,11 +71,14 @@ RUN if [ -n ${aptCacher} ]; then echo "Acquire::http::Proxy \"http://${aptCacher
     && if [ $VERSION = "release" ]; then /root/install_docker.sh -s 10 -v ${VERSION} \
     else /root/install_docker.sh -s 11 -v ${VERSION}; fi ; \
     #S11 = check
+    update-ca-certificates --fresh ; \
+    apt-get remove -y x11-common; \
     #enable xdebug
     if [ $XDEBUG = "1" ]; then apt-get update && apt-get install -y php-xdebug openssh-server; echo "[xdebug]\nxdebug.remote_enable=1\nxdebug.remote_host=127.0.0.1 \nxdebug.remote_port=9000\nxdebug.remote_enable=On\nxdebug.remote_connect_back=On\nxdebug.idekey=idekey" |tee -a $(find /etc -type f -iwholename  *apache2/php.ini -print); sed -i "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" /etc/ssh/sshd_config ; \
     echo "<?php phpinfo() ?>" > /var/www/html/phpinfo.php ; echo "[program:sshd]\ncommand=/usr/sbin/sshd -D" > /etc/supervisor/conf.d/sshd.conf;fi; \
-    update-ca-certificates --fresh ; rm -rf /var/lib/apt/lists/* ; \
-    apt-get autoremove --purge  #&& apt-get autoclean && apt-get clean
+    # clean caches
+    apt-get autoremove -y --purge && apt-get autoclean; \
+    rm -rf /var/lib/apt/lists/*
     # && sed -i "s#export APACHE_LOG_DIR=/var/log/apache2#export APACHE_LOG_DIR=/var/log/supervisor#" /etc/apache2/envvars
 
 COPY init.sh /root/init.sh
