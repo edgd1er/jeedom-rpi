@@ -11,10 +11,13 @@ ENV MYSQL_JEEDOM_PASSWD jeedom
 ENV MYSQL_JEEDOM_DBNAME jeedom
 ENV MYSQL_JEEDOM_USERNAME jeedom
 ENV MYSQL_JEEDOM_PORT 3306
+ENV XDEBUG 0
+ENV XDEBUG_HOST localhost
+ENV XEBUG_PORT 9003
 ARG VERSION
 ENV VERSION=${VERSION}
-ARG XDEBUG
 ARG aptCacher
+
 
 EXPOSE 80
 EXPOSE 443
@@ -73,9 +76,6 @@ RUN if [ -n ${aptCacher} ]; then echo "Acquire::http::Proxy \"http://${aptCacher
     #S11 = check
     update-ca-certificates --fresh ; \
     apt-get remove -y x11-common; \
-    #enable xdebug
-    if [ $XDEBUG = "1" ]; then apt-get update && apt-get install -y php-xdebug openssh-server; echo "[xdebug]\nxdebug.remote_enable=1\nxdebug.remote_host=127.0.0.1 \nxdebug.remote_port=9000\nxdebug.remote_enable=On\nxdebug.remote_connect_back=On\nxdebug.idekey=idekey" |tee -a $(find /etc -type f -iwholename  *apache2/php.ini -print); sed -i "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" /etc/ssh/sshd_config ; \
-    echo "<?php phpinfo() ?>" > /var/www/html/phpinfo.php ; echo "[program:sshd]\ncommand=/usr/sbin/sshd -D" > /etc/supervisor/conf.d/sshd.conf;fi; \
     # clean caches
     apt-get autoremove -y --purge && apt-get autoclean; \
     rm -rf /var/lib/apt/lists/*
