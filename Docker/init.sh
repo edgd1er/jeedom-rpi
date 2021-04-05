@@ -153,3 +153,22 @@ if [[ ${LOGS_TO_STDOUT,,} =~ y ]]; then
 fi
 
 supervisorctl start apache2
+
+#enable xdebug
+if [ ${XDEBUG:-0} = "1" ]; then
+  apt-get update
+  apt-get install -y php-xdebug openssh-server
+  sed -i "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" /etc/ssh/sshd_config ; \
+  echo "<?php phpinfo() ?>" > /var/www/html/phpinfo.php
+  echo "[xdebug]
+xdebug.remote_eable=true
+#xdebug.remote_connect_back=On
+xdebug.remote_host=${XDEBUG_HOST:-"localhost"}
+xdebug.remote_port=${XDEBUG_PORT:-9003}
+xdebug.log=${XDEBUG_LOGFILE:-"/var/log/apache2/php_debug.log"}
+xdebug.idekey=1" |tee -a $(find /etc -type f -iwholename  *apache2/php.ini -print);
+  echo -e "[program:sshd]\ncommand=/usr/sbin/sshd -D" > /etc/supervisor/conf.d/sshd.conf
+  supervisorctl reload
+  supervisorctl start sshd
+  export XDEBUG_SESSION=1
+fi

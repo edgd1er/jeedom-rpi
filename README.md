@@ -21,7 +21,7 @@ Difference from fork:
 - healthcheck
 - handle services with supervisor.
 - able to redirect apache logs to stdout
-- at build time, can enable xdebug for dev purpose. 
+- at run time, can enable xdebug for dev purpose. (Env var : XDEBUG=1)
 
 Please note that:
 - jeedom version (V3 or v4) will be downloaded during image building, so the core project is the version at build time.
