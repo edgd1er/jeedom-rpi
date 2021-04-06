@@ -167,7 +167,6 @@ xdebug.idekey=1" |tee -a $(find /etc -type f -iwholename  *apache2/php.ini -prin
   echo -e "[program:sshd]\ncommand=/usr/sbin/sshd -D" > /etc/supervisor/conf.d/sshd.conf
   supervisorctl reread
   supervisorctl add sshd
-  supervisorctl start sshd
   export XDEBUG_SESSION=1
 fi
 
