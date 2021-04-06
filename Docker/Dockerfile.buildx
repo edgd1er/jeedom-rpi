@@ -44,7 +44,7 @@ RUN if [ -n ${aptCacher} ]; then echo "Acquire::http::Proxy \"http://${aptCacher
     && apt-get -y remove -y brltty net-tools && apt-get upgrade -y && apt-get autoremove  \
     && mkdir -p /var/run/sshd -p /var/log/supervisor \
     # get from jeedom's stable master install files
-    echo "install jeedom VERSION: $VERSION" \
+    && echo "install jeedom VERSION: $VERSION" \
     && wget -qO /root/.bashrc -q https://raw.githubusercontent.com/jeedom/core/$VERSION/install/bashrc \
     && wget -qO /root/install_docker.sh -q https://raw.githubusercontent.com/jeedom/core/$VERSION/install/install.sh \
     && wget -qO /etc/motd https://raw.githubusercontent.com/jeedom/core/$VERSION/install/motd  \
@@ -66,7 +66,7 @@ RUN if [ -n ${aptCacher} ]; then echo "Acquire::http::Proxy \"http://${aptCacher
     # s6 install jeedom download
     && /root/install_docker.sh -s 6 -v ${VERSION} \
 	#Step 7 = apache SSL + php conf + mysql server conf
-    /root/install_docker.sh -s 7 -v ${VERSION} \
+    && /root/install_docker.sh -s 7 -v ${VERSION} \
     # Next steps are executed in init.
     #S8 =  db param done when running docker.
     #S9 =  install.php done when running docker.
@@ -74,11 +74,11 @@ RUN if [ -n ${aptCacher} ]; then echo "Acquire::http::Proxy \"http://${aptCacher
     && if [ $VERSION = "release" ]; then /root/install_docker.sh -s 10 -v ${VERSION} \
     else /root/install_docker.sh -s 11 -v ${VERSION}; fi ; \
     #S11 = check
-    update-ca-certificates --fresh ; \
-    apt-get remove -y x11-common; \
+    update-ca-certificates --fresh \
+    && apt-get remove -y x11-common \
     # clean caches
-    apt-get autoremove -y --purge && apt-get autoclean; \
-    rm -rf /var/lib/apt/lists/*
+    && apt-get autoremove -y --purge && apt-get autoclean \
+    && rm -rf /var/lib/apt/lists/*
     # && sed -i "s#export APACHE_LOG_DIR=/var/log/apache2#export APACHE_LOG_DIR=/var/log/supervisor#" /etc/apache2/envvars
 
 COPY init.sh /root/init.sh
@@ -86,7 +86,7 @@ COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY jeedom_apps.conf /etc/supervisor/conf.d/jeedom_apps.conf
 COPY supervisor /etc/logrotate.d/supervisor
 COPY jeedom_plugin /etc/logrotate.d/jeedom_plugin
-RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/  ; \
+RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/  && \
 #VOLUME ["/tmp", "/var/log","/var/www/html/log/"]
  if [ -n $aptCacher ]; then echo "" > /etc/apt/apt.conf.d/01proxy; fi
 

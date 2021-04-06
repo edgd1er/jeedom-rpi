@@ -53,7 +53,6 @@ step_8_jeedom_configuration() {
 if [[ 1 -eq ${DEBUG:-0} ]]; then
   set -x
   SETX="-x"
-  supervisorctl start sshd
   else
     SETX=""
 fi
@@ -152,8 +151,6 @@ if [[ ${LOGS_TO_STDOUT,,} =~ y ]]; then
   ln -sf /proc/1/fd/1 /var/log/apache2/error.log
 fi
 
-supervisorctl start apache2
-
 #enable xdebug
 if [ ${XDEBUG:-0} = "1" ]; then
   apt-get update
@@ -168,7 +165,10 @@ xdebug.remote_port=${XDEBUG_PORT:-9003}
 xdebug.log=${XDEBUG_LOGFILE:-"/var/log/apache2/php_debug.log"}
 xdebug.idekey=1" |tee -a $(find /etc -type f -iwholename  *apache2/php.ini -print);
   echo -e "[program:sshd]\ncommand=/usr/sbin/sshd -D" > /etc/supervisor/conf.d/sshd.conf
-  supervisorctl reload
+  supervisorctl reread
+  supervisorctl add sshd
   supervisorctl start sshd
   export XDEBUG_SESSION=1
 fi
+
+supervisorctl start apache2
