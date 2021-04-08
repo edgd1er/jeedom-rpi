@@ -8,7 +8,7 @@ Forked from https://github.com/CodaFog/jeedom-rpi
 [![Docker Stars](https://img.shields.io/docker/stars/edgd1er/jeedom-rpi.svg?maxAge=604800)](https://store.docker.com/community/images/edgd1er/jeedom-rpi)
 [![Docker Pulls](https://img.shields.io/docker/pulls/edgd1er/jeedom-rpi.svg?maxAge=604800)](https://store.docker.com/community/images/edgd1er/jeedom-rpi)
 
-last build: 21/02/19 (V4.1.20, V3.3.55)
+last build: 8/04/21 (V4.1.20, V3.3.55)
 
 A Jeedom Docker image for Raspberry Pi based on debian image.
 
@@ -20,12 +20,12 @@ Difference from fork:
 - added https support
 - healthcheck
 - handle services with supervisor.
-- able to redirect apache logs to stdout
+- able to redirect apache logs to stdout ( disable fail2ban as logs are not files anymore)
 - at run time, can enable xdebug for dev purpose. (Env var : XDEBUG=1)
 
 Please note that:
 - jeedom version (V3 or v4) will be downloaded during image building, so the core project is the version at build time.
-- upon upgrade, the jeedom_encryption key will be changed, and decryption of encrypted values will be impossible. You can either restore a jeedom backup, save that key and put it back, or have a SQL update query ready to reassign theese values:
+- upon upgrade, if no environment variable `JEEDOM_ENC_KEY` is set, the jeedom_encryption key will be changed, and decryption of encrypted values will be impossible. You can either restore a jeedom backup, set the `JEEDOM_ENC_KEY` variable, or have a SQL update query ready to reassign these values:
   apipro, apimarket, samba::backup::password, samba::backup::ip, samba::backup::username, ldap:password, ldap:host, ldap:username, dns::token, api
   (field names are extracted from L27: jeedom_core:/core/class/config.class.php)
   that key can be generated (genkey core/class/config.class.php) using: `cat /dev/urandom | tr -dc '0-9a-zA-Z' | fold -w 32 | head -1` and mounted as a binded volume
