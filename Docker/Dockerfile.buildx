@@ -49,13 +49,22 @@ RUN if [ -n ${aptCacher} ]; then echo "Acquire::http::Proxy \"http://${aptCacher
     && wget -qO /root/install_docker.sh -q https://raw.githubusercontent.com/jeedom/core/$VERSION/install/install.sh \
     && wget -qO /etc/motd https://raw.githubusercontent.com/jeedom/core/$VERSION/install/motd  \
     && chmod +x /root/install_docker.sh \
+    ##########################################
+    # Adapt install_docker to docker
+    #fix jeedom install.sh for unattended install
+    && sed -i "s#MYSQL_JEEDOM_PASSWD=.*#MYSQL_JEEDOM_PASSWD=\$\(tr -cd \'a-f0-9\' \< /dev/urandom \| head -c 15\)#" /root/install_docker.sh \
+    #fix jeedom-core, allowing to define mysql not being local
+    && sed -i -E "s#mysql -uroot($| )#mysql -uroot -p\${MYSQL_ROOT_PASSWD} -h \${MYSQL_JEEDOM_HOST} -P\${MYSQL_JEEDOM_PORT} \${MYSQL_JEEDOM_DBNAME} #g" /root/install_docker.sh \
+    && grep "^MYSQL_JEEDOM_PASSWD=" /root/install_docker.sh \
+    && grep "mysql -uroot" /root/install_docker.sh \
     #apt-get for unattended install
     && sed -i "s#apt install#apt-get install -y#" /root/install_docker.sh \
-    && echo "root:${SHELL_ROOT_PASSWORD}" | chpasswd \
     ## cut mysql server configuration
-    && sed -i 's/systemctl stop mysql/exit 0/' ./root/install_docker.sh \
+    && sed -i 's/service_action stop mysql/return 0/' /root/install_docker.sh \
     # set jeedom version v3 or v4
-    && sed -i "s/VERSION=V4-stable/VERSION=${VERSION}/g" ./root/install_docker.sh \
+    && sed -i "s/VERSION=V4-stable/VERSION=\${VERSION}/g" /root/install_docker.sh \
+    ########################################## \
+    && echo "root:${SHELL_ROOT_PASSWORD}" | chpasswd \
     # step 2 install mainpackage
     && /root/install_docker.sh -s 2 -v ${VERSION}\
     # step 3 install mysql server
@@ -74,13 +83,12 @@ RUN if [ -n ${aptCacher} ]; then echo "Acquire::http::Proxy \"http://${aptCacher
     #v3 s10 = post install (cron ) / v4: install.php done at runtime.
     #v4 s11 = none / v4: post install (cron )
     && if [ $VERSION = "release" ]; then /root/install_docker.sh -s 10 -v ${VERSION} \
-    else /root/install_docker.sh -s 8 -v ${VERSION};/root/install_docker.sh -s 11 -v ${VERSION}; fi ; \
-    update-ca-certificates --fresh \
+    else /root/install_docker.sh -s 8 -v ${VERSION};/root/install_docker.sh -s 11 -v ${VERSION}; fi \
+    && update-ca-certificates --fresh \
     && apt-get remove -y x11-common \
     # clean caches \
     && apt-get autoremove -y --purge && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/*
-    # && sed -i "s#export APACHE_LOG_DIR=/var/log/apache2#export APACHE_LOG_DIR=/var/log/supervisor#" /etc/apache2/envvars
 
 COPY init.sh /root/init.sh
 COPY supervisord.conf /etc/supervisor/supervisord.conf

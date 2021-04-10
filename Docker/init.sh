@@ -7,7 +7,7 @@ LOGS_TO_STDOUT=${LOGS_TO_STDOUT:-"n"}
 SETX=""
 XDEBUG=${XDEBUG:-0}
 ##Functions
-setTimeZone(){
+setTimeZone() {
   [[ ${TZ} == $(cat /etc/timezone) ]] && return
   echo "Setting timezone to ${TZ}"
   ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime
@@ -32,13 +32,13 @@ step_8_mysql_create_db() {
   echo "${JAUNE}commence l'étape 8 configuration de mysql ${NORMAL}"
   isDB=$(mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} -BNe "show databases;" | grep -c ${MYSQL_JEEDOM_DBNAME})
   [[ 0 -eq ${isDB} ]] && mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} -e "CREATE DATABASE ${MYSQL_JEEDOM_DBNAME};"
-  isUser=$(mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT}  -BNe "select user from mysql.user where user='jeedom';" | wc -l )
+  isUser=$(mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} -BNe "select user from mysql.user where user='jeedom';" | wc -l)
   [[ 0 -eq ${isUser} ]] && mysql_sql "CREATE USER '${MYSQL_JEEDOM_USERNAME}'@'%' IDENTIFIED BY '${MYSQL_JEEDOM_PASSWD}';"
   mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} -e "GRANT ALL PRIVILEGES ON ${MYSQL_JEEDOM_DBNAME}.* TO '${MYSQL_JEEDOM_USERNAME}'@'%';"
 }
 
 step_8_jeedom_configuration() {
-  echo "-------------------------Step 8 DB credentials------------------------------------------"
+  echo "Etape 8: informations de login pour la BDD"
   cp ${WEBSERVER_HOME}/core/config/common.config.sample.php ${WEBSERVER_HOME}/core/config/common.config.php
   sed -i "s/#PASSWORD#/${MYSQL_JEEDOM_PASSWD}/g" ${WEBSERVER_HOME}/core/config/common.config.php
   sed -i "s/#DBNAME#/${MYSQL_JEEDOM_DBNAME}/g" ${WEBSERVER_HOME}/core/config/common.config.php
@@ -46,22 +46,20 @@ step_8_jeedom_configuration() {
   sed -i "s/#PORT#/${MYSQL_JEEDOM_PORT}/g" ${WEBSERVER_HOME}/core/config/common.config.php
   sed -i "s/#HOST#/${MYSQL_JEEDOM_HOST}/g" ${WEBSERVER_HOME}/core/config/common.config.php
 
-
-
-  echo "-------------------------Step 8 apache sites conf ------------------------------------------"
+  echo "Etape 8: Configuration des sites Web sur Apache"
   cp ${WEBSERVER_HOME}/install/apache_security /etc/apache2/conf-available/security.conf
   sed -i -e "s%WEBSERVER_HOME%${WEBSERVER_HOME}%g" /etc/apache2/conf-available/security.conf
 
-  rm /etc/apache2/conf-enabled/security.conf > /dev/null 2>&1
+  rm /etc/apache2/conf-enabled/security.conf >/dev/null 2>&1
   ln -s /etc/apache2/conf-available/security.conf /etc/apache2/conf-enabled/
 
   cp ${WEBSERVER_HOME}/install/apache_default /etc/apache2/sites-available/000-default.conf
   sed -i -e "s%WEBSERVER_HOME%${WEBSERVER_HOME}%g" /etc/apache2/sites-available/000-default.conf
-  rm /etc/apache2/sites-enabled/000-default.conf > /dev/null 2>&1
+  rm /etc/apache2/sites-enabled/000-default.conf >/dev/null 2>&1
   ln -s /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-enabled/
 
-  [[ -f /etc/apache2/conf-available/other-vhosts-access-log.conf ]] && rm /etc/apache2/conf-available/other-vhosts-access-log.conf > /dev/null 2>&1
-  [[ -f /etc/apache2/conf-enabled/other-vhosts-access-log.conf ]] && rm /etc/apache2/conf-enabled/other-vhosts-access-log.conf > /dev/null 2>&1
+  [[ -f /etc/apache2/conf-available/other-vhosts-access-log.conf ]] && rm /etc/apache2/conf-available/other-vhosts-access-log.conf >/dev/null 2>&1
+  [[ -f /etc/apache2/conf-enabled/other-vhosts-access-log.conf ]] && rm /etc/apache2/conf-enabled/other-vhosts-access-log.conf >/dev/null 2>&1
 
   chmod 775 -R ${WEBSERVER_HOME}
   chown -R www-data:www-data ${WEBSERVER_HOME}
@@ -71,7 +69,7 @@ step_8_jeedom_configuration() {
 
 ### Main
 # execute all install scripts with -x
-if [[ 1 -eq ${DEBUG} ]] ; then
+if [[ 1 -eq ${DEBUG} ]]; then
   set -x
   sed -i "s#bin/sh#bin/sh -x#" /root/install_docker.sh
 fi
@@ -86,14 +84,14 @@ if [[ -n ${JEEDOM_ENC_KEY} ]]; then
   #write jeedom encryption key if different
   if [[ "$(cat /var/www/html/data/jeedom_encryption.key)" != "${JEEDOM_ENC_KEY}" ]]; then
     echo "Writing jeedom encryption key as defined in env"
-    echo "${JEEDOM_ENC_KEY}" > /var/www/html/data/jeedom_encryption.key
+    echo "${JEEDOM_ENC_KEY}" >/var/www/html/data/jeedom_encryption.key
     #echo "update user set password='admin' where login='admin'" | mysql -u${MYSQL_JEEDOM_USERNAME} -p${MYSQL_JEEDOM_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} -D${MYSQL_JEEDOM_DBNAME}
   fi
 fi
 
 #set root password
 if [ -z ${ROOT_PASSWORD} ]; then
-  ROOT_PASSWORD=$(tr -cd 'a-f0-9' < /dev/urandom | head -c 20)
+  ROOT_PASSWORD=$(tr -cd 'a-f0-9' </dev/urandom | head -c 20)
   echo "Use generate password : ${ROOT_PASSWORD}"
 fi
 echo "root:${ROOT_PASSWORD}" | chpasswd
@@ -128,21 +126,21 @@ else
     sleep 5
   done
   #mysql is not local to jeedom container
-  # create helper reset password
-  sed "s/^\$username = .*/\$username = \"\$argv[1]\";/" /var/www/html/install/reset_password.php > /var/www/html/install/reset_password_admin.php;
-  sed -i "s/^\$password = .*/\$password = \"\$argv[2]\";/" /var/www/html/install/reset_password_admin.php;
-
   #set db creds
   step_8_jeedom_configuration
   #create database if needed
   step_8_mysql_create_db
   if [[ "release" == "$VERSION" ]]; then
     #V3
+    echo "V3 is EOL (End of Life), V4.1 is the suggested version. V4.0 is legacy"
     #S9 =  install.php done when running docker.
     #broken /root/install_docker.sh -s 9
     #DBCLass is looking for language before having created the schema.
-    isTables=$(mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT}  ${MYSQL_JEEDOM_DBNAME} -e "show tables;" | wc -l)
-    [[ 0 -eq ${isTables} ]] && mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT}  ${MYSQL_JEEDOM_DBNAME} < /var/www/html/install/install.sql
+    isTables=$(mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} ${MYSQL_JEEDOM_DBNAME} -e "show tables;" | wc -l)
+    if [[ 0 -eq ${isTables} ]]; then
+      echo "Mysql jeedom schema is created as no table were found, and install is bugged and check for languga in config table before creating the schema"
+      mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} ${MYSQL_JEEDOM_DBNAME} </var/www/html/install/install.sql
+    fi
     #s10 = post install (cron ) /s11 for v4
     /root/install_docker.sh -s 10
     #s11 = jeedom check
@@ -150,11 +148,14 @@ else
   else
     #V4-stable
     cp ${WEBSERVER_HOME}/install/fail2ban.jeedom.conf /etc/fail2ban/jail.d/jeedom.conf
+    # create helper reset password
+    sed "s/^\$username = .*/\$username = \"\$argv[1]\";/" /var/www/html/install/reset_password.php >/var/www/html/install/reset_password_admin.php
+    sed -i "s/^\$password = .*/\$password = \"\$argv[2]\";/" /var/www/html/install/reset_password_admin.php
     #remove admin password save if already exists in db
-    isTables=$(mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT}  ${MYSQL_JEEDOM_DBNAME} -e "show tables;" | wc -l)
-    if [[ 1 -eq $isTables ]]; then
+    isTables=$(mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} ${MYSQL_JEEDOM_DBNAME} -e "show tables;" | wc -l)
+    if [[ ${isTables:-0} -gt 0 ]]; then
       echo "User admin already exists, removing its creation"
-      sed -i 's/\$user->save();//' /var/www/html/install/install.php
+      sed -i '/\$user->save();/d' /var/www/html/install/install.php
     else
       echo "User admin does not exists, install will install it."
     fi
@@ -167,8 +168,8 @@ else
     #s12 = jeedom_check
     /root/install_docker.sh -s 12
     #force reset when admin already exists
-    [[ 1 -eq ${res} ]] && php /var/www/html/install/reset_password_admin.php admin admin
-    update-ca-certificates --fresh
+    [[ 1 -eq ${res} ]] && echo "Resetting admin password to admin" && php /var/www/html/install/reset_password_admin.php admin admin
+    # update-ca-certificates --fresh
   fi
 fi
 
@@ -181,34 +182,35 @@ chmod 777 /dev/tty*
 #needed when using tempfs
 mkdir -p /var/log/supervisor/ -p /run/lock/ -p /var/log/apache2/ -p /var/log/fail2ban -p /var/run/fail2ban
 
-if [[ ${LOGS_TO_STDOUT,,} =~ y ]]; then
-  echo "Send apache logs to stdout/err"
-  [[ -f /var/log/apache2/access.log ]] && mv /var/log/apache2/{access,error}.log /var/log/apache2/access_.log && mv /var/log/apache2/error.log /var/log/apache2/error_.log
-  ln -sf /proc/1/fd/1 /var/log/apache2/access.log
-  ln -sf /proc/1/fd/1 /var/log/apache2/error.log
-  else
-    [[ -L /var/log/apache2/access.log ]] && rm -f /var/log/apache2/{access,error}.log && echo "Remove apache symlink to stdout/stderr" || echo
-    #cannot start fail2ban when logs are redirected
-    supervisorctl start fail2ban
-fi
-
 #enable xdebug
 if [ ${XDEBUG:-0} = "1" ]; then
   apt-get update
   apt-get install -y php-xdebug openssh-server
-  sed -i "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" /etc/ssh/sshd_config ; \
-  echo "<?php phpinfo() ?>" > /var/www/html/phpinfo.php
+  sed -i "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" /etc/ssh/sshd_config
+  echo "<?php phpinfo() ?>" >/var/www/html/phpinfo.php
   echo "[xdebug]
 xdebug.remote_eable=true
 #xdebug.remote_connect_back=On
 xdebug.remote_host=${XDEBUG_HOST:-"localhost"}
 xdebug.remote_port=${XDEBUG_PORT:-9003}
 xdebug.log=${XDEBUG_LOGFILE:-"/var/log/apache2/php_debug.log"}
-xdebug.idekey=1" |tee -a $(find /etc -type f -iwholename  *apache2/php.ini -print);
-  echo -e "[program:sshd]\ncommand=/usr/sbin/sshd -D" > /etc/supervisor/conf.d/sshd.conf
+xdebug.idekey=1" | tee -a $(find /etc -type f -iwholename *apache2/php.ini -print)
+  echo -e "[program:sshd]\ncommand=/usr/sbin/sshd -D" >/etc/supervisor/conf.d/sshd.conf
   supervisorctl reread
   supervisorctl add sshd
   export XDEBUG_SESSION=1
 fi
 
+if [[ ${LOGS_TO_STDOUT,,} =~ y ]]; then
+  echo "Send apache logs to stdout/err"
+  [[ -f /var/log/apache2/access.log ]] && mv /var/log/apache2/{access,error}.log /var/log/apache2/access_.log && mv /var/log/apache2/error.log /var/log/apache2/error_.log
+  ln -sf /proc/1/fd/1 /var/log/apache2/access.log
+  ln -sf /proc/1/fd/1 /var/log/apache2/error.log
+else
+  [[ -L /var/log/apache2/access.log ]] && rm -f /var/log/apache2/{access,error}.log && echo "Remove apache symlink to stdout/stderr" || echo
+fi
+
 supervisorctl start apache2
+#wait for logs file to be created
+#cannot start fail2ban when logs are redirected
+[[ ${LOGS_TO_STDOUT,,} =~ n ]] && supervisorctl start fail2ban || echo
