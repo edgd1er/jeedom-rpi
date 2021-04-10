@@ -22,6 +22,7 @@ Difference from fork:
 - handle services with supervisor.
 - able to redirect apache logs to stdout ( disable fail2ban as logs are not files anymore)
 - at run time, can enable xdebug for dev purpose. (Env var : XDEBUG=1)
+- WIP: fail2ban not starting, sqlite database to move /etc/fail2ban/fail2ban.conf:# Values: [ None :memory: FILE ] Default: /var/lib/fail2ban/fail2ban.sqlite3
 
 Please note that:
 - jeedom version (V3 or v4) will be downloaded during image building, so the core project is the version at build time.
