@@ -30,11 +30,11 @@ mysql_sql() {
 step_8_mysql_create_db() {
   echo "---------------------------------------------------------------------"
   echo "${JAUNE}commence l'étape 8 configuration de mysql ${NORMAL}"
-  #mysql_sql "DROP USER '${MYSQL_JEEDOM_USERNAME}'@'%';"
-  #mysql_sql "CREATE USER '${MYSQL_JEEDOM_USERNAME}'@'%' IDENTIFIED BY '${MYSQL_JEEDOM_PASSWD}';"
-  #mysql_sql "DROP DATABASE IF EXISTS ${MYSQL_JEEDOM_DBNAME};"
-  #mysql_sql "CREATE DATABASE ${MYSQL_JEEDOM_DBNAME};"
-  mysql_sql "GRANT ALL PRIVILEGES ON ${MYSQL_JEEDOM_DBNAME}.* TO '${MYSQL_JEEDOM_USERNAME}'@'%';"
+  isDB=$(mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} -BNe "show databases;" | grep -c ${MYSQL_JEEDOM_DBNAME})
+  [[ 0 -eq ${isDB} ]] && mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} -e "CREATE DATABASE ${MYSQL_JEEDOM_DBNAME};"
+  isUser=$(mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT}  -BNe "select user from mysql.user where user='jeedom';" | wc -l )
+  [[ 0 -eq ${isUser} ]] && mysql_sql "CREATE USER '${MYSQL_JEEDOM_USERNAME}'@'%' IDENTIFIED BY '${MYSQL_JEEDOM_PASSWD}';"
+  mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} -e "GRANT ALL PRIVILEGES ON ${MYSQL_JEEDOM_DBNAME}.* TO '${MYSQL_JEEDOM_USERNAME}'@'%';"
 }
 
 step_8_jeedom_configuration() {
@@ -49,8 +49,6 @@ step_8_jeedom_configuration() {
 
 
   echo "-------------------------Step 8 apache sites conf ------------------------------------------"
-  cp ${WEBSERVER_HOME}/install/fail2ban.jeedom.conf /etc/fail2ban/jail.d/jeedom.conf
-
   cp ${WEBSERVER_HOME}/install/apache_security /etc/apache2/conf-available/security.conf
   sed -i -e "s%WEBSERVER_HOME%${WEBSERVER_HOME}%g" /etc/apache2/conf-available/security.conf
 
@@ -62,8 +60,8 @@ step_8_jeedom_configuration() {
   rm /etc/apache2/sites-enabled/000-default.conf > /dev/null 2>&1
   ln -s /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-enabled/
 
-  rm /etc/apache2/conf-available/other-vhosts-access-log.conf > /dev/null 2>&1
-  rm /etc/apache2/conf-enabled/other-vhosts-access-log.conf > /dev/null 2>&1
+  [[ -f /etc/apache2/conf-available/other-vhosts-access-log.conf ]] && rm /etc/apache2/conf-available/other-vhosts-access-log.conf > /dev/null 2>&1
+  [[ -f /etc/apache2/conf-enabled/other-vhosts-access-log.conf ]] && rm /etc/apache2/conf-enabled/other-vhosts-access-log.conf > /dev/null 2>&1
 
   chmod 775 -R ${WEBSERVER_HOME}
   chown -R www-data:www-data ${WEBSERVER_HOME}
@@ -72,17 +70,6 @@ step_8_jeedom_configuration() {
 }
 
 ### Main
-
-# check if env jeedom encryption key is defined
-if [[ -n ${JEEDOM_ENC_KEY} ]]; then
-  #write jeedom encryption key if different
-  if [[ "$(cat /var/www/html/data/jeedom_encryption.key)" != "${JEEDOM_ENC_KEY}" ]]; then
-    echo "Writing jeedom encryption key as defined in env"
-    echo "${JEEDOM_ENC_KEY}" > /var/www/html/data/jeedom_encryption.key
-    echo "update user set password='admin' where login='admin'" | mysql -u${MYSQL_JEEDOM_USERNAME} -p${MYSQL_JEEDOM_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} -D${MYSQL_JEEDOM_DBNAME}
-  fi
-fi
-
 # execute all install scripts with -x
 if [[ 1 -eq ${DEBUG} ]] ; then
   set -x
@@ -94,9 +81,19 @@ if ! [ -f /.dockerinit ]; then
   chmod 755 /.dockerinit
 fi
 
+# check if env jeedom encryption key is defined
+if [[ -n ${JEEDOM_ENC_KEY} ]]; then
+  #write jeedom encryption key if different
+  if [[ "$(cat /var/www/html/data/jeedom_encryption.key)" != "${JEEDOM_ENC_KEY}" ]]; then
+    echo "Writing jeedom encryption key as defined in env"
+    echo "${JEEDOM_ENC_KEY}" > /var/www/html/data/jeedom_encryption.key
+    #echo "update user set password='admin' where login='admin'" | mysql -u${MYSQL_JEEDOM_USERNAME} -p${MYSQL_JEEDOM_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} -D${MYSQL_JEEDOM_DBNAME}
+  fi
+fi
+
 #set root password
 if [ -z ${ROOT_PASSWORD} ]; then
-  ROOT_PASSWORD=$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 20)
+  ROOT_PASSWORD=$(tr -cd 'a-f0-9' < /dev/urandom | head -c 20)
   echo "Use generate password : ${ROOT_PASSWORD}"
 fi
 echo "root:${ROOT_PASSWORD}" | chpasswd
@@ -112,6 +109,7 @@ sed -i -E "s/\<VirtualHost \*:(.*)\>/VirtualHost \*:${APACHE_HTTPS_PORT}/" /etc/
 if [ -f /var/www/html/core/config/common.config.php ]; then
   echo 'Jeedom is already installed'
 else
+  [[ ! -f /root/install_docker.sh ]] && echo -e "\n*************** ERROR, no /root/install_docker.sh file ***********\n" && exit
   #allow fail2ban to start even on docker
   touch /var/log/auth.log
   #generate db param
@@ -134,21 +132,27 @@ else
   sed "s/^\$username = .*/\$username = \"\$argv[1]\";/" /var/www/html/install/reset_password.php > /var/www/html/install/reset_password_admin.php;
   sed -i "s/^\$password = .*/\$password = \"\$argv[2]\";/" /var/www/html/install/reset_password_admin.php;
 
-  #step_8_mysql_create_db
+  #set db creds
   step_8_jeedom_configuration
+  #create database if needed
+  step_8_mysql_create_db
   if [[ "release" == "$VERSION" ]]; then
     #V3
     #S9 =  install.php done when running docker.
-    /root/install_docker.sh -s 9
+    #broken /root/install_docker.sh -s 9
+    #DBCLass is looking for language before having created the schema.
+    isTables=$(mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT}  ${MYSQL_JEEDOM_DBNAME} -e "show tables;" | wc -l)
+    [[ 0 -eq ${isTables} ]] && mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT}  ${MYSQL_JEEDOM_DBNAME} < /var/www/html/install/install.sql
     #s10 = post install (cron ) /s11 for v4
     /root/install_docker.sh -s 10
     #s11 = jeedom check
     /root/install_docker.sh -s 11
   else
     #V4-stable
+    cp ${WEBSERVER_HOME}/install/fail2ban.jeedom.conf /etc/fail2ban/jail.d/jeedom.conf
     #remove admin password save if already exists in db
-    res=$(mysql -BNr -u${MYSQL_JEEDOM_USERNAME} -p${MYSQL_JEEDOM_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} ${MYSQL_JEEDOM_DBNAME} -e "select count(login) from user where login = 'admin';")
-    if [[ 1 -eq $res ]]; then
+    isTables=$(mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT}  ${MYSQL_JEEDOM_DBNAME} -e "show tables;" | wc -l)
+    if [[ 1 -eq $isTables ]]; then
       echo "User admin already exists, removing its creation"
       sed -i 's/\$user->save();//' /var/www/html/install/install.php
     else
@@ -164,7 +168,7 @@ else
     /root/install_docker.sh -s 12
     #force reset when admin already exists
     [[ 1 -eq ${res} ]] && php /var/www/html/install/reset_password_admin.php admin admin
-
+    update-ca-certificates --fresh
   fi
 fi
 

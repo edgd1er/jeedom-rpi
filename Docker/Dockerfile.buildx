@@ -59,6 +59,7 @@ RUN if [ -n ${aptCacher} ]; then echo "Acquire::http::Proxy \"http://${aptCacher
     # step 2 install mainpackage
     && /root/install_docker.sh -s 2 -v ${VERSION}\
     # step 3 install mysql server
+    && echo "Etape 3: non faite: installation en local de la BDD" \
     # install apache
     && /root/install_docker.sh -s 4 -v ${VERSION} \
     # s5 install php
