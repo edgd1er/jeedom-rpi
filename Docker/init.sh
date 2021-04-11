@@ -3,6 +3,8 @@
 set -e
 
 #Variables
+VERT="\\033[1;32m"
+NORMAL="\\033[0;39m"
 LOGS_TO_STDOUT=${LOGS_TO_STDOUT:-"n"}
 SETX=""
 XDEBUG=${XDEBUG:-0}
@@ -38,7 +40,7 @@ step_8_mysql_create_db() {
 }
 
 step_8_jeedom_configuration() {
-  echo "Etape 8: informations de login pour la BDD"
+  echo "${VERT}Etape 8: informations de login pour la BDD${NORMAL}"
   cp ${WEBSERVER_HOME}/core/config/common.config.sample.php ${WEBSERVER_HOME}/core/config/common.config.php
   sed -i "s/#PASSWORD#/${MYSQL_JEEDOM_PASSWD}/g" ${WEBSERVER_HOME}/core/config/common.config.php
   sed -i "s/#DBNAME#/${MYSQL_JEEDOM_DBNAME}/g" ${WEBSERVER_HOME}/core/config/common.config.php
@@ -46,7 +48,7 @@ step_8_jeedom_configuration() {
   sed -i "s/#PORT#/${MYSQL_JEEDOM_PORT}/g" ${WEBSERVER_HOME}/core/config/common.config.php
   sed -i "s/#HOST#/${MYSQL_JEEDOM_HOST}/g" ${WEBSERVER_HOME}/core/config/common.config.php
 
-  echo "Etape 8: Configuration des sites Web sur Apache"
+  echo "${VERT}Etape 8: Configuration des sites Web sur Apache${NORMAL}"
   cp ${WEBSERVER_HOME}/install/apache_security /etc/apache2/conf-available/security.conf
   sed -i -e "s%WEBSERVER_HOME%${WEBSERVER_HOME}%g" /etc/apache2/conf-available/security.conf
 
@@ -145,6 +147,9 @@ else
     /root/install_docker.sh -s 10
     #s11 = jeedom check
     /root/install_docker.sh -s 11
+    #reset admin password
+    echo "${VERT}Admin password is now admin${NORMAL}"
+    mysql_sql "use ${MYSQL_JEEDOM_DBNAME};REPLACE INTO user SET login='admin',password='c7ad44cbad762a5da0a452f9e854fdc1e0e7a52a38015f23f3eab1d80b931dd472634dfac71cd34ebc35d16ab7fb8a90c81f975113d6c7538dc69dd8de9077ec',profils='admin', enable='1';"
   else
     #V4-stable
     cp ${WEBSERVER_HOME}/install/fail2ban.jeedom.conf /etc/fail2ban/jail.d/jeedom.conf
@@ -168,7 +173,7 @@ else
     #s12 = jeedom_check
     /root/install_docker.sh -s 12
     #force reset when admin already exists
-    [[ 1 -eq ${res} ]] && echo "Resetting admin password to admin" && php /var/www/html/install/reset_password_admin.php admin admin
+    [[ 1 -eq ${res} ]] && echo "Admin password, now, is admin" && php /var/www/html/install/reset_password_admin.php admin admin
     # update-ca-certificates --fresh
   fi
 fi
