@@ -60,7 +60,10 @@ RUN if [ -n ${aptCacher} ]; then echo "Acquire::http::Proxy \"http://${aptCacher
     #apt-get for unattended install
     && sed -i "s#apt install#apt-get install -y#" /root/install_docker.sh \
     ## cut mysql server configuration
+    #V4
     && sed -i 's/service_action stop mysql/return 0/' /root/install_docker.sh \
+    #V3
+    && sed -i 's/systemctl stop mysql/return 0/' /root/install_docker.sh \
     # set jeedom version v3 or v4
     && sed -i "s/VERSION=V4-stable/VERSION=\${VERSION}/g" /root/install_docker.sh \
     ########################################## \
