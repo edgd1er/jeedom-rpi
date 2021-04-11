@@ -66,7 +66,12 @@ step_8_jeedom_configuration() {
   chmod 775 -R ${WEBSERVER_HOME}
   chown -R www-data:www-data ${WEBSERVER_HOME}
   echo "${VERT}étape 8 configuration de jeedom réussie${NORMAL}"
+}
 
+checkCerts(){
+  ret=0
+  [[ $(echo | openssl s_client -servername market.jeedom.com -connect market.jeedom.com:443 2>&1) =~ Verify\ return\ code:\ ([0-9]{1,2}) ]] && ret=${BASH_REMATCH[1]}
+  [[ 0 -ne ${ret} ]] && echo "Refresh ca certs" && update-ca-certificates --fresh || echo "ca certs are up to date"
 }
 
 ### Main
@@ -214,6 +219,8 @@ if [[ ${LOGS_TO_STDOUT,,} =~ y ]]; then
 else
   [[ -L /var/log/apache2/access.log ]] && rm -f /var/log/apache2/{access,error}.log && echo "Remove apache symlink to stdout/stderr" || echo
 fi
+
+checkCerts
 
 supervisorctl start apache2
 #wait for logs file to be created
