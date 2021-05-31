@@ -8,6 +8,7 @@ NORMAL="\\033[0;39m"
 LOGS_TO_STDOUT=${LOGS_TO_STDOUT:-"n"}
 SETX=""
 XDEBUG=${XDEBUG:-0}
+
 ##Functions
 setTimeZone() {
   [[ ${TZ} == $(cat /etc/timezone) ]] && return
@@ -23,7 +24,7 @@ mysql_sql() {
     echo "$@" | mysql -u${MYSQL_JEEDOM_USERNAME} -p${MYSQL_JEEDOM_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT}
   fi
   if [ $? -ne 0 ]; then
-    echo "C${ROUGE}Ne peut exécuter $@ dans MySQL - Annulation${NORMAL}"
+    echo "${ROUGE}Ne peut exécuter $* dans MySQL - Annulation${NORMAL}"
     #exit 1
   fi
 }
