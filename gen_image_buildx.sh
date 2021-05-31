@@ -34,7 +34,7 @@ usage() {
   echo -e "\t-h\tHelp: cette aide"
   echo -e "\t-l\tload: load into docker only"
   echo -e "\t-n\tno-cache: force building from scratch"
-  echo -e "\t-p\tload: push to docker hub"
+  echo -e "\t-p\tpush: to docker hub"
   echo -e "\t-v\tVersion: 4 or 3"
   echo -e "\t-x\tVerbose"
 }
@@ -101,7 +101,7 @@ docker buildx build ${WHERE} --platform ${PTF} -f ${DKRFILE} --build-arg VERSION
 --build-arg DISTRO=$DISTRO $CACHE --progress $PROGRESS --build-arg aptCacher=$aptCacher \
 -t $TAG ./Docker
 
-if [[ "docker_login" != ${DUSER} ]]; then
+if [[ "docker_login" != "${DUSER}" ]]; then
   docker manifest inspect $TAG | grep -iE "architecture|variant"
   else
   docker inspect $TAG | grep -iE "architecture|variant"
