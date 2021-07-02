@@ -4,11 +4,14 @@ on:
   pull_request:
     branches:
       - master
+    paths-ignore:
+      - '.github/**'
   push:
     branches:
       - master
       - gh_pb
-    tags:
+    paths-ignore:
+      - '.github/**'
 
 env:
   IMAGE: jeedom-rpi
