@@ -107,4 +107,3 @@ RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/  && \
 HEALTHCHECK --interval=60s --timeout=3s --retries=3 --start-period=40s \
  CMD curl -s --fail http://localhost/here.html || exit 1
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
-

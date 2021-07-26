@@ -14,3 +14,6 @@ sqldata/
 /docker-compose.yml
 /docker-compose-ph.yml
 /log/
+/docker-compose-dev.yml
+/Docker/Dockerfile_split.buildx
+/jeedom_encryption.key
