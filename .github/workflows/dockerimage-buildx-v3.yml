@@ -1,6 +1,7 @@
-name: Docker CI buildx armhf+amd64 v3
+name: Docker buildx armhf+amd64 v3
 
 on:
+  workflow_dispatch:
   pull_request:
     branches:
       - master
@@ -18,6 +19,7 @@ env:
   TAG: v3-latest
   VERSION: release
   DISTRO: debian
+  aptCacher: ''
 
 jobs:
   buildx:
@@ -29,10 +31,6 @@ jobs:
         uses: docker/setup-qemu-action@v1.2.0
         with:
           platforms: all
-      - name: hadolint
-        uses: hadolint/hadolint-action@v1.5.0
-        with:
-          dockerfile: ./Docker/Dockerfile.buildx
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1.5.1

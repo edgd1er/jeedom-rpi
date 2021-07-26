@@ -1,12 +1,20 @@
-Forked from https://github.com/CodaFog/jeedom-rpi
+# Jeedom-rpi
 
-# jeedom-rpi
 ![Docker CI buildx armhf+amd64 v3](https://github.com/edgd1er/jeedom-rpi/workflows/Docker%20CI%20buildx%20armhf+amd64%20v3/badge.svg?branch=master)
 ![Docker CI buildx armhf+amd64 v4](https://github.com/edgd1er/jeedom-rpi/workflows/Docker%20CI%20buildx%20armhf+amd64%20v4/badge.svg?branch=master)
 
-[![GitHub issues](https://img.shields.io/github/issues/edgd1er/jeedom-rpi.svg)](https://GitHub.com/edgd1er/jeedom_rpi.js/issues/)
-[![Docker Stars](https://img.shields.io/docker/stars/edgd1er/jeedom-rpi.svg?maxAge=604800)](https://store.docker.com/community/images/edgd1er/jeedom-rpi)
-[![Docker Pulls](https://img.shields.io/docker/pulls/edgd1er/jeedom-rpi.svg?maxAge=604800)](https://store.docker.com/community/images/edgd1er/jeedom-rpi)
+![gh issues](https://badgen.net/github/open-issues/edgd1er/jeedom-rpi?icon=github&label=issues)
+![Docker Pulls](https://badgen.net/docker/pulls/edgd1er/jeedom-rpi?icon=docker&label=pulls)
+![Docker Stars](https://badgen.net/docker/stars/edgd1er/jeedom-rpi?icon=docker&label=stars)
+
+![Docker Size v4](https://badgen.net/docker/size/edgd1er/jeedom-rpi/v4-latest?icon=docker&label=Docker%20size%20v4)
+![ImageLayers v4](https://badgen.net/docker/layers/edgd1er/jeedom-rpi/v4-latest?icon=docker&label=Docker%20layers%20v4)
+
+![Docker Size v3](https://badgen.net/docker/size/edgd1er/jeedom-rpi/v3-latest?icon=docker&label=Docker%20size%20v3)
+![ImageLayers v3](https://badgen.net/docker/layers/edgd1er/jeedom-rpi/v4-latest?icon=docker&label=Docker%20layers%20v3)
+
+
+Forked from https://github.com/CodaFog/jeedom-rpi
 
 last build: 19/07/09 ([V4.1.24](https://github.com/jeedom/core/blob/V4-stable/core/config/version), [V3.3.56](https://github.com/jeedom/core/blob/master/core/config/version))
 
