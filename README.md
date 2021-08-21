@@ -16,7 +16,7 @@
 
 Forked from https://github.com/CodaFog/jeedom-rpi
 
-last build: 19/07/09 ([V4.1.24](https://github.com/jeedom/core/blob/V4-stable/core/config/version), [V3.3.56](https://github.com/jeedom/core/blob/master/core/config/version))
+last build: 21/08/21 ([V4.1.25](https://github.com/jeedom/core/blob/V4-stable/core/config/version), [V3.3.57](https://github.com/jeedom/core/blob/master/core/config/version))
 
 
 A Jeedom Docker image for Raspberry Pi based on debian image.
