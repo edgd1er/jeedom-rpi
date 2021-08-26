@@ -69,7 +69,7 @@ step_8_jeedom_configuration() {
   echo "${VERT}étape 8 configuration de jeedom réussie${NORMAL}"
 }
 
-checkCerts(){
+checkCerts() {
   ret=0
   [[ $(echo | openssl s_client -servername market.jeedom.com -connect market.jeedom.com:443 2>&1) =~ Verify\ return\ code:\ ([0-9]{1,2}) ]] && ret=${BASH_REMATCH[1]}
   [[ 0 -ne ${ret} ]] && echo "Refresh ca certs" && update-ca-certificates --fresh || echo "ca certs are up to date"
@@ -127,7 +127,7 @@ else
   #S8 =  db param done when running docker.
   while true; do
     result=$(mysql_sql "show grants for 'jeedom'@'%';")
-    if [[ $(echo ${result} | grep -c "GRANT ALL PRIV") -gt 0 ]]; then
+    if [[ $(echo ${result} | grep -c "GRANT") -gt 0 ]]; then
       echo -e "result: ${result}"
       break
     fi
