@@ -90,10 +90,9 @@ fi
 # check if env jeedom encryption key is defined
 if [[ -n ${JEEDOM_ENC_KEY} ]]; then
   #write jeedom encryption key if different
-  if [[ "$(cat /var/www/html/data/jeedom_encryption.key)" != "${JEEDOM_ENC_KEY}" ]]; then
+  if [[ ! -e /var/www/html/data/jeedom_encryption.key ]] || [[ "$(cat /var/www/html/data/jeedom_encryption.key)" != "${JEEDOM_ENC_KEY}" ]]; then
     echo "Writing jeedom encryption key as defined in env"
     echo "${JEEDOM_ENC_KEY}" >/var/www/html/data/jeedom_encryption.key
-    #echo "update user set password='admin' where login='admin'" | mysql -u${MYSQL_JEEDOM_USERNAME} -p${MYSQL_JEEDOM_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} -D${MYSQL_JEEDOM_DBNAME}
   fi
 fi
 

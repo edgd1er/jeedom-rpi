@@ -21,6 +21,8 @@ last build: 21/08/21 ([V4.1.25](https://github.com/jeedom/core/blob/V4-stable/co
 /!\ asof 2021/08/26, mysql image based on alpin:3.13 which require an updated libseccomp2 on the host (rpi) that rasbian does not have at the moment. 
 * technical explanation: https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.13.0#time64_requirements
 * two way to fix: https://docs.linuxserver.io/faq#libseccomp
+  
+  deb files: http://ftp.debian.org/debian/pool/main/libs/libseccomp/
 
 A Jeedom Docker image for Raspberry Pi based on debian image.
 
