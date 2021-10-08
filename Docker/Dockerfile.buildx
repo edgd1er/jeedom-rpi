@@ -35,9 +35,9 @@ RUN if [[ -n ${aptCacher} ]]; then printf "Acquire::http::Proxy \"http://%s:3142
     apt-get update && apt-get install -y --no-install-recommends wget aufs-tools automake lsof \
 	build-essential curl apt-transport-https software-properties-common \
     && add-apt-repository non-free  && apt-get update && apt-get install -y --no-install-recommends supervisor \
-	python3 python3-pip nmap xvfb iputils-ping passwd usbutils usb.ids\
-    ntp ca-certificates unzip sudo cron locate tar telnet wget logrotate fail2ban dos2unix ntpdate htop \
-    iotop vim iftop smbclient git python python-pip libexpat1 \
+	python3 python3-pip python3-setuptools python python-pip python-setuptools python-wheel nmap xvfb iputils-ping \
+    passwd usbutils usb.ids ntp ca-certificates unzip sudo cron locate tar telnet wget logrotate fail2ban dos2unix \
+    ntpdate htop iotop vim iftop smbclient git libexpat1 \
     cutycapt duplicity at libsox-fmt-mp3 sox libttspico-utils mariadb-client mariadb-common \
     #mbrola removed (not available for armhf )
     #add server apache
