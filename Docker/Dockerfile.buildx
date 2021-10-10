@@ -27,48 +27,53 @@ LABEL maintainer=edgd1er@hotmail.com
 #add apt-cacher setting if present:
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 #hadolint ignore=DL3008
-RUN if [[ -n ${aptCacher} ]]; then printf "Acquire::http::Proxy \"http://%s:3142\";" "${aptCacher}">/etc/apt/apt.conf.d/01proxy && \
-    printf "Acquire::https::Proxy \"http://%s:3142\";" "${aptCacher}">>/etc/apt/apt.conf.d/01proxy ; fi && \
-    #echo "Dir::Cache \"\";\nDir::Cache::archives \"\";" | tee /etc/apt/apt.conf.d/02nocache && \
-    printf "#/etc/dpkg/dpkg.cfg.d/01_nodoc\n\n# Delete locales\npath-exclude=/usr/share/locale/*\n\n# Delete man pages\npath-exclude=/usr/share/man/*\n\n# Delete docs\npath-exclude=/usr/share/doc/*\npath-include=/usr/share/doc/*/copyright" | tee /etc/dpkg/dpkg.cfg.d/03nodoc && \
+RUN if [[ -n ${aptCacher} ]]; then printf "Acquire::http::Proxy \"http://%s:3142\";" "${aptCacher}">/etc/apt/apt.conf.d/01proxy \
+    && printf "Acquire::https::Proxy \"http://%s:3142\";" "${aptCacher}">>/etc/apt/apt.conf.d/01proxy ; fi  \
+    #&& echo "Dir::Cache \"\";\nDir::Cache::archives \"\";" | tee /etc/apt/apt.conf.d/02nocache && \
+    && printf "#/etc/dpkg/dpkg.cfg.d/01_nodoc\n\n# Delete locales\npath-exclude=/usr/share/locale/*\n\n# Delete man pages\npath-exclude=/usr/share/man/*\n\n# Delete docs\npath-exclude=/usr/share/doc/*\npath-include=/usr/share/doc/*/copyright" | tee /etc/dpkg/dpkg.cfg.d/03nodoc \
     #Massive apt install of jeedom requirements to optimise downloads
-    apt-get update && apt-get install -y --no-install-recommends wget aufs-tools automake lsof \
+    && apt-get update && apt-get install -y --no-install-recommends wget aufs-tools automake lsof \
 	build-essential curl apt-transport-https software-properties-common \
     && add-apt-repository non-free  && apt-get update && apt-get install -y --no-install-recommends supervisor \
 	python3 python3-pip python3-setuptools python python-pip python-setuptools python-wheel nmap xvfb iputils-ping \
     passwd usbutils usb.ids ntp ca-certificates unzip sudo cron locate tar telnet wget logrotate fail2ban dos2unix \
-    ntpdate htop iotop vim iftop smbclient git libexpat1 \
-    cutycapt duplicity at libsox-fmt-mp3 sox libttspico-utils mariadb-client mariadb-common \
+    ntpdate htop iotop vim iftop smbclient git libexpat1 ssl-cert ffmpeg \
+    cutycapt at libsox-fmt-mp3 sox libttspico-utils mariadb-client mariadb-common \
     #mbrola removed (not available for armhf )
     #add server apache
-    apache2 apache2-utils libexpat1 ssl-cert \
+    apache2 apache2-utils \
     #cannot install php as php5 or 7 might be option. leave install.sh install needed php package
-    && apt-get -y remove -y brltty net-tools && apt-get upgrade -y && apt-get autoremove  \
+    #get from jeedom s stable install files
+    && apt-get -y remove -y brltty net-tools && apt-get upgrade -y && apt-get autoremove \
     && mkdir -p /var/run/sshd -p /var/log/supervisor \
-    # get from jeedom's stable master install files
     && echo "install jeedom VERSION: $VERSION" \
-    && wget -qO /root/.bashrc -q https://raw.githubusercontent.com/jeedom/core/$VERSION/install/bashrc \
-    && wget -qO /root/install_docker.sh -q https://raw.githubusercontent.com/jeedom/core/$VERSION/install/install.sh \
-    && wget -qO /etc/motd https://raw.githubusercontent.com/jeedom/core/$VERSION/install/motd  \
+    && wget -qO /root/.bashrc https://raw.githubusercontent.com/jeedom/core/$VERSION/install/bashrc \
+    && wget -qO /etc/motd https://raw.githubusercontent.com/jeedom/core/$VERSION/install/motd \
+    && wget -qO /root/install_docker.sh https://raw.githubusercontent.com/jeedom/core/$VERSION/install/install.sh \
     && chmod +x /root/install_docker.sh \
     ##########################################
     # Adapt install_docker to docker
-    #fix jeedom install.sh for unattended install
+    # fix jeedom install.sh for unattended install
+    # fix jeedom-core, allowing to define mysql not being local
+    # apt-get for unattended install
     && sed -i "s#MYSQL_JEEDOM_PASSWD=.*#MYSQL_JEEDOM_PASSWD=\$\(tr -cd \'a-f0-9\' \< /dev/urandom \| head -c 15\)#" /root/install_docker.sh \
-    #fix jeedom-core, allowing to define mysql not being local
+    && sed -i "s/systemctl daemon-reload/:/" /root/install_docker.sh \
+    && sed -i "s#rm /var/lib/mysql/ib_logfile\*#:#" /root/install_docker.sh \
     && sed -i -E "s#mysql -uroot($| )#mysql -uroot -p\${MYSQL_ROOT_PASSWD} -h \${MYSQL_JEEDOM_HOST} -P\${MYSQL_JEEDOM_PORT} \${MYSQL_JEEDOM_DBNAME} #g" /root/install_docker.sh \
     && grep "^MYSQL_JEEDOM_PASSWD=" /root/install_docker.sh \
     && grep "mysql -uroot" /root/install_docker.sh \
-    #apt-get for unattended install
     && sed -i "s#apt install#apt-get install -y#" /root/install_docker.sh \
-    ## cut mysql server configuration
+    # cut mysql server configuration
     #V4
     && sed -i 's/service_action stop mysql/return 0/' /root/install_docker.sh \
+    && sed -i 's/service_action status mysql/\:/' /root/install_docker.sh \
+    && sed -i 's/service_action restart apache2/\:/' /root/install_docker.sh \
     #V3
+    && sed -i 's/systemctl restart apache2/\:/' /root/install_docker.sh \
     && sed -i 's/systemctl stop mysql/return 0/' /root/install_docker.sh \
     # set jeedom version v3 or v4
     && sed -i "s/VERSION=V4-stable/VERSION=\${VERSION}/g" /root/install_docker.sh \
-    ########################################## \
+    ##########################################
     && echo "root:${SHELL_ROOT_PASSWORD}" | chpasswd \
     # step 2 install mainpackage
     && /root/install_docker.sh -s 2 -v ${VERSION}\
@@ -82,7 +87,7 @@ RUN if [[ -n ${aptCacher} ]]; then printf "Acquire::http::Proxy \"http://%s:3142
     && /root/install_docker.sh -s 6 -v ${VERSION} \
 	#Step 7 = apache SSL + php conf + mysql server conf
     && /root/install_docker.sh -s 7 -v ${VERSION} \
-    # Next steps are executed in init. \
+    # Next steps are executed in init.
     #V3 S8 =  db param done at runtime. / V4: later in build\
     #v3 S9 =  install.php done at runtime. / V4: drop database , DB creds done at runtime \
     #v3 s10 = post install (cron ) / v4: install.php done at runtime.
@@ -91,7 +96,7 @@ RUN if [[ -n ${aptCacher} ]]; then printf "Acquire::http::Proxy \"http://%s:3142
     else /root/install_docker.sh -s 8 -v ${VERSION};/root/install_docker.sh -s 11 -v ${VERSION}; fi \
     && update-ca-certificates --fresh \
     && apt-get remove -y x11-common \
-    # clean caches \
+    # clean caches
     && apt-get autoremove -y --purge && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/*
 
