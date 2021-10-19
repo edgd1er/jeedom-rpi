@@ -16,7 +16,7 @@
 
 Forked from https://github.com/CodaFog/jeedom-rpi
 
-last build: 21/10/08 ([V4.1.26](https://github.com/jeedom/core/blob/V4-stable/core/config/version), [V3.3.58](https://github.com/jeedom/core/blob/master/core/config/version))
+last build: 21/10/19 ([V4.1.27](https://github.com/jeedom/core/blob/V4-stable/core/config/version), [V3.3.59](https://github.com/jeedom/core/blob/master/core/config/version))
 
 /!\ asof 2021/08/26, mysql image based on alpin:3.13 which require an updated libseccomp2 on the host (rpi) that rasbian does not have at the moment. 
 * technical explanation: https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.13.0#time64_requirements
