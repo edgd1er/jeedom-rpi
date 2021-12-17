@@ -16,7 +16,7 @@
 
 Forked from https://github.com/CodaFog/jeedom-rpi
 
-last build: 21/10/19 ([V4.1.27](https://github.com/jeedom/core/blob/V4-stable/core/config/version), [V3.3.59](https://github.com/jeedom/core/blob/master/core/config/version))
+last build: 21/10/19 ([V4.1.28](https://github.com/jeedom/core/blob/V4-stable/core/config/version), [V3.3.59](https://github.com/jeedom/core/blob/master/core/config/version))
 
 /!\ asof 2021/08/26, mysql image based on alpin:3.13 which require an updated libseccomp2 on the host (rpi) that rasbian does not have at the moment. 
 * technical explanation: https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.13.0#time64_requirements
@@ -190,10 +190,26 @@ services:
 ### Upgrade
 
 in Jeedom, application, static files and configurations are not always distinct. Container needs a strict separation between application, static files and configuration, either to mount a volume or use a bind volume.
-As a result, jeedom container upgrade is not transparent. many files (static and configurations) are losts. Here is a list of folder where either static or conf files are found:
+As a result, jeedom container upgrade is not as easy as it could be. many files (static and configurations) are losts. Here is a list of folder where either static or conf files lost after each upgrade:
 
 - /var/www/html/data/jeedom_encryption.key
+- /var/www/html/data/customTemplates/dashboard
+- /var/www/html/data/img
+- /var/www/html/data/fonts
 
+## Fixes broken plugins: pushbullet, speedtest
+
+```bash
+# pushbullet: replace object with jeeObject
+docker-compose exec web sed -i 's/(object/(jeeObject/' /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
+# pushbullet: replace obsolete websocket
+docker-compose exec web bash mv /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket.old
+docker-compose exec web pip install websocket-client
+
+#speedclient : change client version check to match current version
+docker-compose exec web sed -Ei "s/line == 'Version: 2.[0-9].[0-9a-z]{1,3}/line == 'Version: 2.1.4b1'/" /var/www/html/plugins/speedtest/core/class/speedtest.class.php
+docker-compose exec web grep -H "line == 'Version" /var/www/html/plugins/speedtest/core/class/speedtest.class.php
+```
 
 ### Github
 
