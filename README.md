@@ -16,7 +16,7 @@
 
 Forked from https://github.com/CodaFog/jeedom-rpi
 
-last build: 22/01/31 ([V4.2.7](https://github.com/jeedom/core/blob/V4-stable/core/config/version), [V3.3.59](https://github.com/jeedom/core/blob/master/core/config/version))
+last build: 22/02/04 ([V4.2.8](https://github.com/jeedom/core/blob/V4-stable/core/config/version), [V3.3.59](https://github.com/jeedom/core/blob/master/core/config/version))
 
 Please read [changelog](https://doc.jeedom.com/en_US/core/4.1/changelog?theme=light#Changelog%20Jeedom%20V4.2) form breaking changes in features
 
