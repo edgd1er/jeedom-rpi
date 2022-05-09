@@ -16,9 +16,9 @@ on:
 
 env:
   IMAGE: jeedom-rpi
-  TAG: v4-latest-dev
+  TAG: v4-latest
   VERSION: V4-stable
-  DISTRO: bullseye-slim
+  DISTRO: buster-slim
   aptCacher: ''
   PUSH: true
 
