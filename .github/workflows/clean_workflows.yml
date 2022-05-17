@@ -33,3 +33,11 @@ jobs:
           save_period: 5
           save_min_runs_number: 0
           dry: ${{ env.DRY }}
+
+      - name: Delete workflow runs mattracks
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          retain_days: 30
+          keep_minimum_runs: 1
