@@ -1,12 +1,12 @@
 name: check V3/V4 jeedom's version
 on:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 17 * * *"
   workflow_dispatch:
 
 env:
   J3_VERSION: 3.3.59
-  J4_VERSION: 4.2.16
+  J4_VERSION: 4.2.18
 
 jobs:
   check-j4_version:

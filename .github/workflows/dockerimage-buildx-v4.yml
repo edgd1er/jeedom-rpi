@@ -18,8 +18,9 @@ env:
   IMAGE: jeedom-rpi
   TAG: v4-latest
   VERSION: V4-stable
-  DISTRO: debian
+  DISTRO: buster-slim
   aptCacher: ''
+  PUSH: true
 
 jobs:
   buildx:
@@ -65,7 +66,7 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
           # removed linux/arm64
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
-          push: true
+          push: ${{ env.PUSH }}
           build-args: |
             VERSION=${{ env.VERSION }}
             DISTRO=${{ env.DISTRO }}
