@@ -13,14 +13,14 @@
 ![Docker Size v3](https://badgen.net/docker/size/edgd1er/jeedom-rpi/v3-latest?icon=docker&label=Docker%20size%20v3)
 ![ImageLayers v3](https://badgen.net/docker/layers/edgd1er/jeedom-rpi/v4-latest?icon=docker&label=Docker%20layers%20v3)
 
-
 Forked from https://github.com/CodaFog/jeedom-rpi
 
-last build: 22/05/17 ([V4.2.16](https://github.com/jeedom/core/blob/V4-stable/core/config/version), [V3.3.59](https://github.com/jeedom/core/blob/master/core/config/version))
+| Last Version | Commit Date | changelog |
+|--------------|-------------|----------|
+| v4.2.18      | 22/06/01    | [changelog](https://doc.jeedom.com/en_US/core/4.2/changelog?theme=light#Changelog%20Jeedom%20V4.2) |
+| v3.3.59      | 21/12/17    |[changelog](https://doc.jeedom.com/en_US/core/3.3/changelog?theme=light#Changelog%20Jeedom%20V4.2)|
 
-Please read [changelog](https://doc.jeedom.com/en_US/core/4.2/changelog?theme=light#Changelog%20Jeedom%20V4.2) form breaking changes in features
-
-/!\ asof 2021/08/26, mysql image based on alpin:3.13 which require an updated libseccomp2 on the host (rpi) that rasbian does not have at the moment. 
+/!\ asof 2021/08/26, mysql image based on alpine:3.13 which require an updated libseccomp2 on the host (rpi) that rasbian does not have at the moment. 
 * technical explanation: https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.13.0#time64_requirements
 * two way to fix: https://docs.linuxserver.io/faq#libseccomp
   

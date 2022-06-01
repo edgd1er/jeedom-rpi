@@ -18,7 +18,7 @@ env:
   IMAGE: jeedom-rpi
   TAG: v3-latest
   VERSION: release
-  DISTRO: debian
+  DISTRO: buster-slim
   aptCacher: ''
 
 jobs:

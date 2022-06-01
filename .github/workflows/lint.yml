@@ -1,4 +1,4 @@
-name: lint docker-ripper dockerfile
+name: lint jeedom-rpi dockerfile
 
 on:
   workflow_dispatch:
