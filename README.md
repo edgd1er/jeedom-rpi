@@ -1,7 +1,7 @@
 # Jeedom-rpi
 
-![Docker CI buildx armhf+amd64 v3](https://github.com/edgd1er/jeedom-rpi/workflows/Docker%20CI%20buildx%20armhf+amd64%20v3/badge.svg?branch=master)
-![Docker CI buildx armhf+amd64 v4](https://github.com/edgd1er/jeedom-rpi/workflows/Docker%20CI%20buildx%20armhf+amd64%20v4/badge.svg?branch=master)
+![Docker buildx armhf+amd64 v3](https://github.com/edgd1er/jeedom-rpi/workflows/Docker%20buildx%20armhf+amd64%20v3/badge.svg?branch=master)
+![Docker buildx armhf+amd64 v4](https://github.com/edgd1er/jeedom-rpi/workflows/Docker%20buildx%20armhf+amd64%20v4/badge.svg?branch=master)
 
 ![gh issues](https://badgen.net/github/open-issues/edgd1er/jeedom-rpi?icon=github&label=issues)
 ![Docker Pulls](https://badgen.net/docker/pulls/edgd1er/jeedom-rpi?icon=docker&label=pulls)
@@ -17,7 +17,7 @@ Forked from https://github.com/CodaFog/jeedom-rpi
 
 | Last Version | Commit Date | changelog |
 |--------------|-------------|----------|
-| v4.2.18      | 22/06/01    | [changelog](https://doc.jeedom.com/en_US/core/4.2/changelog?theme=light#Changelog%20Jeedom%20V4.2) |
+| v4.2.19      | 22/06/20     | [changelog](https://doc.jeedom.com/en_US/core/4.2/changelog?theme=light#Changelog%20Jeedom%20V4.2) |
 | v3.3.59      | 21/12/17    |[changelog](https://doc.jeedom.com/en_US/core/3.3/changelog?theme=light#Changelog%20Jeedom%20V4.2)|
 
 /!\ asof 2021/08/26, mysql image based on alpine:3.13 which require an updated libseccomp2 on the host (rpi) that rasbian does not have at the moment. 
