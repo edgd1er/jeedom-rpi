@@ -42,7 +42,7 @@ step_8_mysql_create_db() {
 
 step_8_jeedom_configuration() {
   echo "${VERT}Etape 8: informations de login pour la BDD${NORMAL}"
-  cp ${WEBSERVER_HOME}/core/config/common.config.sample.php ${WEBSERVER_HOME}/core/config/common.config.php
+  cp -p ${WEBSERVER_HOME}/core/config/common.config.sample.php ${WEBSERVER_HOME}/core/config/common.config.php
   sed -i "s/#PASSWORD#/${MYSQL_JEEDOM_PASSWD}/g" ${WEBSERVER_HOME}/core/config/common.config.php
   sed -i "s/#DBNAME#/${MYSQL_JEEDOM_DBNAME}/g" ${WEBSERVER_HOME}/core/config/common.config.php
   sed -i "s/#USERNAME#/${MYSQL_JEEDOM_USERNAME}/g" ${WEBSERVER_HOME}/core/config/common.config.php
@@ -56,7 +56,7 @@ step_8_jeedom_configuration() {
   rm /etc/apache2/conf-enabled/security.conf >/dev/null 2>&1
   ln -s /etc/apache2/conf-available/security.conf /etc/apache2/conf-enabled/
 
-  cp ${WEBSERVER_HOME}/install/apache_default /etc/apache2/sites-available/000-default.conf
+  cp -p ${WEBSERVER_HOME}/install/apache_default /etc/apache2/sites-available/000-default.conf
   sed -i -e "s%WEBSERVER_HOME%${WEBSERVER_HOME}%g" /etc/apache2/sites-available/000-default.conf
   rm /etc/apache2/sites-enabled/000-default.conf >/dev/null 2>&1
   ln -s /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-enabled/
@@ -64,8 +64,6 @@ step_8_jeedom_configuration() {
   [[ -f /etc/apache2/conf-available/other-vhosts-access-log.conf ]] && rm /etc/apache2/conf-available/other-vhosts-access-log.conf >/dev/null 2>&1
   [[ -f /etc/apache2/conf-enabled/other-vhosts-access-log.conf ]] && rm /etc/apache2/conf-enabled/other-vhosts-access-log.conf >/dev/null 2>&1
 
-  chmod 775 -R ${WEBSERVER_HOME}
-  chown -R www-data:www-data ${WEBSERVER_HOME}
   echo "${VERT}étape 8 configuration de jeedom réussie${NORMAL}"
 }
 
@@ -112,8 +110,10 @@ sed -i -E "s/\<VirtualHost \*:(.*)\>/VirtualHost \*:${APACHE_HTTPS_PORT}/" /etc/
 [[ $(a2query -s 000-default | grep -c "^000-default") -eq 0 ]] && a2ensite 000-default
 
 if [ -f /var/www/html/core/config/common.config.php ]; then
+  JEEDOM_INSTALL=1
   echo 'Jeedom is already installed'
 else
+  JEEDOM_INSTALL=0
   [[ ! -f /root/install_docker.sh ]] && echo -e "\n*************** ERROR, no /root/install_docker.sh file ***********\n" && exit
   #allow fail2ban to start even on docker
   touch /var/log/auth.log
@@ -221,6 +221,17 @@ else
 fi
 
 checkCerts
+
+if [ ${JEEDOM_INSTALL} -eq 0 ] && [ ! -z "${RESTOREBACKUP}" ] && [ "${RESTOREBACKUP}" != 'NO' ]; then
+  echo 'Need restore backup '${RESTOREBACKUP}
+  wget ${RESTOREBACKUP} -O /tmp/backup.tar.gz
+  php /var/www/html/install/restore.php backup=/tmp/backup.tar.gz
+  rm /tmp/backup.tar.gz
+  if [ ! -z "${UPDATEJEEDOM}" ] && [ "${UPDATEJEEDOM}" != 'NO' ]; then
+    echo 'Need update jeedom'
+    php /var/www/html/install/update.php
+  fi
+fi
 
 supervisorctl start apache2
 #wait for logs file to be created
