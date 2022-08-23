@@ -85,21 +85,32 @@ if ! [ -f /.dockerinit ]; then
   chmod 755 /.dockerinit
 fi
 
+#Get vars from secrets
+for s in JEEDOM_ENCRYPTION_KEY MYSQL_ROOT_PASSWD MYSQL_JEEDOM_PASSWD ROOT_PASSWD; do
+  if [[ -f /run/secrets/${s} ]]; then
+    echo "Reading ${s} from secrets"
+    eval ${s}=$(cat /run/secrets/${s})
+    [[ 1 -eq ${DEBUG} ]] && echo "${s}: ${!s}" || true
+  fi
+done
+#fix mysql user as secret
+[[ -f /run/secrets/MYSQL_JEEDOM_PASSWD ]] && sed -i "s/\${MYSQL_JEEDOM_PASSWD}/${MYSQL_JEEDOM_PASSWD}/g" /root/install_docker.sh || true
+
 # check if env jeedom encryption key is defined
-if [[ -n ${JEEDOM_ENC_KEY} ]]; then
+if [[ -n ${JEEDOM_ENCRYPTION_KEY} ]]; then
   #write jeedom encryption key if different
-  if [[ ! -e /var/www/html/data/jeedom_encryption.key ]] || [[ "$(cat /var/www/html/data/jeedom_encryption.key)" != "${JEEDOM_ENC_KEY}" ]]; then
+  if [[ ! -e /var/www/html/data/jeedom_encryption.key ]] || [[ "$(cat /var/www/html/data/jeedom_encryption.key)" != "${JEEDOM_ENCRYPTION_KEY}" ]]; then
     echo "Writing jeedom encryption key as defined in env"
-    echo "${JEEDOM_ENC_KEY}" >/var/www/html/data/jeedom_encryption.key
+    echo "${JEEDOM_ENCRYPTION_KEY}" >/var/www/html/data/jeedom_encryption.key
   fi
 fi
 
 #set root password
-if [ -z ${ROOT_PASSWORD} ]; then
-  ROOT_PASSWORD=$(tr -cd 'a-f0-9' </dev/urandom | head -c 20)
-  echo "Use generate password : ${ROOT_PASSWORD}"
+if [ -z ${ROOT_PASSWD} ]; then
+  ROOT_PASSWD=$(tr -cd 'a-f0-9' </dev/urandom | head -c 20)
+  echo "Use generate password : ${ROOT_PASSWD}"
 fi
-echo "root:${ROOT_PASSWORD}" | chpasswd
+echo "root:${ROOT_PASSWD}" | chpasswd
 
 echo "Listen 80" >/etc/apache2/ports.conf
 echo "Listen 443" >>/etc/apache2/ports.conf
