@@ -111,6 +111,16 @@ if LOGS_TO_STDOUT is set to yes, apache logs are sent to container's stdout.
       - MYSQL_JEEDOM_PASSWD mysql username password
 ```
 
+### Secrets
+
+the hereunder variables may be replaced by secrets:
+- JEEDOM_ENCRYPTION_KEY
+- ROOT_PASSWD
+- MYSQL_ROOT_PASSWD
+- MYSQL_JEEDOM_PASSWD
+
+create a file with that name in the docker-compose.yml's directory.
+
 ### https support
 
 default certificates are generated during apache's configuration. Mounting or copying the file to /etc/ssl/certs

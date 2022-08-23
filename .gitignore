@@ -11,9 +11,11 @@ Thumbs.db
 
 webdata/
 sqldata/
-/docker-compose.yml
-/docker-compose-ph.yml
 /log/
-/docker-compose-dev.yml
 /Docker/Dockerfile_split.buildx
-/jeedom_encryption.key
+JEEDOM_ENCRYPTION_KEY
+MYSQL_JEEDOM_PASSWD
+MYSQL_ROOT_PASSWD
+ROOT_PASSWD
+!docker-compose.yml
+!docker-compose-no-secrets.yml
