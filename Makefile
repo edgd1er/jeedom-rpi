@@ -5,6 +5,8 @@ SHELL:=bash
 
 # Enable BuildKit for Docker build
 export DOCKER_BUILDKIT:=1
+export aptCacher:=
+progress:=auto #plain auto
 
 
 # https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
@@ -19,9 +21,9 @@ lint: ## stop all containers
 build: ## build image
 	@echo -e "build image ...v3"
 	## docker-compose -f docker-compose-dev.yml build
-	docker buildx build --load --progress plain --build-arg aptCacher="192.168.53.208" --build-arg VERSION="release" -f Docker/Dockerfile.buildx -t edgd1er/jeedom-rpi:v3-latest ./Docker
+	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="release" --build-arg DISTRO="buster-slim" -f Docker/Dockerfile.buildx -t edgd1er/jeedom-rpi:v3-latest ./Docker
 	@echo -e "\n\nbuild image ...v4"
-	docker buildx build --load --progress plain --build-arg aptCacher="192.168.53.208" --build-arg VERSION="V4-stable" -f Docker/Dockerfile.buildx -t edgd1er/jeedom-rpi:v4-latest ./Docker
+	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="V4-stable" --build-arg DISTRO="buster-slim" -f Docker/Dockerfile.buildx -t edgd1er/jeedom-rpi:v4-latest ./Docker
 
 run:
 	@echo "run container"
