@@ -2,6 +2,12 @@ name: Docker buildx armhf+amd64 v4
 
 on:
   workflow_dispatch:
+    inputs:
+      JDM_VERSION:
+        description: 'jeedom version'
+        required: true
+        default: 'latest'
+        type: string
   pull_request:
     branches:
       - master
@@ -19,6 +25,7 @@ env:
   TAG: v4-latest
   VERSION: V4-stable
   DISTRO: buster-slim
+  JDM_VERSION: latest
   aptCacher: ''
   PUSH: true
 
@@ -70,14 +77,15 @@ jobs:
           build-args: |
             VERSION=${{ env.VERSION }}
             DISTRO=${{ env.DISTRO }}
-          tags: ${{ secrets.DOCKER_USER }}/${{ env.IMAGE }}:${{ env.TAG }}
+            JDM_VERSION=${{ github.event.inputs.JDM_VERSION || env.JDM_VERSION }}
+          tags: ${{ secrets.DOCKER_USER }}/${{ env.IMAGE }}:${{ github.event.inputs.JDM_VERSION || env.TAG }}
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ secrets.DOCKER_USER }}/${{ env.IMAGE }}:${{ env.TAG }}
+          docker buildx imagetools inspect ${{ secrets.DOCKER_USER }}/${{ env.IMAGE }}:${{ github.event.inputs.JDM_VERSION || env.TAG }}
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'docker.io/${{ secrets.DOCKER_USER }}/${{ env.IMAGE }}:${{ env.TAG }}'
+          image-ref: 'docker.io/${{ secrets.DOCKER_USER }}/${{ env.IMAGE }}:${{ github.event.inputs.JDM_VERSION || env.TAG }}'
           format: 'template'
           template: '@/contrib/sarif.tpl'
           output: 'trivy-results.sarif'

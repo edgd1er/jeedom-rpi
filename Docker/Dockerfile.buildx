@@ -17,6 +17,7 @@ ENV XDEBUG_HOST localhost
 ENV XEBUG_PORT 9003
 ARG VERSION
 ENV VERSION=${VERSION}
+ARG JDM_VERSION=latest
 ARG aptCacher
 
 
@@ -28,7 +29,7 @@ LABEL maintainer=edgd1er@hotmail.com
 #add apt-cacher setting if present:
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 #hadolint ignore=DL3008
-RUN if [[ -n ${aptCacher} ]]; then printf "Acquire::http::Proxy \"http://%s:3142\";" "${aptCacher}">/etc/apt/apt.conf.d/01proxy \
+RUN if [[ -n ${aptCacher:-} ]]; then printf "Acquire::http::Proxy \"http://%s:3142\";" "${aptCacher}">/etc/apt/apt.conf.d/01proxy \
     && printf "Acquire::https::Proxy \"http://%s:3142\";" "${aptCacher}">>/etc/apt/apt.conf.d/01proxy ; fi  \
     #&& echo "Dir::Cache \"\";\nDir::Cache::archives \"\";" | tee /etc/apt/apt.conf.d/02nocache && \
     && printf "#/etc/dpkg/dpkg.cfg.d/01_nodoc\n\n# Delete locales\npath-exclude=/usr/share/locale/*\n\n# Delete man pages\npath-exclude=/usr/share/man/*\n\n# Delete docs\npath-exclude=/usr/share/doc/*\npath-include=/usr/share/doc/*/copyright" | tee /etc/dpkg/dpkg.cfg.d/03nodoc \
@@ -47,11 +48,18 @@ RUN if [[ -n ${aptCacher} ]]; then printf "Acquire::http::Proxy \"http://%s:3142
     #get from jeedom s stable install files
     && apt-get -y remove -y brltty net-tools && apt-get upgrade -y && apt-get autoremove \
     && mkdir -p /var/run/sshd -p /var/log/supervisor \
-    && echo "install jeedom VERSION: $VERSION" \
+    && echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     && wget -qO /root/.bashrc https://raw.githubusercontent.com/jeedom/core/$VERSION/install/bashrc \
     && wget -qO /etc/motd https://raw.githubusercontent.com/jeedom/core/$VERSION/install/motd \
-    && wget -qO /root/install_docker.sh https://raw.githubusercontent.com/jeedom/core/$VERSION/install/install.sh \
+    && apt-get autoremove -y --purge && apt-get autoclean \
+    && rm -rf /var/lib/apt/lists/*
+    ## latest version
+RUN wget -qO /root/install_docker.sh https://raw.githubusercontent.com/jeedom/core/$VERSION/install/install.sh \
+    # tagged version
+    && if [[ latest != "${JDM_VERSION}" ]] && [[ "${VERSION}" == "V4-stable" ]]; then \
+    sed -i "s#https://github.com/jeedom/core/archive/\${VERSION}.zip#https://github.com/jeedom/core/archive/refs/tags/${JDM_VERSION}.zip#" /root/install_docker.sh ; fi \
     && chmod +x /root/install_docker.sh \
+    && echo "url install: $(grep -oP '(?<=  wget )(--no-check-certificate |)([^ ]+)' /root/install_docker.sh | grep -oP 'https.+')" || true \
     ##########################################
     # Adapt install_docker to docker
     # fix jeedom install.sh for unattended install
@@ -76,6 +84,7 @@ RUN if [[ -n ${aptCacher} ]]; then printf "Acquire::http::Proxy \"http://%s:3142
     && sed -i "s/VERSION=V4-stable/VERSION=\${VERSION}/g" /root/install_docker.sh \
     ##########################################
     && echo "root:${SHELL_ROOT_PASSWORD}" | chpasswd \
+    && echo "Installing jeedom version: ${VERSION} / ${JDM_VERSION}" \
     # step 2 install mainpackage
     && /root/install_docker.sh -s 2 -v ${VERSION}\
     # step 3 install mysql server
