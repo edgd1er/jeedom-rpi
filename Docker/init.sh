@@ -248,3 +248,5 @@ supervisorctl start apache2
 #wait for logs file to be created
 #cannot start fail2ban when logs are redirected
 [[ ${LOGS_TO_STDOUT,,} =~ n ]] && supervisorctl start fail2ban || echo
+
+echo "Jeedom version: $(cat /var/www/html/core/config/version)"
