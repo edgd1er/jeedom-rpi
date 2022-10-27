@@ -6,7 +6,7 @@ on:
 
 env:
   J3_VERSION: 3.3.59
-  J4_VERSION: 4.3.6
+  J4_VERSION: 4.3.8
 
 jobs:
   check-j4_version:
