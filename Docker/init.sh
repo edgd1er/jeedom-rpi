@@ -73,6 +73,17 @@ checkCerts() {
   [[ 0 -ne ${ret} ]] && echo "Refresh ca certs" && update-ca-certificates --fresh || echo "ca certs are up to date"
 }
 
+populateVolume(){
+  if [[ 2 -ne $# ]]; then
+    echo "No directory to populate"
+  else
+    src=${1%*/}
+    dst=${2%*/}
+    echo "Populating ${dst}/ with ${src}/"
+    rsync -a -v --ignore-existing ${src}/ ${dst}/
+  fi
+}
+
 ### Main
 # execute all install scripts with -x
 if [[ 1 -eq ${DEBUG} ]]; then
@@ -119,6 +130,9 @@ sed -i -E "s/\<VirtualHost \*:(.*)\>/VirtualHost \*:80/" /etc/apache2/sites-avai
 sed -i -E "s/\<VirtualHost \*:(.*)\>/VirtualHost \*:${APACHE_HTTPS_PORT}/" /etc/apache2/sites-available/default-ssl.conf
 [[ $(a2query -s default-ssl | grep -c "^default-ssl") -eq 0 ]] && a2ensite default-ssl
 [[ $(a2query -s 000-default | grep -c "^000-default") -eq 0 ]] && a2ensite 000-default
+
+#populateVolumes if needed
+populateVolume /var/www/html/.data /var/www/html/data
 
 if [ -f /var/www/html/core/config/common.config.php ]; then
   JEEDOM_INSTALL=1
