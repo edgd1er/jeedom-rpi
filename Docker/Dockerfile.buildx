@@ -34,7 +34,7 @@ RUN if [[ -n ${aptCacher:-} ]]; then printf "Acquire::http::Proxy \"http://%s:31
     #&& echo "Dir::Cache \"\";\nDir::Cache::archives \"\";" | tee /etc/apt/apt.conf.d/02nocache && \
     && printf "#/etc/dpkg/dpkg.cfg.d/01_nodoc\n\n# Delete locales\npath-exclude=/usr/share/locale/*\n\n# Delete man pages\npath-exclude=/usr/share/man/*\n\n# Delete docs\npath-exclude=/usr/share/doc/*\npath-include=/usr/share/doc/*/copyright" | tee /etc/dpkg/dpkg.cfg.d/03nodoc \
     #Massive apt install of jeedom requirements to optimise downloads
-    && apt-get update && apt-get install -y --no-install-recommends wget automake lsof iproute2 \
+    && apt-get update && apt-get install -y --no-install-recommends wget rsync automake lsof iproute2 \
 	build-essential curl apt-transport-https software-properties-common \
     && add-apt-repository non-free  && apt-get update && apt-get install -y --no-install-recommends supervisor \
 	python3 python3-pip python3-setuptools python-setuptools nmap xvfb iputils-ping \
@@ -109,6 +109,8 @@ RUN wget -qO /root/install_docker.sh https://raw.githubusercontent.com/jeedom/co
     else /root/install_docker.sh -s 8 -v ${VERSION};/root/install_docker.sh -s 11 -v ${VERSION}; fi \
     && update-ca-certificates --fresh \
     && apt-get remove -y x11-common \
+    # untouched data dir
+    && cp -Rp /var/www/html/data/ /var/www/html/.data/ \
     # clean caches
     && apt-get autoremove -y --purge && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/*
@@ -125,3 +127,10 @@ RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/  && \
 HEALTHCHECK --interval=60s --timeout=3s --retries=3 --start-period=40s \
  CMD curl -s --fail http://localhost/here.html || exit 1
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
+
+VOLUME /var/www/html/data
+VOLUME /var/www/html/backup
+VOLUME /var/www/html/tmp
+VOLUME /var/www/html/log/
+
+

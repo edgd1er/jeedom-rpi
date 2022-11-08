@@ -17,7 +17,7 @@ Forked from https://github.com/CodaFog/jeedom-rpi
 
 | Last Version                                               | Commit Date |
 |------------------------------------------------------------|-------------|
-| [v4.3.9](https://doc.jeedom.com/en_US/core/4.3/changelog)  | 22/11/05    |
+| [v4.3.10](https://doc.jeedom.com/en_US/core/4.3/changelog)  | 22/11/08    |
 | [v3.3.59](https://doc.jeedom.com/en_US/core/3.3/changelog) | 21/12/17    |
 
 /!\ asof 2021/08/26, mysql image based on alpine:3.13 which require an updated libseccomp2 on the host (rpi) that rasbian does not have at the moment. 
@@ -139,15 +139,18 @@ No volumes are defined within the image.
 
 /!\ **/var/www/html/logs** (plugins logs) and **/var/logs/** (system logs) may clutter the container. It should be mounted in a volume.
 
-|Container|volumes|content|
-|---------|-------|------|
-|Mysql|/config| database config+data|
-|jeedom|/var/log|system's logs|
-|jeedom|/var/www/html/log|jeedom plugins logs|
-|jeedom|/var/www/html/plugins|jeedom's plugins|
-|jeedom|/etc/ssl/certs/ssl-cert-snakeoil.pem|jeedom's https certificate|
-|jeedom|/etc/ssl/certs/ssl-cert-snakeoil.key|jeedom's https certificate|
-
+|Container|volumes| content                           |
+|---------|-------|-----------------------------------|
+|Mysql|/config| database config+data              |
+|jeedom|/var/log| system's logs                     |
+|jeedom|/var/www/html/log| jeedom plugins logs               |
+|jeedom|/var/www/html/plugins| jeedom's plugins                  |
+|jeedom|/etc/ssl/certs/ssl-cert-snakeoil.pem| jeedom's https certificate        |
+|jeedom|/etc/ssl/certs/ssl-cert-snakeoil.key| jeedom's https certificate        |
+|jeedom|/var/www/html/data| jeedom custom data (img,css, ...) |
+|jeedom|/var/www/html/backup| jeedom backup dir                 |
+|jeedom|/var/www/html/tmp| jeedom temp dir|
+|jeedom|/var/www/html/log/| jeedom log dir                    |
 ### Example of a docker-compose
 
 ```
@@ -162,7 +165,10 @@ services:
       - "443"
     ports:
       - "9180:80"
-      - "9443:443"            
+      - "9443:443"
+    volumes:
+      - backup:/var/www/html/backup/
+      - data:/var/www/html/data/
     tmpfs:
       - /run:rw,size=10M
       - /tmp:rw,size=64M
