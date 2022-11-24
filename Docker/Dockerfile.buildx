@@ -35,31 +35,31 @@ RUN if [[ -n ${aptCacher:-} ]]; then printf "Acquire::http::Proxy \"http://%s:31
     && printf "#/etc/dpkg/dpkg.cfg.d/01_nodoc\n\n# Delete locales\npath-exclude=/usr/share/locale/*\n\n# Delete man pages\npath-exclude=/usr/share/man/*\n\n# Delete docs\npath-exclude=/usr/share/doc/*\npath-include=/usr/share/doc/*/copyright" | tee /etc/dpkg/dpkg.cfg.d/03nodoc \
     #Massive apt install of jeedom requirements to optimise downloads
     && apt-get update && apt-get install -y --no-install-recommends wget rsync automake lsof iproute2 \
-	build-essential curl apt-transport-https software-properties-common \
+	build-essential curl apt-transport-https software-properties-common net-tools gettext snmp \
     && add-apt-repository non-free  && apt-get update && apt-get install -y --no-install-recommends supervisor \
-	python3 python3-pip python3-setuptools python-setuptools nmap xvfb iputils-ping \
+	python3 python3-pip python3-setuptools python-setuptools nmap xvfb iputils-ping libcurl3-gnutls librsync-dev \
     passwd usbutils usb.ids ntp ca-certificates unzip sudo cron locate tar telnet wget logrotate fail2ban dos2unix \
-    ntpdate htop iotop vim iftop smbclient git libexpat1 ssl-cert ffmpeg \
+    ntpdate htop iotop vim iftop smbclient git libexpat1 ssl-cert ffmpeg usbutils snmp-mibs-downloader\
     cutycapt at libsox-fmt-mp3 sox libttspico-utils mariadb-client mariadb-common \
     #mbrola removed (not available for armhf )
     #add server apache
     apache2 apache2-utils \
     #cannot install php as php5 or 7 might be option. leave install.sh install needed php package
     #get from jeedom s stable install files
-    && apt-get -y remove -y brltty net-tools && apt-get upgrade -y && apt-get autoremove \
+    && apt-get -y remove -y brltty  && apt-get upgrade -y && apt-get autoremove \
     && mkdir -p /var/run/sshd -p /var/log/supervisor \
     && echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     && wget -qO /root/.bashrc https://raw.githubusercontent.com/jeedom/core/$VERSION/install/bashrc \
     && wget -qO /etc/motd https://raw.githubusercontent.com/jeedom/core/$VERSION/install/motd \
     && apt-get autoremove -y --purge && apt-get autoclean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
     ## latest version
-RUN wget -qO /root/install_docker.sh https://raw.githubusercontent.com/jeedom/core/$VERSION/install/install.sh \
+    && wget -qO /root/install_docker.sh https://raw.githubusercontent.com/jeedom/core/${VERSION}/install/install.sh \
     # tagged version
-    && if [[ latest != "${JDM_VERSION}" ]] && [[ "${VERSION}" == "V4-stable" ]]; then \
-    sed -i "s#https://github.com/jeedom/core/archive/\${VERSION}.zip#https://github.com/jeedom/core/archive/refs/tags/${JDM_VERSION}.zip#" /root/install_docker.sh ; fi \
+    && if [[ "latest" != "${JDM_VERSION}" ]] && [[ "${VERSION}" == "V4-stable" ]]; then \
+    sed -i "s#https://github.com/jeedom/core/archive/\${VERSION}.zip#https://github.com/jeedom/core/archive/refs/tags/\${JDM_VERSION}.zip#" /root/install_docker.sh ; fi \
     && chmod +x /root/install_docker.sh \
-    && echo "url install: $(grep -oP '(?<=  wget )(--no-check-certificate |)([^ ]+)' /root/install_docker.sh | grep -oP 'https.+')" || true \
+    #&& echo "url install: $(grep -oP '(?<=  wget )(--no-check-certificate |)([^ ]+)' /root/install_docker.sh | grep -oP 'https.+')" || true \
     ##########################################
     # Adapt install_docker to docker
     # fix jeedom install.sh for unattended install
@@ -69,8 +69,8 @@ RUN wget -qO /root/install_docker.sh https://raw.githubusercontent.com/jeedom/co
     && sed -i "s/systemctl daemon-reload/:/" /root/install_docker.sh \
     && sed -i "s#rm /var/lib/mysql/ib_logfile\*#:#" /root/install_docker.sh \
     && sed -i -E "s#mysql -uroot($| )#mysql -uroot -p\${MYSQL_ROOT_PASSWD} -h \${MYSQL_JEEDOM_HOST} -P\${MYSQL_JEEDOM_PORT} \${MYSQL_JEEDOM_DBNAME} #g" /root/install_docker.sh \
-    && grep "^MYSQL_JEEDOM_PASSWD=" /root/install_docker.sh \
-    && grep "mysql -uroot" /root/install_docker.sh \
+    && grep "^MYSQL_JEEDOM_PASSWD=" /root/install_docker.sh || true \
+    && grep "mysql -uroot" /root/install_docker.sh || true \
     && sed -i "s#apt install#apt-get install -y#" /root/install_docker.sh \
     # cut mysql server configuration
     #V4
