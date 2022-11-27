@@ -1,5 +1,5 @@
 ARG DISTRO=buster-slim
-FROM debian:${DISTRO}
+FROM debian:${DISTRO} as base
 
 ENV SHELL_ROOT_PASSWORD password
 ENV APACHE_HTTP_PORT 80
@@ -15,9 +15,6 @@ ENV MYSQL_JEEDOM_PORT 3306
 ENV XDEBUG 0
 ENV XDEBUG_HOST localhost
 ENV XEBUG_PORT 9003
-ARG VERSION
-ENV VERSION=${VERSION}
-ARG JDM_VERSION=latest
 ARG aptCacher
 
 
@@ -46,9 +43,21 @@ RUN if [[ -n ${aptCacher:-} ]]; then printf "Acquire::http::Proxy \"http://%s:31
     apache2 apache2-utils \
     #cannot install php as php5 or 7 might be option. leave install.sh install needed php package
     #get from jeedom s stable install files
-    && apt-get -y remove -y brltty  && apt-get upgrade -y && apt-get autoremove \
-    && mkdir -p /var/run/sshd -p /var/log/supervisor \
-    && echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
+    && apt-get -y remove -y brltty  && apt-get upgrade -y \
+    && apt-get autoremove -y --purge && apt-get autoclean \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /var/run/sshd -p /var/log/supervisor
+
+FROM base
+
+#Performs versions specific actions
+
+ARG VERSION
+ENV VERSION=${VERSION}
+ARG JDM_VERSION=latest
+ARG aptCacher
+
+RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     && wget -qO /root/.bashrc https://raw.githubusercontent.com/jeedom/core/$VERSION/install/bashrc \
     && wget -qO /etc/motd https://raw.githubusercontent.com/jeedom/core/$VERSION/install/motd \
     && apt-get autoremove -y --purge && apt-get autoclean \
@@ -71,11 +80,14 @@ RUN if [[ -n ${aptCacher:-} ]]; then printf "Acquire::http::Proxy \"http://%s:31
     && sed -i -E "s#mysql -uroot($| )#mysql -uroot -p\${MYSQL_ROOT_PASSWD} -h \${MYSQL_JEEDOM_HOST} -P\${MYSQL_JEEDOM_PORT} \${MYSQL_JEEDOM_DBNAME} #g" /root/install_docker.sh \
     && grep "^MYSQL_JEEDOM_PASSWD=" /root/install_docker.sh || true \
     && grep "mysql -uroot" /root/install_docker.sh || true \
-    && sed -i "s#apt install#apt-get install -y#" /root/install_docker.sh \
-    # cut mysql server configuration
+    && sed -i 's#-y install "#-y --no-install-recommends install "#' /root/install_docker.sh \
+    && sed -i "s#apt install#apt-get install -y --no-install-recommends#" /root/install_docker.sh \
+    # cut mysql/mariadb server configuration
     #V4
+    && sed -i 's/mariadb-server//' /root/install_docker.sh \
     && sed -i 's/service_action stop mysql/return 0/' /root/install_docker.sh \
-    && sed -i 's/service_action status mysql/\:/' /root/install_docker.sh \
+    && sed -i 's/service_action status mariadb/true/g' /root/install_docker.sh \
+    && sed -i 's/service_action status mysql/true/g' /root/install_docker.sh \
     && sed -i 's/service_action restart apache2/\:/' /root/install_docker.sh \
     #V3
     && sed -i 's/systemctl restart apache2/\:/' /root/install_docker.sh \
