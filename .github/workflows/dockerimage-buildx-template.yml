@@ -1,0 +1,109 @@
+name: reusable worflow template Docker buildx armhf+amd64
+
+on:
+  workflow_call:
+    inputs:
+      image-name:
+        required: true
+        type: string
+      build-context:
+        required: true
+        type: string
+      jdm_version:
+        description: 'jeedom version'
+        required: true
+        default: 'latest'
+        type: string
+      tag:
+        description: 'docker tag'
+        required: true
+        default: 'v4-latest'
+        type: string
+      push:
+        description: 'push to registry'
+        required: true
+        default: 'false'
+        type: string
+      version:
+        description: 'V4-stable'
+        default: 'V4-stable'
+        required: true
+        type: string
+      distro:
+        description: 'base OS'
+        required: true
+        type: string
+        default: "buster-slim"
+
+jobs:
+  buildx:
+    runs-on: ubuntu-latest
+    steps:
+      - name: env
+        run: env
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: latest
+          install: true
+          use: true
+      - name: Builder instance name
+        run: echo ${{ steps.buildx.outputs.name }}
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        id: cache
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      - name: Available platforms
+        run: echo ${{ steps.buildx.outputs.platforms }}
+      - name: Login to Docker hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: ${{ inputs.build-context }}
+          file: ./Docker/Dockerfile.buildx
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          # removed linux/arm64
+          platforms: linux/amd64,linux/arm/v7,linux/arm64
+          push: ${{ inputs.push }}
+          build-args: |
+            VERSION=${{ inputs.version }}
+            DISTRO=${{ inputs.distro }}
+            JDM_VERSION=${{ inputs.jdm_version }}
+          tags: ${{ secrets.DOCKER_USER }}/${{ inputs.image-name }}:${{ inputs.tag }}
+
+  inspect-security:
+    runs-on: ubuntu-latest
+    needs: buildx
+    steps:
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect ${{ secrets.DOCKER_USER }}/${{ inputs.image-name }}:${{ inputs.tag }}
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'docker.io/${{ secrets.DOCKER_USER }}/${{ inputs.image-name }}:${{ inputs.tag }}'
+          format: 'template'
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'

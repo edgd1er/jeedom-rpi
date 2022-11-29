@@ -128,9 +128,8 @@ RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     && rm -rf /var/lib/apt/lists/*
 
 COPY init.sh /root/init.sh
-COPY supervisord.conf /etc/supervisor/supervisord.conf
-COPY jeedom_apps.conf /etc/supervisor/conf.d/jeedom_apps.conf
-COPY supervisor /etc/logrotate.d/supervisor
+COPY supervisor/ /etc/supervisor/
+COPY supervisorlog /etc/logrotate.d/supervisor
 COPY jeedom_plugin /etc/logrotate.d/jeedom_plugin
 RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/  && \
 #VOLUME ["/tmp", "/var/log","/var/www/html/log/"]

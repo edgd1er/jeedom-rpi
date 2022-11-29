@@ -22,54 +22,20 @@ env:
   aptCacher: ''
 
 jobs:
-  buildx:
+  getenv:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-        with:
-          version: latest
-          install: true
-          use: true
-      - name: Builder instance name
-        run: echo ${{ steps.buildx.outputs.name }}
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        id: cache
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-      - name: Available platforms
-        run: echo ${{ steps.buildx.outputs.platforms }}
-      - name: Login to Docker hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build and push
-        uses: docker/build-push-action@v3
-        with:
-          builder: ${{ steps.buildx.outputs.name }}
-          context: ./Docker
-          file: ./Docker/Dockerfile.buildx
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
-          # removed linux/arm64
-          platforms: linux/amd64,linux/arm/v7,linux/arm64
-          push: true
-          build-args: |
-            VERSION=${{ env.VERSION }}
-            DISTRO=${{ env.DISTRO }}
-          tags: ${{ secrets.DOCKER_USER }}/${{ env.IMAGE }}:${{ env.TAG }}
-      - name: Inspect image
+      - name: env
         run: |
-          docker buildx imagetools inspect ${{ secrets.DOCKER_USER }}/${{ env.IMAGE }}:${{ env.TAG }}
+          env
+  build-images:
+    uses: ./.github/workflows/dockerimage-buildx-template.yml
+    with:
+      image-name: jeedom-rpi
+      build-context: './Docker'
+      jdm_version: latest
+      tag: v3-latest
+      version: release
+      distro: buster-slim
+      push: true
+    secrets: inherit

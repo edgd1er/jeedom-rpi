@@ -19,3 +19,8 @@ jobs:
         uses: hadolint/hadolint-action@v3.0.0
         with:
           dockerfile: ./Docker/Dockerfile.buildx
+          failure-threshold: info               # name of threshold level (error | warning | info | style | ignore | none)
+          format: json                          # Output format (tty | json | checkstyle | codeclimate | gitlab_codeclimate | gnu | codacy)
+          no-color: false                       # true | false
+          no-fail: false                        # true | false
+          verbose: true                         #
