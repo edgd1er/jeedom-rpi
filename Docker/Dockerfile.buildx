@@ -1,3 +1,4 @@
+#hadolint global ignore=SC3010
 ARG DISTRO=buster-slim
 FROM debian:${DISTRO} as base
 
@@ -51,12 +52,12 @@ RUN if [[ -n ${aptCacher:-} ]]; then printf "Acquire::http::Proxy \"http://%s:31
 FROM base
 
 #Performs versions specific actions
-
 ARG VERSION
 ENV VERSION=${VERSION}
 ARG JDM_VERSION=latest
 ARG aptCacher
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     && wget -qO /root/.bashrc https://raw.githubusercontent.com/jeedom/core/$VERSION/install/bashrc \
     && wget -qO /etc/motd https://raw.githubusercontent.com/jeedom/core/$VERSION/install/motd \

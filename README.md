@@ -17,7 +17,7 @@ Forked from https://github.com/CodaFog/jeedom-rpi
 
 | Last Version                                               | Commit Date |
 |------------------------------------------------------------|-------------|
-| [v4.3.11](https://doc.jeedom.com/en_US/core/4.3/changelog) | 22/11/24    |
+| [v4.3.12](https://doc.jeedom.com/en_US/core/4.3/changelog) | 22/12/08     |
 | [v3.3.59](https://doc.jeedom.com/en_US/core/3.3/changelog) | 21/12/17    |
 
 /!\ asof 2021/08/26, mysql image based on alpine:3.13 which require an updated libseccomp2 on the host (rpi) that rasbian does not have at the moment. 
@@ -66,6 +66,8 @@ Docker Hub: https://hub.docker.com/r/edgd1er/jeedom-rpi
 * [https://hub.docker.com/_/debian](https://github.com/debuerreotype/docker-debian-artifacts/blob/686d9f6eaada08a754bc7abf6f6184c65c5b378f/buster/Dockerfile)
 
 upgrade to bullseye postponed due to plugins still using python2.7 ( [openzwave](https://github.com/jeedom/plugin-openzwave/blob/beta/docs/en_US/index.md), maybe others ...)
+
+According to [Jeedom's documentation](https://doc.jeedom.com/en_US/plugins/automation%20protocol/zwavejs/): "ZwaveJs: This plugin is compatible with Debian 11 “Bullseye” and is therefore the official plugin to be preferred to manage your Z-Wave network in Jeedom." No Hope to have Zwave plugin to be ported on bullseye.
 
 ### Installation
 
