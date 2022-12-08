@@ -37,7 +37,7 @@ jobs:
       image-name: jeedom-rpi
       build-context: './Docker'
       jdm_version: latest
-      tag: buster-v4-latest
+      tag: v4-latest
       version: V4-stable
       distro: buster-slim
       push: true
