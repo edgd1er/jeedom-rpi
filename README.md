@@ -20,7 +20,7 @@ Forked from https://github.com/CodaFog/jeedom-rpi
 | [v4.3.12](https://doc.jeedom.com/en_US/core/4.3/changelog) | 22/12/08     |
 | [v3.3.59](https://doc.jeedom.com/en_US/core/3.3/changelog) | 21/12/17    |
 
-/!\ asof 2021/08/26, mysql image based on alpine:3.13 which require an updated libseccomp2 on the host (rpi) that rasbian does not have at the moment. 
+/!\ asof 2021/08/26, mysql image based on alpine:3.13 requires an updated libseccomp2 on the host (rpi) that rasbian does not have at the moment. 
 * technical explanation: https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.13.0#time64_requirements
 * two way to fix: https://docs.linuxserver.io/faq#libseccomp
   
@@ -44,6 +44,7 @@ Difference from fork:
 Please note that:
 - jeedom version (V3 or v4) will be downloaded during image building, so the core project is the version at build time.
 - Jeedom V3 (named release) is deprecated. Image is built, but v4 is my daily drive.  
+- If you wish to use zwavejs plugin, see [zwavejs](##zwaveJs) section.
 - upon upgrade, if no environment variable `JEEDOM_ENC_KEY` is set, the jeedom_encryption key will be changed, and decryption of encrypted values will be impossible. You can either restore a jeedom backup, set the `JEEDOM_ENC_KEY` variable, or have a SQL update query ready to reassign these values:
   apipro, apimarket, samba::backup::password, samba::backup::ip, samba::backup::username, ldap:password, ldap:host, ldap:username, dns::token, api
   (field names are extracted from L27: jeedom_core:/core/class/config.class.php)
@@ -67,7 +68,7 @@ Docker Hub: https://hub.docker.com/r/edgd1er/jeedom-rpi
 
 upgrade to bullseye postponed due to plugins still using python2.7 ( [openzwave](https://github.com/jeedom/plugin-openzwave/blob/beta/docs/en_US/index.md), maybe others ...)
 
-According to [Jeedom's documentation](https://doc.jeedom.com/en_US/plugins/automation%20protocol/zwavejs/): "ZwaveJs: This plugin is compatible with Debian 11 “Bullseye” and is therefore the official plugin to be preferred to manage your Z-Wave network in Jeedom." No Hope to have Zwave plugin to be ported on bullseye.
+According to [Jeedom's documentation](https://doc.jeedom.com/en_US/plugins/automation%20protocol/zwavejs/): "ZwaveJs: This plugin is compatible with Debian 11 “Bullseye” and is therefore the official plugin to be preferred to manage your Z-Wave network in Jeedom." No Hope to have Zwave plugin to be ported on bullseye. Please see [zwaveJs](##zwajeJs) section, if you plan to us that plugin.
 
 ### Installation
 
@@ -218,14 +219,63 @@ As a result, jeedom container upgrade is not as easy as it could be. many files 
 - /var/www/html/data/img
 - /var/www/html/data/fonts
 
+## zwaveJs
+
+Please note that is a work in progress. At the moment, Jeedom can handle my roller shutter, fibaro plugs, stella Z radiator and fibaro door sensors. It may not be effective or applicable to your setup.
+
+Official plugin will install mqtt package, mqtt plugin, node, clone zwavejsUI, build a container. the plugin will start a container to run zwaveJsui. all that add more than 600Mb in the container and add too many dependancies.
+
+What needs to be done:
+* run a mqtt container with jeedom settings in jeedom's network. 
+* Define an external mqtt in mqtt's plugin.
+* run zwaveJsui container in jeedom's network
+* alter code so plugin validates that installation, processes mqtt commands, communicates with zwaveJsUI container. 
+
+The hereafter commands will:
+* remove package dependancies (node, zwave, docker run)
+* alter daemon start, status so nothing is required as all requirements are external to the container.
+* alter code so it will be compatible with 8.6.1's version of zwaveJsUi. 
+* copy mqq data and redefine mqtt plugin config.
+
+```bash
+# copy mqtt data to external folder
+  docker compose cp web:/var/www/html/plugins/mqtt2/data/* mqtt/
+  sed -i "s#/var/www/html/plugins/mqtt2/core/class/../../data#/mosquito/config#" /root/containers_conf/jeedom/mqtt2/mosquitto.conf
+#change version expected: zwavejs/core/config/zwavejs.config.ini: wantedVersion=8.6.1
+  #docker-compose exec web sed -i 's#^wantedVersion=8.6.1#wantedVersion=8.6.1#' /var/www/html/plugins/zwavejs/core/config/zwavejs.config.ini
+  # do not clone zwavejs ui
+  docker-compose exec web sed -i -E  's/git clone --branch .*//g' /var/www/html/plugins/zwavejs/resources/pre_install.sh
+  # do not install zwave js
+  docker-compose exec web sed -i -E  's/sudo yarn.*//g' /var/www/html/plugins/zwavejs/resources/post_install.sh
+  docker-compose exec web sed -i -E  's/cd zwave-js-ui//g' /var/www/html/plugins/zwavejs/resources/post_install.sh
+  # zwavejs.class.php: remove yarn start / node is not local
+  # remove yarn start / node is not local
+  docker-compose exec web sed -i -E  's/ yarn start//g' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  # node is not local: simulate daemon detection
+  docker-compose exec web sed -i -E  's#server/bin/www.js#php#g' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  # remove node modules check as project was not cloned.
+  docker-compose exec web bash -c "mkdir -p /var/www/html/plugins/zwavejs/resources/zwave-js-ui/; touch /var/www/html/plugins/zwavejs/resources/zwave-js-ui/node_modules"
+  #docker-compose exec web sed -i 's#/../../resources/zwave-js-ui/node_modules#/../../resources/no_zwave-js-ui#' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  # detect nodeID_XX as XX
+  echo "in zwavejsui container uncheck 'Use nodes name instead of numeric nodeIDs' in parameters"
+  # log debug unknown key
+  docker compose exec web sed "s/'\.__('Le message reçu est de type inconnu', __FILE__)/, key: '.\$key.__('. Le message reçu est de type inconnu', __FILE__)/" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php```
+
+
 ## Fixes broken plugins: pushbullet, speedtest
 
 ```bash
 # pushbullet: replace object with jeeObject
-docker-compose exec web sed -i 's/(object/(jeeObject/' /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
-# pushbullet: replace obsolete websocket
-docker-compose exec web bash mv /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket.old
-docker-compose exec web pip install websocket-client
+  docker-compose exec web sed -i 's/(object/(jeeObject/' /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
+  docker-compose exec web grep -iP "\((|jee)object" /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
+  #debug
+  docker-compose exec web sed -i 's#/dev/null#/var/www/html/log/pushbullet_daemon.log#' /var/www/html/plugins/pushbullet/core/class/pushbullet.class.php
+  docker-compose exec web sed -i "s#'/tmp/pushbullet.log#'/var/www/html/log/pushbullet.log#"s /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py
+  # pushbullet: replace obsolete websocket
+  if [[ 0 -lt $(docker compose exec web bash -c "ls -l /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket"| wc -l) ]]; then
+    docker-compose exec web bash -c "mv /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket.old"
+  fi
+  docker-compose exec web bash -c "/usr/bin/python -m pip install --upgrade pip websocket websocket-client"
 
 #speedclient : change client version check to match current version
 docker-compose exec web sed -Ei "s/line == 'Version: 2.[0-9].[0-9a-z]{1,3}/line == 'Version: 2.1.4b1'/" /var/www/html/plugins/speedtest/core/class/speedtest.class.php
