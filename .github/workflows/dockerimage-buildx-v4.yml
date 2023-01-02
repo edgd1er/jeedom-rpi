@@ -31,7 +31,7 @@ env:
 
 
 jobs:
-  build-buster-v4:
+  build-bullseye-v4:
     uses: ./.github/workflows/dockerimage-buildx-template.yml
     with:
       image-name: jeedom-rpi
@@ -39,18 +39,18 @@ jobs:
       jdm_version: latest
       tag: v4-latest
       version: V4-stable
-      distro: buster-slim
+      distro: bullseye-slim
       push: true
     secrets: inherit
 
-  build-bullseye-v4:
+  build-buster-v4:
     uses: ./.github/workflows/dockerimage-buildx-template.yml
     with:
       image-name: jeedom-rpi
       build-context: './Docker'
       jdm_version: latest
-      tag: bullseye-v4-latest
+      tag: buster-v4-latest
       version: V4-stable
-      distro: bullseye-slim
+      distro: buster-slim
       push: true
     secrets: inherit
