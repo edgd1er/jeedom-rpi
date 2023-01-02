@@ -17,8 +17,11 @@ Forked from https://github.com/CodaFog/jeedom-rpi
 
 | Last Version                                               | Commit Date |
 |------------------------------------------------------------|-------------|
-| [v4.3.12](https://doc.jeedom.com/en_US/core/4.3/changelog) | 22/12/08     |
-| [v3.3.59](https://doc.jeedom.com/en_US/core/3.3/changelog) | 21/12/17    |
+| [v4.3.12](https://doc.jeedom.com/en_US/core/4.3/changelog) | 22/12/08    |
+| [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02    |
+
+/!\ According to jeedom, 3.3.60 will be the last update to v3.
+/!\ Asof 2023/01/02, v4-latest docker tag is now based on bullseye as zwave plugin has migrated to zwave js ui plugin. v4-buster-latest is available for plugins not compatible with debian:buster. 
 
 /!\ asof 2021/08/26, mysql image based on alpine:3.13 requires an updated libseccomp2 on the host (rpi) that rasbian does not have at the moment. 
 * technical explanation: https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.13.0#time64_requirements
@@ -32,13 +35,13 @@ Difference from fork:
 - Update image, install a version at build time
 - Use supervisor to handle cron, apache and logs. (allow proper shutdown through PID 1 signal)
 - Image is ready to use 
-- Updated base image: debian buster-slim
+- Updated base image: debian bullseye-slim
 - Added https support
 - Healthcheck
 - Handle services with supervisor.
 - Able to redirect apache logs to stdout ( disable fail2ban as logs are not files anymore)
-- At run time, can enable xdebug for dev purpose. (Env var : XDEBUG=1)
-- When logs are note redirected to stdout, fail2ban is protecting services.
+- At run time, can enable xdebug for dev purpose. (wip, Env var : XDEBUG=1)
+- When logs are not redirected to stdout, fail2ban is protecting services.
 - Admin password is resetted to admin
 
 Please note that:
@@ -221,11 +224,11 @@ As a result, jeedom container upgrade is not as easy as it could be. many files 
 
 ## zwaveJs
 
-Please note that is a work in progress. At the moment, Jeedom can handle my roller shutter, fibaro plugs, stella Z radiator and fibaro door sensors. It may not be effective or applicable to your setup.
+ At the moment, Jeedom can handle my roller shutter, fibaro plugs, stella Z radiator and fibaro door sensors. It may not be effective or applicable to your setup.
 
 Official plugin will install mqtt package, mqtt plugin, node, clone zwavejsUI, build a container. the plugin will start a container to run zwaveJsui. all that add more than 600Mb in the container and add too many dependancies.
 
-What needs to be done:
+What needs to be done, to have a lighter container:
 * run a mqtt container with jeedom settings in jeedom's network. 
 * Define an external mqtt in mqtt's plugin.
 * run zwaveJsui container in jeedom's network
@@ -234,7 +237,7 @@ What needs to be done:
 The hereafter commands will:
 * remove package dependancies (node, zwave, docker run)
 * alter daemon start, status so nothing is required as all requirements are external to the container.
-* alter code so it will be compatible with 8.6.1's version of zwaveJsUi. 
+* alter code so it will be compatible with 8.6.2's version of zwaveJsUi. 
 * copy mqq data and redefine mqtt plugin config.
 
 ```bash
