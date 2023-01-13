@@ -9,6 +9,9 @@ on:
       build-context:
         required: true
         type: string
+      build-dockerfile:
+        description: 'Dockerfile'
+        default: './Docker/Dockerfile.buildx'
       jdm_version:
         description: 'jeedom version'
         required: true
@@ -76,7 +79,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: ${{ inputs.build-context }}
-          file: ./Docker/Dockerfile.buildx
+          file: ${{ inputs.build-dockerfile }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           # removed linux/arm64

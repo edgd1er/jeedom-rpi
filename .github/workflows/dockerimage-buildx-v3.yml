@@ -33,6 +33,7 @@ jobs:
     with:
       image-name: jeedom-rpi
       build-context: './Docker'
+      build-dockerfile: './Docker/Dockerfile.v3'
       jdm_version: latest
       tag: v3-latest
       version: release
