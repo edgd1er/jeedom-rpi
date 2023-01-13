@@ -40,6 +40,7 @@ jobs:
       tag: v4-latest
       version: V4-stable
       distro: bullseye-slim
+      build-dockerfile: './Docker/Dockerfile.buildx'
       push: true
     secrets: inherit
 

@@ -35,9 +35,9 @@ RUN if [[ -n ${aptCacher:-} ]]; then printf "Acquire::http::Proxy \"http://%s:31
     && apt-get update && apt-get install -y --no-install-recommends wget rsync automake lsof iproute2 \
 	curl apt-transport-https software-properties-common net-tools gettext snmp \
     && add-apt-repository non-free  && apt-get update && apt-get install -y --no-install-recommends supervisor \
-	python3 python3-pip python3-setuptools python-setuptools nmap xvfb iputils-ping libcurl3-gnutls librsync-dev \
+	python3 python3-pip python3-setuptools python-setuptools nmap iputils-ping libcurl3-gnutls librsync-dev \
     passwd usbutils usb.ids ntp ca-certificates unzip sudo cron locate tar telnet wget logrotate fail2ban dos2unix \
-    ntpdate htop iotop vim iftop smbclient git libexpat1 ssl-cert ffmpeg usbutils snmp-mibs-downloader\
+    ntpdate htop iotop vim iftop smbclient git libexpat1 ssl-cert ffmpeg usbutils \
     cutycapt at libsox-fmt-mp3 sox libttspico-utils mariadb-client mariadb-common \
     #mbrola removed (not available for armhf )
     #add server apache
@@ -108,7 +108,7 @@ RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     && /root/install_docker.sh -s 5 -v ${VERSION} \
     # s6 install jeedom download
     && /root/install_docker.sh -s 6 -v ${VERSION} \
-    && sed -i '/"mariadb-server" .*/d' /var/www/html/install/packages.json \
+    && [[ -f /var/www/html/install/packages.json ]] && sed -i '/"mariadb-server" .*/d' /var/www/html/install/packages.json || true \
 	#Step 7 = apache SSL + php conf + mysql server conf
     && /root/install_docker.sh -s 7 -v ${VERSION} \
     # Next steps are executed in init.
