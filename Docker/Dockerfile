@@ -32,13 +32,13 @@ RUN if [[ -n ${aptCacher:-} ]]; then printf "Acquire::http::Proxy \"http://%s:31
     #&& echo "Dir::Cache \"\";\nDir::Cache::archives \"\";" | tee /etc/apt/apt.conf.d/02nocache && \
     && printf "#/etc/dpkg/dpkg.cfg.d/01_nodoc\n\n# Delete locales\npath-exclude=/usr/share/locale/*\n\n# Delete man pages\npath-exclude=/usr/share/man/*\n\n# Delete docs\npath-exclude=/usr/share/doc/*\npath-include=/usr/share/doc/*/copyright" | tee /etc/dpkg/dpkg.cfg.d/03nodoc \
     #Massive apt install of jeedom requirements to optimise downloads
-    && apt-get update && apt-get install -y --no-install-recommends wget rsync automake lsof iproute2 \
+    && apt-get update && apt-get install -y --no-install-recommends wget rsync lsof iproute2 \
 	curl apt-transport-https software-properties-common net-tools gettext snmp \
     && add-apt-repository non-free  && apt-get update && apt-get install -y --no-install-recommends supervisor \
-	python3 python3-pip python3-setuptools python-setuptools nmap xvfb iputils-ping libcurl3-gnutls librsync-dev \
-    passwd usbutils usb.ids ntp ca-certificates unzip sudo cron locate tar telnet wget logrotate fail2ban dos2unix \
-    ntpdate htop iotop vim iftop smbclient git libexpat1 ssl-cert ffmpeg usbutils snmp-mibs-downloader\
-    cutycapt at libsox-fmt-mp3 sox libttspico-utils mariadb-client mariadb-common \
+	python3 python3-pip python3-setuptools iputils-ping libcurl3-gnutls librsync-dev \
+    passwd usbutils usb.ids ntp ca-certificates unzip sudo cron locate tar telnet logrotate fail2ban dos2unix \
+    ntpdate htop vim smbclient git libexpat1 ssl-cert ffmpeg usbutils snmp-mibs-downloader\
+    cutycapt at mariadb-client mariadb-common bzip2 gpg gpg-agent gpgconf xz-utils \
     #mbrola removed (not available for armhf )
     #add server apache
     apache2 apache2-utils \
