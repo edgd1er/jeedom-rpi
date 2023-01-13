@@ -15,16 +15,16 @@ help:
 lint: ## stop all containers
 	@echo "lint dockerfile ..."
 	docker image pull hadolint/hadolint
-	docker run -i --rm hadolint/hadolint < Docker/Dockerfile.buildx
+	docker run -i --rm hadolint/hadolint < Docker/Dockerfile
 
 buildv3: ## build v3 image
 	@echo -e "build image ...v3"
 	## docker-compose -f docker-compose-dev.yml build
-	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="release" --build-arg DISTRO="buster-slim" -f Docker/Dockerfile.buildx -t edgd1er/jeedom-rpi:v3-latest ./Docker
+	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="release" --build-arg DISTRO="buster-slim" -f Docker/Dockerfile.v3 -t edgd1er/jeedom-rpi:v3-latest ./Docker
 
 build: ## build v4 image
 	@echo -e "\n\nbuild image ...v4"
-	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="V4-stable" --build-arg DISTRO="buster-slim" -f Docker/Dockerfile.buildx -t edgd1er/jeedom-rpi:v4-latest ./Docker
+	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="V4-stable" --build-arg DISTRO="bullseye-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-latest ./Docker
 
 run:
 	@echo "run container"
