@@ -17,7 +17,7 @@ Forked from https://github.com/CodaFog/jeedom-rpi
 
 | Last Version                                               | Commit Date |
 |------------------------------------------------------------|-------------|
-| [v4.3.14](https://doc.jeedom.com/en_US/core/4.3/changelog) | 23/01/13    |
+| [v4.3.15](https://doc.jeedom.com/en_US/core/4.3/changelog) | 23/01/19    |
 | [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02    |
 
 /!\ According to jeedom, 3.3.60 will be the last update to v3.
@@ -117,6 +117,14 @@ if LOGS_TO_STDOUT is set to yes, apache logs are sent to container's stdout.
       - MYSQL_JEEDOM_PASSWD mysql username password
 ```
 
+### Upgrade
+
+To upgrade jeedom two options:
+* fetch new image and create a new container, be sure to have the `JEEDOM_ENCRYPTION_KEY` env var set, so the new container will be able to decode data in database.
+* Use jeedom's upgrade feature. be sure to disable image update. 
+
+JEEDOM_ENCRYPTION_KEY's value is to be found in `/var/www/htmldata/jeedom_encryption.key`
+
 ### Secrets
 
 the hereunder variables may be replaced by secrets:
@@ -157,6 +165,7 @@ No volumes are defined within the image.
 |jeedom|/var/www/html/backup| jeedom backup dir                 |
 |jeedom|/var/www/html/tmp| jeedom temp dir|
 |jeedom|/var/www/html/log/| jeedom log dir                    |
+
 ### Example of a docker-compose
 
 ```
