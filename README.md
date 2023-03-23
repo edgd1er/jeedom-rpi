@@ -7,17 +7,17 @@
 ![Docker Pulls](https://badgen.net/docker/pulls/edgd1er/jeedom-rpi?icon=docker&label=pulls)
 ![Docker Stars](https://badgen.net/docker/stars/edgd1er/jeedom-rpi?icon=docker&label=stars)
 
-![Docker Size v4](https://badgen.net/docker/size/edgd1er/jeedom-rpi/v4-latest?icon=docker&label=Docker%20size%20v4)
-![ImageLayers v4](https://badgen.net/docker/layers/edgd1er/jeedom-rpi/v4-latest?icon=docker&label=Docker%20layers%20v4)
+![Docker Size v4](https://badgen.net/docker/size/edgd1er/jeedom-rpi/v4-latest?icon=docker&label=Size%20v4)
+![ImageLayers v4](https://badgen.net//docker/layers/edgd1er/jeedom-rpi?icon=docker&label=Layers%20v4)
 
-![Docker Size v3](https://badgen.net/docker/size/edgd1er/jeedom-rpi/v3-latest?icon=docker&label=Docker%20size%20v3)
-![ImageLayers v3](https://badgen.net/docker/layers/edgd1er/jeedom-rpi/v4-latest?icon=docker&label=Docker%20layers%20v3)
+![Docker Size v3](https://badgen.net/docker/size/edgd1er/jeedom-rpi/v3-latest?icon=docker&label=Size%20v3)
+![ImageLayers v3](https://badgen.net/docker/layers/edgd1er/jeedom-rpi?icon=docker&label=Layers%20v3)
 
 Forked from https://github.com/CodaFog/jeedom-rpi
 
 | Last Version                                               | Commit Date |
 |------------------------------------------------------------|-------------|
-| [v4.3.15](https://doc.jeedom.com/en_US/core/4.3/changelog) | 23/01/19    |
+| [v4.3.16](https://doc.jeedom.com/en_US/core/4.3/changelog) | 23/03/23     |
 | [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02    |
 
 /!\ According to jeedom, 3.3.60 will be the last update to v3.
@@ -121,7 +121,11 @@ if LOGS_TO_STDOUT is set to yes, apache logs are sent to container's stdout.
 
 To upgrade jeedom two options:
 * fetch new image and create a new container, be sure to have the `JEEDOM_ENCRYPTION_KEY` env var set, so the new container will be able to decode data in database.
+  * pros: start with a clean image. container size is reduced.
+  * cons: have to re run all plugins dependancies install.
 * Use jeedom's upgrade feature. be sure to disable image update. 
+  * cons: start with a container that may have problems, possiblby with a huge container.
+  * pros: no plugins dependancies to install
 
 JEEDOM_ENCRYPTION_KEY's value is to be found in `/var/www/htmldata/jeedom_encryption.key`
 
@@ -254,10 +258,11 @@ The hereafter commands will:
   docker compose cp web:/var/www/html/plugins/mqtt2/data/* mqtt/
   sed -i "s#/var/www/html/plugins/mqtt2/core/class/../../data#/mosquito/config#" /root/containers_conf/jeedom/mqtt2/mosquitto.conf
 #change version expected: zwavejs/core/config/zwavejs.config.ini: wantedVersion=8.6.1
-  #docker-compose exec web sed -i 's#^wantedVersion=8.6.1#wantedVersion=8.6.1#' /var/www/html/plugins/zwavejs/core/config/zwavejs.config.ini
+  docker-compose exec web sed -i 's#^wantedVersion=8\..\..#wantedVersion=8.11.0#' /var/www/html/plugins/zwavejs/core/config/zwavejs.config.ini
   # do not clone zwavejs ui
   docker-compose exec web sed -i -E  's/git clone --branch .*//g' /var/www/html/plugins/zwavejs/resources/pre_install.sh
-  # do not install zwave js
+  # do not install zwave js, nor dependencies
+  docker-compose exec web sed -i '/npm/,+2d' /var/www/html/plugins/zwavejs/plugin_info/packages.json
   docker-compose exec web sed -i -E  's/sudo yarn.*//g' /var/www/html/plugins/zwavejs/resources/post_install.sh
   docker-compose exec web sed -i -E  's/cd zwave-js-ui//g' /var/www/html/plugins/zwavejs/resources/post_install.sh
   # zwavejs.class.php: remove yarn start / node is not local
@@ -269,9 +274,10 @@ The hereafter commands will:
   docker-compose exec web bash -c "mkdir -p /var/www/html/plugins/zwavejs/resources/zwave-js-ui/; touch /var/www/html/plugins/zwavejs/resources/zwave-js-ui/node_modules"
   #docker-compose exec web sed -i 's#/../../resources/zwave-js-ui/node_modules#/../../resources/no_zwave-js-ui#' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   # detect nodeID_XX as XX
-  echo "in zwavejsui container uncheck 'Use nodes name instead of numeric nodeIDs' in parameters"
+  echo "in zwavejsui uncheck 'Use nodes name instead of numeric nodeIDs' in parameters"
   # log debug unknown key
-  docker compose exec web sed "s/'\.__('Le message reçu est de type inconnu', __FILE__)/, key: '.\$key.__('. Le message reçu est de type inconnu', __FILE__)/" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php```
+  docker compose exec web sed -i "s/'\.__('Le message reçu est de type inconnu', __FILE__)/, key: '.\$key.__('. Le message reçu est de type inconnu', __FILE__)/" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+```
 
 
 ## Fixes broken plugins: pushbullet, speedtest
@@ -280,19 +286,22 @@ The hereafter commands will:
 # pushbullet: replace object with jeeObject
   docker-compose exec web sed -i 's/(object/(jeeObject/' /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
   docker-compose exec web grep -iP "\((|jee)object" /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
-  #debug
+  # pushbullet: change tmp path
+  docker-compose exec web sed -i "s#path = os.path.dirname(os.path.realpath(__file__))+'/../../../../tmp'#path = '/tmp'#" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py
+  # pushbullet: activation du log du daemon
   docker-compose exec web sed -i 's#/dev/null#/var/www/html/log/pushbullet_daemon.log#' /var/www/html/plugins/pushbullet/core/class/pushbullet.class.php
-  docker-compose exec web sed -i "s#'/tmp/pushbullet.log#'/var/www/html/log/pushbullet.log#"s /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py
+  docker-compose exec web sed -i "s#/tmp/pushbullet.log#/var/www/html/log/pushbullet.log#" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py
   # pushbullet: replace obsolete websocket
   if [[ 0 -lt $(docker compose exec web bash -c "ls -l /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket"| wc -l) ]]; then
     docker-compose exec web bash -c "mv /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket.old"
   fi
-  docker-compose exec web bash -c "/usr/bin/python -m pip install --upgrade pip websocket websocket-client"
-
-#speedclient : change client version check to match current version
-docker-compose exec web sed -Ei "s/line == 'Version: 2.[0-9].[0-9a-z]{1,3}/line == 'Version: 2.1.4b1'/" /var/www/html/plugins/speedtest/core/class/speedtest.class.php
-docker-compose exec web grep -H "line == 'Version" /var/www/html/plugins/speedtest/core/class/speedtest.class.php
-```
+  
+  docker-compose exec web bash -c "sed -i 's#nice -n 19 /usr/bin/python #nice -n 19 /usr/bin/python3 #' /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py"
+  docker-compose exec web bash -c "sed -i 's# file(# open(#' /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py"
+  docker-compose exec web bash -c "apt-get install -y --no-install-recommends python-dev;/usr/bin/python -m pip install --upgrade pip websocket websocket-client"
+  # Meross
+  docker-compose exec web bash -c "apt-get install -y --no-install-recommends g++ python3-dev; pip3 install --upgrade pip meross_iot"
+ ```
 
 ### Github
 

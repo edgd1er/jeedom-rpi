@@ -22,9 +22,13 @@ buildv3: ## build v3 image
 	## docker-compose -f docker-compose-dev.yml build
 	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="release" --build-arg DISTRO="buster-slim" -f Docker/Dockerfile.v3 -t edgd1er/jeedom-rpi:v3-latest ./Docker
 
-build: ## build v4 image
+build: ## build v4 image with bullseye
 	@echo -e "\n\nbuild image ...v4"
 	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="V4-stable" --build-arg DISTRO="bullseye-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-latest ./Docker
+
+buildb: ## build v4 image with buster
+	@echo -e "\n\nbuild image ...v4 buster"
+	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="V4-stable" --build-arg DISTRO="buster-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:buster-v4-latest ./Docker
 
 run:
 	@echo "run container"

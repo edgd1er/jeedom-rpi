@@ -35,15 +35,19 @@ RUN if [[ -n ${aptCacher:-} ]]; then printf "Acquire::http::Proxy \"http://%s:31
     && apt-get update && apt-get install -y --no-install-recommends wget rsync lsof iproute2 \
 	curl apt-transport-https software-properties-common net-tools gettext snmp \
     && add-apt-repository non-free  && apt-get update && apt-get install -y --no-install-recommends supervisor \
-	python3 python3-pip python3-setuptools iputils-ping libcurl3-gnutls librsync-dev \
+	python python3 python3-pip python3-setuptools iputils-ping libcurl3-gnutls librsync-dev \
     passwd usbutils usb.ids ntp ca-certificates unzip sudo cron locate tar telnet logrotate fail2ban dos2unix \
     ntpdate htop vim smbclient git libexpat1 ssl-cert ffmpeg usbutils snmp-mibs-downloader\
     cutycapt at mariadb-client mariadb-common bzip2 gpg gpg-agent gpgconf xz-utils \
     #mbrola removed (not available for armhf )
     #add server apache
     apache2 apache2-utils \
+    && update-ca-certificates --fresh \
+    #install python2 pip from boostrap as not in repo anymore for debian 11
+    && if [[ ${DISTRO} =~ bullseye ]]; then curl https://bootstrap.pypa.io/pip/2.7/get-pip.py | python - \
+    else apt-get install -y --no-install-recommends python2;fi \
     #cannot install php as php5 or 7 might be option. leave install.sh install needed php package
-    #get from jeedom s stable install files
+    #clean temp files
     && apt-get -y remove -y brltty  && apt-get upgrade -y \
     && apt-get autoremove -y --purge && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/* \
@@ -63,6 +67,7 @@ RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     && wget -qO /etc/motd https://raw.githubusercontent.com/jeedom/core/$VERSION/install/motd \
     && apt-get autoremove -y --purge && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/* \
+    #get from jeedom s stable install files
     ## latest version
     && wget -qO /root/install_docker.sh https://raw.githubusercontent.com/jeedom/core/${VERSION}/install/install.sh \
     # tagged version
@@ -121,7 +126,6 @@ RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     #v4 s11 = none / v4: post install (cron )
     && if [ $VERSION = "release" ]; then /root/install_docker.sh -s 10 -v ${VERSION} \
     else /root/install_docker.sh -s 8 -v ${VERSION};/root/install_docker.sh -s 11 -v ${VERSION}; fi \
-    && update-ca-certificates --fresh \
     && apt-get remove -y x11-common \
     # untouched data dir
     && cp -Rp /var/www/html/data/ /var/www/html/.data/ \
@@ -137,6 +141,7 @@ RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/  && \
 #VOLUME ["/tmp", "/var/log","/var/www/html/log/"]
  if [[ -n $aptCacher ]]; then echo "" > /etc/apt/apt.conf.d/01proxy; fi
 
+WORKDIR /var/www/html/
 HEALTHCHECK --interval=60s --timeout=3s --retries=3 --start-period=40s \
  CMD curl -s --fail http://localhost/here.html || exit 1
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
