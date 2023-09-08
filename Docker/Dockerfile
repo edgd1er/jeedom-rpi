@@ -38,7 +38,7 @@ RUN if [[ -n ${aptCacher:-} ]]; then printf "Acquire::http::Proxy \"http://%s:31
 	python python3 python3-pip python3-setuptools iputils-ping libcurl3-gnutls librsync-dev \
     passwd usbutils usb.ids ntp ca-certificates unzip sudo cron locate tar telnet logrotate fail2ban dos2unix \
     ntpdate htop vim smbclient git libexpat1 ssl-cert ffmpeg usbutils snmp-mibs-downloader\
-    cutycapt at mariadb-client mariadb-common bzip2 gpg gpg-agent gpgconf xz-utils \
+    cutycapt at mariadb-client mariadb-common bzip2 gpg gpg-agent gpgconf xz-utils udev\
     #mbrola removed (not available for armhf )
     #add server apache
     apache2 apache2-utils \
@@ -126,6 +126,8 @@ RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     #v4 s11 = none / v4: post install (cron )
     && if [ $VERSION = "release" ]; then /root/install_docker.sh -s 10 -v ${VERSION} \
     else /root/install_docker.sh -s 8 -v ${VERSION};/root/install_docker.sh -s 11 -v ${VERSION}; fi \
+    # rpi
+    && [[ ! -f /sbin/udevadm ]] && ln -sfn /bin/udevadm /sbin/udevadm || true \
     && apt-get remove -y x11-common \
     # untouched data dir
     && cp -Rp /var/www/html/data/ /var/www/html/.data/ \

@@ -3,32 +3,50 @@ on:
   schedule:
     - cron: "0 17 * * *"
   workflow_dispatch:
-
 env:
-  J3_VERSION: 3.3.60
-  J4_VERSION: 4.3.17
+  ZWAVE_VERSION: 8.25.0
 
 jobs:
   check-j4_version:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: get J4 version
         id: getJ4version
         run: |
+          ls -al .
+          local_version=$( grep -oP "(?<=v)4\.[0-9\.]+" README.md )
           ver=$(curl -s "https://raw.githubusercontent.com/jeedom/core/V4-stable/core/config/version")
-          echo "latest built version: ${{ env.J4_VERSION }}, latest github version: ${ver}"
-          if [[ ${{ env.J4_VERSION }} == ${ver} ]]; then exit 0; fi
+          echo "latest built version: ${local_version}, latest github version: ${ver}"
+          if [[ ${local_version} == ${ver} ]]; then exit 0; fi
           curl -s "https://raw.githubusercontent.com/jeedom/core/V4-stable/docs/fr_FR/changelog.md" | grep -A20 -P "## ${ver}" | sed '/^$/d' | head -10
           exit 1
 
   check-j3_version:
       runs-on: ubuntu-latest
       steps:
+        - name: Checkout
+          uses: actions/checkout@v4
         - name: get J3 version
           id: getJ3version
           run: |
+            ls -al .
+            local_ver=$( grep -oP "(?<=v)3\.[0-9\.]+" README.md )
             ver=$(curl -s "https://raw.githubusercontent.com/jeedom/core/master/core/config/version")
-            echo "latest built version: ${{ env.J3_VERSION }}, latest github version: ${ver}"
-            if [[ ${{ env.J3_VERSION }} == ${ver} ]]; then exit 0; fi
+            echo "latest built version: ${local_ver}, latest github version: ${ver}"
+            if [[ ${local_ver} == ${ver} ]]; then exit 0; fi
             curl -s "https://raw.githubusercontent.com/jeedom/core/master/docs/fr_FR/changelog.md" | grep -A20 -P "${ver}" | sed '/^$/d' | head -10
             exit 1
+
+  check-zwave_version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: get zwaveJsUi version
+        id: getzwaveJsUi
+        run: |
+          auth=''
+          if [[ -n ${{ secrets.GITHUB_TOKEN }} ]]; then auth='-H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"'; fi
+          ver=$(curl -s ${auth} "https://api.github.com/repos/zwave-js/zwave-js-ui/releases/latest" | jq -r .tag_name )
+          echo "Zwave-js-ui version: ${{ env.ZWAVE_VERSION }}, latest github Zwave-js-ui version: ${ver}"
+          if [[ ${{ env.ZWAVE_VERSION }} != ${ver#v} ]]; then exit 1; fi
