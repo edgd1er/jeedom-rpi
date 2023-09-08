@@ -5,7 +5,9 @@ SHELL:=bash
 
 # Enable BuildKit for Docker build
 export DOCKER_BUILDKIT:=1
-export aptCacher:=
+export aptCacher:=192.168.53.208
+export ZWAVE_VER:= v8.25.0
+#export aptCacher:=
 progress:=auto #plain auto
 
 # https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
@@ -29,6 +31,17 @@ build: ## build v4 image with bullseye
 buildb: ## build v4 image with buster
 	@echo -e "\n\nbuild image ...v4 buster"
 	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="V4-stable" --build-arg DISTRO="buster-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:buster-v4-latest ./Docker
+
+ver: ## check version
+	@JDM_VER=$$( grep -oP "(?<=v)4\.[0-9\.]+" README.md ) ; \
+	jdm=$$( curl -s "https://raw.githubusercontent.com/jeedom/core/V4-stable/core/config/version"); \
+	zwave=$$( curl -s "https://api.github.com/repos/zwave-js/zwave-js-ui/releases/latest" | jq -r .tag_name) ; \
+	echo "Jeedom local: $${JDM_VER} remote: $${jdm}" ; \
+	echo "Zwave-ui-js local: ${ZWAVE_VER} remote: $${zwave}" ; \
+	if [[ $${jdm} != $${JDM_VER} ]]; then echo "Jeedom update detected: https://raw.githubusercontent.com/jeedom/core/V4-stable/core/config/version" ;\
+	  sed -i -E "s/ VERSION:.+/ VERSION: ${jdm}/" docker-compose.yml; fi ; \
+	if [[ $${zwave} != $${ZWAVE_VER} ]]; then echo "zwave-js-ui update detected: https://raw.githubusercontent.com/zwave-js/zwave-js-ui/"; fi
+
 
 run:
 	@echo "run container"
