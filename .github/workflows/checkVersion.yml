@@ -4,7 +4,7 @@ on:
     - cron: "0 17 * * *"
   workflow_dispatch:
 env:
-  ZWAVE_VERSION: 8.25.0
+  ZWAVE_VERSION: 8.25.1
 
 jobs:
   check-j4_version:
@@ -41,6 +41,7 @@ jobs:
 
   check-zwave_version:
     runs-on: ubuntu-latest
+    if: false
     steps:
       - name: get zwaveJsUi version
         id: getzwaveJsUi
