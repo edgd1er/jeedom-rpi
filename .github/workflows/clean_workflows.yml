@@ -49,7 +49,7 @@ jobs:
             skipped
             stale
             timed_out
-          save_period: 0
+          save_period: 1
           save_min_runs_number: 0
           #branch: ${{ matrix.branch }}
           dry: ${{ github.event.inputs.dry || env.DRY }}
