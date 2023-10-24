@@ -6,7 +6,7 @@ SHELL:=bash
 # Enable BuildKit for Docker build
 export DOCKER_BUILDKIT:=1
 export aptCacher:=192.168.53.208
-export ZWAVE_VER:= v8.25.1
+export ZWAVE_VER:= v9.2.3
 #export aptCacher:=
 progress:=auto #plain auto
 
@@ -45,4 +45,4 @@ ver: ## check version
 
 run:
 	@echo "run container"
-	docker-compose up
+	docker compose up
