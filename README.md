@@ -17,24 +17,29 @@ Forked from https://github.com/CodaFog/jeedom-rpi
 
 | Last Version                                               | Commit Date |
 |------------------------------------------------------------|-------------|
-| [v4.3.19](https://doc.jeedom.com/en_US/core/4.3/changelog) | 23/11/01    |
+| [v4.3.20](https://doc.jeedom.com/fr_FR/core/4.3/changelog) | 23/11/22    |
 | [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02    |
 
 /!\ According to jeedom, 3.3.60 will be the last update to v3.
-/!\ Asof 2023/01/02, v4-latest docker tag is now based on bullseye as zwave plugin has migrated to zwave-js-ui plugin. v4-buster-latest is available for plugins not compatible with debian:buster. 
 
-/!\ asof 2021/08/26, mysql image based on alpine:3.13 requires an updated libseccomp2 on the host (rpi) that rasbian does not have at the moment. 
+/!\ Asof 2023/01/02, v4-latest docker tag is now based on bullseye (v11) as zwave plugin has migrated to zwave-js-ui
+plugin. v4-buster-latest (v10) is available for plugins not compatible with debian:bullseye (V11).
+
+/!\ asof 2021/08/26, mysql image based on alpine:3.13 requires an updated libseccomp2 on the host (rpi) that rasbian
+does not have at the moment.
+
 * technical explanation: https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.13.0#time64_requirements
 * two way to fix: https://docs.linuxserver.io/faq#libseccomp
-  
+
   deb files: http://ftp.debian.org/debian/pool/main/libs/libseccomp/
 
 A Jeedom Docker image for Raspberry Pi based on debian image.
 
 Difference from fork:
+
 - Update image, install a version at build time
 - Use supervisor to handle cron, apache and logs. (allow proper shutdown through PID 1 signal)
-- Image is ready to use 
+- Image is ready to use
 - Updated base image: debian bullseye-slim
 - Added https support
 - Healthcheck
@@ -45,19 +50,23 @@ Difference from fork:
 - Admin password is resetted to admin
 
 Please note that:
-- jeedom version (V3 or v4) will be downloaded during image building, so the core project is the version at build time.
-- Jeedom V3 (named release) is deprecated. Image is built, but v4 is my daily drive.  
-- If you wish to use zwavejs plugin, see [zwavejs](##zwaveJs) section.
-- upon upgrade, if no environment variable `JEEDOM_ENC_KEY` is set, the jeedom_encryption key will be changed, and decryption of encrypted values will be impossible. You can either restore a jeedom backup, set the `JEEDOM_ENC_KEY` variable, or have a SQL update query ready to reassign these values:
-  apipro, apimarket, samba::backup::password, samba::backup::ip, samba::backup::username, ldap:password, ldap:host, ldap:username, dns::token, api
-  (field names are extracted from L27: jeedom_core:/core/class/config.class.php)
-  that key can be generated (genkey core/class/config.class.php) using: `cat /dev/urandom | tr -dc '0-9a-zA-Z' | fold -w 32 | head -1` and mounted as a binded volume
-  Plugins store encrypted values (enedis, may be others ..), so association will have to be done again.
 
+- jeedom version (V3 or v4) will be downloaded during image building, so the core project is the version at build time.
+- Jeedom V3 (named release) is deprecated. Image is built, but v4 is my daily drive.
+- If you wish to use zwavejs plugin, see [zwavejs](##zwaveJs) section.
+- upon upgrade, if no environment variable `JEEDOM_ENC_KEY` is set, the jeedom_encryption key will be changed, and
+  decryption of encrypted values will be impossible. You can either restore a jeedom backup, set the `JEEDOM_ENC_KEY`
+  variable, or have a SQL update query ready to reassign these values:
+  apipro, apimarket, samba::backup::password, samba::backup::ip, samba::backup::username, ldap:password, ldap:host,
+  ldap:username, dns::token, api
+  (field names are extracted from L27: jeedom_core:/core/class/config.class.php)
+  that key can be generated (genkey core/class/config.class.php)
+  using: `cat /dev/urandom | tr -dc '0-9a-zA-Z' | fold -w 32 | head -1` and mounted as a binded volume
+  Plugins store encrypted values (enedis, may be others ..), so association will have to be done again.
 
 Images are build for arm/v6, arm/v7 and amd64
 
-This readme shows a **Dockerfile** of a dockerized [Jeedom](https://www.jeedom.com) based on a debian buster slim image. 
+This readme shows a **Dockerfile** of a dockerized [Jeedom](https://www.jeedom.com) based on a debian buster slim image.
 The mysql database is based on linuxserver mariadb image on a distinct container.
 
 Jeedom major version is given as a parameter, release if for jeedom v3, V4-stable for v4.
@@ -69,13 +78,17 @@ Docker Hub: https://hub.docker.com/r/edgd1er/jeedom-rpi
 * [linuxserver/mariadb](https://hub.docker.com/r/linuxserver/mariadb)
 * [https://hub.docker.com/_/debian](https://github.com/debuerreotype/docker-debian-artifacts/blob/686d9f6eaada08a754bc7abf6f6184c65c5b378f/buster/Dockerfile)
 
-upgrade to bullseye postponed due to plugins still using python2.7 ( [openzwave](https://github.com/jeedom/plugin-openzwave/blob/beta/docs/en_US/index.md), maybe others ...)
+upgrade to bullseye postponed due to plugins still using
+python2.7 ( [openzwave](https://github.com/jeedom/plugin-openzwave/blob/beta/docs/en_US/index.md), maybe others ...)
 
-According to [Jeedom's documentation](https://doc.jeedom.com/en_US/plugins/automation%20protocol/zwavejs/): "ZwaveJs: This plugin is compatible with Debian 11 “Bullseye” and is therefore the official plugin to be preferred to manage your Z-Wave network in Jeedom." No Hope to have Zwave plugin to be ported on bullseye. Please see [zwaveJs](##zwajeJs) section, if you plan to us that plugin.
+According to [Jeedom's documentation](https://doc.jeedom.com/en_US/plugins/automation%20protocol/zwavejs/): "ZwaveJs:
+This plugin is compatible with Debian 11 “Bullseye” and is therefore the official plugin to be preferred to manage your
+Z-Wave network in Jeedom." No Hope to have Zwave plugin to be ported on bullseye. Please see [zwaveJs](##zwajeJs)
+section, if you plan to us that plugin.
 
 ### Installation
 
-the docker-compose files are proposed as an example to build a running jeedom + mysql stack. 
+the docker-compose files are proposed as an example to build a running jeedom + mysql stack.
 mysql database is on a separate container.
 example:
 
@@ -85,7 +98,9 @@ example:
 
 1. Install [Docker](https://www.docker.com/) on your Raspberry pi.
 
-2. Rename docker-compose-armhf.yml to docker-compose.yml and define values in environment section.(mysql database, architecture disribution (amd64-debian, armv7hf-debian ), jeedom version (release, v4-stable), aptcacher if apt-cache-ng is installed, empty string if not. release is latest v3.
+2. Rename docker-compose-armhf.yml to docker-compose.yml and define values in environment section.(mysql database,
+   architecture disribution (amd64-debian, armv7hf-debian ), jeedom version (release, v4-stable), aptcacher if
+   apt-cache-ng is installed, empty string if not. release is latest v3.
 
 version values for jeedom version: v3/v4
 
@@ -95,6 +110,7 @@ version values for jeedom version: v3/v4
       image: edgd1er/jeedom-rpi:v3-latest
 
 3. build and start the stack:
+
 ```
     docker-compose -f docker-compose.yml up --build
 ```
@@ -103,8 +119,8 @@ version values for jeedom version: v3/v4
 
 ### Environment variables
 
-The Jeedom user should be existing in the remote database. 
-Mysql Root password should be in the command line that run the container. If the MYSQL_JEEDOM_DBNAME schema does 
+The Jeedom user should be existing in the remote database.
+Mysql Root password should be in the command line that run the container. If the MYSQL_JEEDOM_DBNAME schema does
 not exists, it will created.
 if LOGS_TO_STDOUT is set to yes, apache logs are sent to container's stdout.
 
@@ -120,18 +136,21 @@ if LOGS_TO_STDOUT is set to yes, apache logs are sent to container's stdout.
 ### Upgrade
 
 To upgrade jeedom two options:
-* fetch new image and create a new container, be sure to have the `JEEDOM_ENCRYPTION_KEY` env var set, so the new container will be able to decode data in database.
-  * pros: start with a clean image. container size is reduced.
-  * cons: have to re run all plugins dependancies install.
-* Use jeedom's upgrade feature. be sure to disable image update. 
-  * cons: start with a container that may have problems, possiblby with a huge container.
-  * pros: no plugins dependancies to install
+
+* fetch new image and create a new container, be sure to have the `JEEDOM_ENCRYPTION_KEY` env var set, so the new
+  container will be able to decode data in database.
+    * pros: start with a clean image. container size is reduced.
+    * cons: have to re run all plugins dependancies install.
+* Use jeedom's upgrade feature. be sure to disable image update.
+    * cons: start with a container that may have problems, possiblby with a huge container.
+    * pros: no plugins dependancies to install
 
 JEEDOM_ENCRYPTION_KEY's value is to be found in `/var/www/htmldata/jeedom_encryption.key`
 
 ### Secrets
 
 the hereunder variables may be replaced by secrets:
+
 - JEEDOM_ENCRYPTION_KEY
 - ROOT_PASSWD
 - MYSQL_ROOT_PASSWD
@@ -149,26 +168,28 @@ as shown below will expose your certificates.
       - ./webdata/cert.pem:/etc/ssl/certs/ssl-cert-snakeoil.pem:ro
       - ./webdata/privkey.pem:/etc/ssl/private/ssl-cert-snakeoil.key:ro
 ```
+
 ### Volumes
 
 after each image update jeedom is installed, restoring a backup is the way to have a system as before the update.
 With docker, you may use volumes to keep data through image updates.
-No volumes are defined within the image. 
+No volumes are defined within the image.
 
-/!\ **/var/www/html/logs** (plugins logs) and **/var/logs/** (system logs) may clutter the container. It should be mounted in a volume.
+/!\ **/var/www/html/logs** (plugins logs) and **/var/logs/** (system logs) may clutter the container. It should be
+mounted in a volume.
 
-|Container|volumes| content                           |
-|---------|-------|-----------------------------------|
-|Mysql|/config| database config+data              |
-|jeedom|/var/log| system's logs                     |
-|jeedom|/var/www/html/log| jeedom plugins logs               |
-|jeedom|/var/www/html/plugins| jeedom's plugins                  |
-|jeedom|/etc/ssl/certs/ssl-cert-snakeoil.pem| jeedom's https certificate        |
-|jeedom|/etc/ssl/certs/ssl-cert-snakeoil.key| jeedom's https certificate        |
-|jeedom|/var/www/html/data| jeedom custom data (img,css, ...) |
-|jeedom|/var/www/html/backup| jeedom backup dir                 |
-|jeedom|/var/www/html/tmp| jeedom temp dir|
-|jeedom|/var/www/html/log/| jeedom log dir                    |
+| Container | volumes                              | content                           |
+|-----------|--------------------------------------|-----------------------------------|
+| Mysql     | /config                              | database config+data              |
+| jeedom    | /var/log                             | system's logs                     |
+| jeedom    | /var/www/html/log                    | jeedom plugins logs               |
+| jeedom    | /var/www/html/plugins                | jeedom's plugins                  |
+| jeedom    | /etc/ssl/certs/ssl-cert-snakeoil.pem | jeedom's https certificate        |
+| jeedom    | /etc/ssl/certs/ssl-cert-snakeoil.key | jeedom's https certificate        |
+| jeedom    | /var/www/html/data                   | jeedom custom data (img,css, ...) |
+| jeedom    | /var/www/html/backup                 | jeedom backup dir                 |
+| jeedom    | /var/www/html/tmp                    | jeedom temp dir                   |
+| jeedom    | /var/www/html/log/                   | jeedom log dir                    |
 
 ### Example of a docker-compose
 
@@ -227,8 +248,10 @@ services:
 
 ### Upgrade
 
-in Jeedom, application, static files and configurations are not always distinct. Container needs a strict separation between application, static files and configuration, either to mount a volume or use a bind volume.
-As a result, jeedom container upgrade is not as easy as it could be. many files (static and configurations) are losts. Here is a list of folder where either static or conf files lost after each upgrade:
+in Jeedom, application, static files and configurations are not always distinct. Container needs a strict separation
+between application, static files and configuration, either to mount a volume or use a bind volume.
+As a result, jeedom container upgrade is not as easy as it could be. many files (static and configurations) are losts.
+Here is a list of folder where either static or conf files lost after each upgrade:
 
 - /var/www/html/data/jeedom_encryption.key
 - /var/www/html/data/customTemplates/dashboard
@@ -237,20 +260,24 @@ As a result, jeedom container upgrade is not as easy as it could be. many files 
 
 ## zwaveJs
 
- At the moment, Jeedom can handle my roller shutter, fibaro plugs, stella Z radiator and fibaro door sensors. It may not be effective or applicable to your setup.
+At the moment, Jeedom can handle my roller shutter, fibaro plugs, stella Z radiator and fibaro door sensors. It may not
+be effective or applicable to your setup.
 
-Official plugin will install mqtt package, mqtt plugin, node, clone zwavejsUI, build a container. the plugin will start a container to run zwaveJsui. all that add more than 600Mb in the container and add too many dependancies.
+Official plugin will install mqtt package, mqtt plugin, node, clone zwavejsUI, build a container. the plugin will start
+a container to run zwaveJsui. all that add more than 600Mb in the container and add too many dependancies.
 
 What needs to be done, to have a lighter container:
-* run a mqtt container with jeedom settings in jeedom's network. 
+
+* run a mqtt container with jeedom settings in jeedom's network.
 * Define an external mqtt in mqtt's plugin.
 * run zwaveJsui container in jeedom's network
-* alter code so plugin validates that installation, processes mqtt commands, communicates with zwaveJsUI container. 
+* alter code so plugin validates that installation, processes mqtt commands, communicates with zwaveJsUI container.
 
 The hereafter commands will:
+
 * remove package dependancies (node, zwave, docker run)
 * alter daemon start, status so nothing is required as all requirements are external to the container.
-* alter code so it will be compatible with 8.6.2's version of zwaveJsUi. 
+* alter code so it will be compatible with 8.6.2's version of zwaveJsUi.
 * copy mqq data and redefine mqtt plugin config.
 
 ```bash
@@ -279,7 +306,6 @@ The hereafter commands will:
   docker compose exec web sed -i "s/'\.__('Le message reçu est de type inconnu', __FILE__)/, key: '.\$key.__('. Le message reçu est de type inconnu', __FILE__)/" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
 ```
 
-
 ## Fixes broken plugins: pushbullet, speedtest
 
 ```bash
@@ -295,7 +321,7 @@ The hereafter commands will:
   if [[ 0 -lt $(docker compose exec web bash -c "ls -l /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket"| wc -l) ]]; then
     docker-compose exec web bash -c "mv /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket.old"
   fi
-  
+
   docker-compose exec web bash -c "sed -i 's#nice -n 19 /usr/bin/python #nice -n 19 /usr/bin/python3 #' /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py"
   docker-compose exec web bash -c "sed -i 's# file(# open(#' /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py"
   docker-compose exec web bash -c "apt-get install -y --no-install-recommends python-dev;/usr/bin/python -m pip install --upgrade pip websocket websocket-client"
