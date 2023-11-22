@@ -38,9 +38,13 @@ ver: ## check version
 	zwave=$$( curl -s "https://api.github.com/repos/zwave-js/zwave-js-ui/releases/latest" | jq -r .tag_name) ; \
 	echo "Jeedom local: $${JDM_VER} remote: $${jdm}" ; \
 	echo "Zwave-ui-js local: ${ZWAVE_VER} remote: $${zwave}" ; \
-	if [[ $${jdm} != $${JDM_VER} ]]; then echo "Jeedom update detected: https://raw.githubusercontent.com/jeedom/core/V4-stable/core/config/version" ;\
-	  sed -i -E "s/ VERSION:.+/ VERSION: ${jdm}/" docker-compose.yml; fi ; \
-	if [[ $${zwave} != $${ZWAVE_VER} ]]; then echo "zwave-js-ui update detected: https://raw.githubusercontent.com/zwave-js/zwave-js-ui/"; fi
+	if [[ $${jdm} != $${JDM_VER} ]]; then \
+	  echo "Jeedom update detected: https://raw.githubusercontent.com/jeedom/core/V4-stable/core/config/version" ;\
+	  #sed -i -E "s/ JDM_VERSION:.+/ JDM_VERSION: $${jdm}/" docker-compose.yml; \
+	  fi ; \
+	if [[ $${zwave} != $${ZWAVE_VER} ]]; then \
+	  echo "zwave-js-ui update detected: https://raw.githubusercontent.com/zwave-js/zwave-js-ui/"; \
+	  sed -i -E "s/ ZWAVE_VERSION:.+/ ZWAVE_VERSION: $${zwave#v*}/" .github/workflows/checkVersion.yml; fi ;
 
 
 run:
