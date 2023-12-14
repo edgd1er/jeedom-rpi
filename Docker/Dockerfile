@@ -133,15 +133,15 @@ RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     && cp -Rp /var/www/html/data/ /var/www/html/.data/ \
     # clean caches
     && apt-get autoremove -y --purge && apt-get autoclean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /var/log/supervisor/  \
+    && if [[ -n $aptCacher ]]; then echo "" > /etc/apt/apt.conf.d/01proxy; fi
 
-COPY init.sh /root/init.sh
+COPY --chmod=755 init.sh /root/init.sh
+COPY --chmod=755 extras.sh /root/extras.sh
 COPY supervisor/ /etc/supervisor/
 COPY supervisorlog /etc/logrotate.d/supervisor
 COPY jeedom_plugin /etc/logrotate.d/jeedom_plugin
-RUN chmod +x /root/init.sh && mkdir -p /var/log/supervisor/  && \
-#VOLUME ["/tmp", "/var/log","/var/www/html/log/"]
- if [[ -n $aptCacher ]]; then echo "" > /etc/apt/apt.conf.d/01proxy; fi
 
 WORKDIR /var/www/html/
 HEALTHCHECK --interval=60s --timeout=3s --retries=3 --start-period=40s \
