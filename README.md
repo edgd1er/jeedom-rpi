@@ -17,16 +17,13 @@ Forked from https://github.com/CodaFog/jeedom-rpi
 
 | Last Version                                               | Commit Date |
 |------------------------------------------------------------|-------------|
-| [v4.3.20](https://doc.jeedom.com/fr_FR/core/4.3/changelog) | 23/11/22    |
+| [v4.3.21](https://doc.jeedom.com/fr_FR/core/4.3/changelog) | 23/12/14    |
 | [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02    |
 
 /!\ According to jeedom, 3.3.60 will be the last update to v3.
 
 /!\ Asof 2023/01/02, v4-latest docker tag is now based on bullseye (v11) as zwave plugin has migrated to zwave-js-ui
 plugin. v4-buster-latest (v10) is available for plugins not compatible with debian:bullseye (V11).
-
-/!\ asof 2021/08/26, mysql image based on alpine:3.13 requires an updated libseccomp2 on the host (rpi) that rasbian
-does not have at the moment.
 
 * technical explanation: https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.13.0#time64_requirements
 * two way to fix: https://docs.linuxserver.io/faq#libseccomp
