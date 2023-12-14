@@ -5,7 +5,7 @@ Thumbs.db
 /.buildpath
 
 *.tar.gz
-*.sh
+./*.sh
 !gen_image.sh
 !gen_image_buildx.sh
 
@@ -19,3 +19,5 @@ MYSQL_ROOT_PASSWD
 ROOT_PASSWD
 !docker-compose.yml
 !docker-compose-no-secrets.yml
+
+env

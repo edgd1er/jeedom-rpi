@@ -73,7 +73,7 @@ checkCerts() {
   [[ 0 -ne ${ret} ]] && echo "Refresh ca certs" && update-ca-certificates --fresh || echo "ca certs are up to date"
 }
 
-populateVolume(){
+populateVolume() {
   if [[ 2 -ne $# ]]; then
     echo "No directory to populate"
   else
@@ -91,7 +91,7 @@ if [[ 1 -eq ${DEBUG} ]]; then
   sed -i "s#bin/sh#bin/sh -x#" /root/install_docker.sh
 fi
 
-if ! [ -f /.dockerinit ]; then
+if [ ! -f /.dockerinit ]; then
   touch /.dockerinit
   chmod 755 /.dockerinit
 fi
@@ -264,3 +264,8 @@ supervisorctl start apache2
 [[ ${LOGS_TO_STDOUT,,} =~ n ]] && supervisorctl start fail2ban || echo
 
 echo "Jeedom version: $(cat /var/www/html/core/config/version)"
+
+#WIP: fix plugins, install dependancies
+if [[ 1 -eq ${E_DEP:-0} ]] || [[ 1 -eq ${E_MEROSS:-0} ]] || [[ ${E_PUSH=0:-0} ]] || [[ ${E_ZWAVE:-0} ]]; then
+  /root/extras.sh
+fi

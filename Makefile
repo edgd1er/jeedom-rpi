@@ -6,7 +6,6 @@ SHELL:=bash
 # Enable BuildKit for Docker build
 export DOCKER_BUILDKIT:=1
 export aptCacher:=192.168.53.208
-export ZWAVE_VER:= v9.2.3
 #export aptCacher:=
 progress:=auto #plain auto
 
@@ -36,13 +35,14 @@ ver: ## check version
 	@JDM_VER=$$( grep -oP "(?<=v)4\.[0-9\.]+" README.md ) ; \
 	jdm=$$( curl -s "https://raw.githubusercontent.com/jeedom/core/V4-stable/core/config/version"); \
 	zwave=$$( curl -s "https://api.github.com/repos/zwave-js/zwave-js-ui/releases/latest" | jq -r .tag_name) ; \
+	ZWAVE_VER=$$(grep -oP "(?<=ZWAVE_VERSION: ).+" .github/workflows/checkVersion.yml) ; \
 	echo "Jeedom local: $${JDM_VER} remote: $${jdm}" ; \
-	echo "Zwave-ui-js local: ${ZWAVE_VER} remote: $${zwave}" ; \
+	echo "Zwave-ui-js local: $${ZWAVE_VER} remote: $${zwave#v*}" ; \
 	if [[ $${jdm} != $${JDM_VER} ]]; then \
 	  echo "Jeedom update detected: https://raw.githubusercontent.com/jeedom/core/V4-stable/core/config/version" ;\
-	  #sed -i -E "s/ JDM_VERSION:.+/ JDM_VERSION: $${jdm}/" docker-compose.yml; \
+	  sed -i -E "s/#JDM_VERSION:.+/#JDM_VERSION: $${jdm}/" docker-compose.yml; \
 	  fi ; \
-	if [[ $${zwave} != $${ZWAVE_VER} ]]; then \
+	if [[ $${zwave} != v$${ZWAVE_VER} ]]; then \
 	  echo "zwave-js-ui update detected: https://raw.githubusercontent.com/zwave-js/zwave-js-ui/"; \
 	  sed -i -E "s/ ZWAVE_VERSION:.+/ ZWAVE_VERSION: $${zwave#v*}/" .github/workflows/checkVersion.yml; fi ;
 
