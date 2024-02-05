@@ -15,7 +15,7 @@ E_PUSH=0
 # force zwave-ui as external container + version
 E_ZWAVE=0
 #Default zwavejs-ui version
-E_ZWAVEVER=${E_ZWAVEVER:-"9.7.1"}
+E_ZWAVEVER=${E_ZWAVEVER:-"9.8.2"}
 
 #Functions
 usage() {
@@ -106,9 +106,14 @@ fixZwaveUI() {
   # detect nodeID_XX as XX
   echo "in zwavejsui uncheck 'Use nodes name instead of numeric nodeIDs' in parameters"
   # log debug unknown key
-  docker compose exec web sed -i "s/'\.__('Le message reçu est de type inconnu', __FILE__)/, key: '.\$key.__('. Le message reçu est de type inconnu', __FILE__)/" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  sed -i "s/'\.__('Le message reçu est de type inconnu', __FILE__)/, key: '.\$key.__('. Le message reçu est de type inconnu', __FILE__)/" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   # remove port controle
-  #docker compose exec web sed -i "sed '/if (@!file_exists($port)) {/,+3d'" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  if [[ $(grep -c "if (@!file_exists($port)" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php) -eq 0 ]]; then
+    sed -i "sed '/if (@!file_exists($port)) {/,+3d'" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  fi
+  #if [[ $(grep -c "//if ($port != 'auto'" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php) -eq 0 ]]; then
+  #  #sed -i "sed '/ if if ($port != 'auto' {/,+3d'" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  #fi
 }
 
 #Main
