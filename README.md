@@ -144,12 +144,12 @@ To upgrade jeedom two options:
 
 JEEDOM_ENCRYPTION_KEY's value is to be found in `/var/www/htmldata/jeedom_encryption.key`
 
-* Work in progress: /root/extras.sh
+* Work in progress: `/root/extras.sh`. No automatic launch, run: `/root/extras.sh` -h for help
   * Install dependancies (-d)
-  * Change zwave plugin to use zwavejs-ui in an external container with a specific version (-z)
   * Fix pushbullet'plugin.(-p)
   * Fix meross's plugin (-p)
-  * Change zwavejs-ui required version, disable local installation (project, node, yarm, ...). Expect a running container or service aside.
+  * Change zwave plugin to use zwavejs-ui in an external container with a specific version (-z)
+  * Change zwavejs-ui required version, disable local installation (project, node, yarm, ...). Expect a running container or service aside. export E_ZWAVEVER to set zwavejs-ui version to accept: example: export E_ZWAVEVER="9.8.2"
 
 ### Secrets
 
