@@ -8,6 +8,12 @@ NORMAL="\\033[0;39m"
 LOGS_TO_STDOUT=${LOGS_TO_STDOUT:-"n"}
 SETX=""
 XDEBUG=${XDEBUG:-0}
+# external database arg for install
+DATABASE=""
+#Release=3.3.57 / V4-stable=4.3.X Beta=4.4.X / Alpha=4.4.X
+if [[ ${VERSION} =~ (V4-stable|alpha|beta) ]]; then
+  DATABASE="-d 0"
+fi
 
 ##Functions
 setTimeZone() {
@@ -42,6 +48,7 @@ step_8_mysql_create_db() {
 
 step_8_jeedom_configuration() {
   echo "${VERT}Etape 8: informations de login pour la BDD${NORMAL}"
+  ls -al ${WEBSERVER_HOME}/core/config/
   cp -p ${WEBSERVER_HOME}/core/config/common.config.sample.php ${WEBSERVER_HOME}/core/config/common.config.php
   sed -i "s/#PASSWORD#/${MYSQL_JEEDOM_PASSWD}/g" ${WEBSERVER_HOME}/core/config/common.config.php
   sed -i "s/#DBNAME#/${MYSQL_JEEDOM_DBNAME}/g" ${WEBSERVER_HOME}/core/config/common.config.php
@@ -74,8 +81,8 @@ checkCerts() {
 }
 
 populateVolume() {
-  if [[ 2 -ne $# ]]; then
-    echo "No directory to populate"
+  if [[ 2 -ne $# ]] || [[ ! -d ${1} ]]; then
+    echo "No directory to populate: ${1}"
   else
     src=${1%*/}
     dst=${2%*/}
@@ -88,7 +95,9 @@ populateVolume() {
 # execute all install scripts with -x
 if [[ 1 -eq ${DEBUG} ]]; then
   set -x
-  sed -i "s#bin/sh#bin/sh -x#" /root/install_docker.sh
+  if [[ 1 -eq $(grep -c "set -x" /root/install_docker.sh) ]]; then
+    sed -i "/STEP=0/i set -x" /root/install_docker.sh
+  fi
 fi
 
 if [ ! -f /.dockerinit ]; then
@@ -123,6 +132,7 @@ if [ -z ${ROOT_PASSWD} ]; then
 fi
 echo "root:${ROOT_PASSWD}" | chpasswd
 
+#define ports, activate ssl
 echo "Listen 80" >/etc/apache2/ports.conf
 echo "Listen 443" >>/etc/apache2/ports.conf
 sed -i -E "s/\<VirtualHost \*:(.*)\>/VirtualHost \*:80/" /etc/apache2/sites-available/000-default.conf
@@ -157,6 +167,16 @@ else
     fi
     sleep 5
   done
+  ### update repository cache
+  apt-get update
+  ## remove bugged php line
+  sed -r -i "s/('remark' => isset)/#\1/" /var/www/html/core/class/system.class.php
+  sed -i 's#preg_grep(mb_strtolower($alternative)#preg_grep(mb_strtolower("/".$alternative."/")#' /var/www/html/core/class/system.class.php
+  #remove unneeded package
+  sed -r -i "/mariadb-server/d" /var/www/html/install/packages.json
+  sed -r -i "/chromium/d" /var/www/html/install/packages.json
+  #fix fail2ban conf
+  sed -i 's#/var/log/apache2/*error$#/var/log/apache2/*error*#g' /etc/fail2ban/jail.d/jeedom.conf
   #mysql is not local to jeedom container
   #set db creds
   step_8_jeedom_configuration
@@ -164,7 +184,7 @@ else
   step_8_mysql_create_db
   if [[ "release" == "$VERSION" ]]; then
     #V3
-    echo "V3 is EOL (End of Life), V4.1 is the suggested version. V4.0 is legacy"
+    echo "V3 is EOL (End of Life), V4.3 is the suggested version. V4.2 is legacy"
     #S9 =  install.php done when running docker.
     #broken /root/install_docker.sh -s 9
     #DBCLass is looking for language before having created the schema.
@@ -174,9 +194,9 @@ else
       mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} ${MYSQL_JEEDOM_DBNAME} </var/www/html/install/install.sql
     fi
     #s10 = post install (cron ) /s11 for v4
-    /root/install_docker.sh -s 10
+    /root/install_docker.sh -s 10 ${DATABASE}
     #s11 = jeedom check
-    /root/install_docker.sh -s 11
+    /root/install_docker.sh -s 11 ${DATABASE}
     #reset admin password
     echo "${VERT}Admin password is now admin${NORMAL}"
     mysql_sql "use ${MYSQL_JEEDOM_DBNAME};REPLACE INTO user SET login='admin',password='c7ad44cbad762a5da0a452f9e854fdc1e0e7a52a38015f23f3eab1d80b931dd472634dfac71cd34ebc35d16ab7fb8a90c81f975113d6c7538dc69dd8de9077ec',profils='admin', enable='1';"
@@ -197,11 +217,11 @@ else
     #S9 drop jeedom database
     echo -e "Step 9 skipped: database drop/create"
     #s10 jeedom_installation
-    /root/install_docker.sh -s 10
+    /root/install_docker.sh -s 10 ${DATABASE}
     #s10 = post install (cron ) /s11 for v4
-    /root/install_docker.sh -s 11
+    /root/install_docker.sh -s 11 ${DATABASE}
     #s12 = jeedom_check
-    /root/install_docker.sh -s 12
+    /root/install_docker.sh -s 12 ${DATABASE}
     #force reset when admin already exists
     [[ 1 -eq ${res} ]] && echo "Admin password, now, is admin" && php /var/www/html/install/reset_password_admin.php admin admin
     # update-ca-certificates --fresh
@@ -220,20 +240,26 @@ mkdir -p /var/log/supervisor/ -p /run/lock/ -p /var/log/apache2/ -p /var/log/fai
 #enable xdebug
 if [ ${XDEBUG:-0} = "1" ]; then
   apt-get update
-  apt-get install -y php-xdebug openssh-server
+  apt-get install -y php-xdebug openssh-server && phpenmod -s ALL xdebug
   sed -i "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/" /etc/ssh/sshd_config
   echo "<?php phpinfo() ?>" >/var/www/html/phpinfo.php
-  echo "[xdebug]
+  phpconf=$(find /etc -type f -iwholename *apache2/php.ini -print)
+  if [[ 0 -eq $(grep -c "[xdebug]" ${phpconf}) ]]; then
+    echo "
+[xdebug]
 xdebug.remote_eable=true
-#xdebug.remote_connect_back=On
-xdebug.remote_host=${XDEBUG_HOST:-"localhost"}
+xdebug.mode=develop,debug
+xdebug.remote_host=${XDEBUG_HOST:-"host.docker.internal"}
 xdebug.remote_port=${XDEBUG_PORT:-9003}
 xdebug.log=${XDEBUG_LOGFILE:-"/var/log/apache2/php_debug.log"}
-xdebug.idekey=1" | tee -a $(find /etc -type f -iwholename *apache2/php.ini -print)
-  echo -e "[program:sshd]\ncommand=/usr/sbin/sshd -D" >/etc/supervisor/conf.d/sshd.conf
-  supervisorctl reread
-  supervisorctl add sshd
-  export XDEBUG_SESSION=1
+xdebug.idekey='idekey'
+xdebug.start_with_request=yes" | tee -a ${phpconf}
+    sed -r "s/^error_reporting = .*/error_reporting = E_ALL/" ${phpconf}
+    echo -e "[program:sshd]\ncommand=/usr/sbin/sshd -D" >/etc/supervisor/conf.d/sshd.conf
+    supervisorctl reread
+    supervisorctl add sshd
+    export XDEBUG_SESSION=1
+  fi
 fi
 
 if [[ ${LOGS_TO_STDOUT,,} =~ y ]]; then
@@ -261,7 +287,13 @@ fi
 supervisorctl start apache2
 #wait for logs file to be created
 #cannot start fail2ban when logs are redirected
-[[ ${LOGS_TO_STDOUT,,} =~ n ]] && supervisorctl start fail2ban || echo
+if [[ ${LOGS_TO_STDOUT,,} =~ n ]]; then
+  #place apache logs at proper location
+  sed -i "s#/var/www/html/log#/var/log/apache2#" /etc/fail2ban/jail.d/jeedom.conf
+  sed -i "s#/http\*\.#/*#" /etc/fail2ban/jail.d/jeedom.conf
+  sed -i 's#\*error$#\*error\*#g' /etc/fail2ban/jail.d/jeedom.conf
+  supervisorctl start fail2ban
+fi
 
 echo "Jeedom version: $(cat /var/www/html/core/config/version)"
 

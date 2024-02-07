@@ -31,6 +31,14 @@ buildb: ## build v4 image with buster
 	@echo -e "\n\nbuild image ...v4 buster"
 	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="V4-stable" --build-arg DISTRO="buster-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:buster-v4-latest ./Docker
 
+alpha: ## build v4 alpha image --no-cache
+	@echo -e "\n\nbuild image ...v4 alpha"
+	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="alpha" --build-arg DISTRO="bookworm-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:alpha ./Docker
+
+beta: ## build v4 beta image --no-cache
+	@echo -e "\n\nbuild image ...v4 beta" --no-cache
+	docker buildx build --load --progress plain  --build-arg aptCacher="${aptCacher}" --build-arg VERSION="beta" --build-arg DISTRO="bookworm-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:beta ./Docker
+
 ver: ## check version
 	@JDM_VER=$$( grep -oP "(?<=v)4\.[0-9\.]+" README.md ) ; \
 	jdm=$$( curl -s "https://raw.githubusercontent.com/jeedom/core/V4-stable/core/config/version"); \

@@ -24,6 +24,7 @@ EXPOSE 443
 
 LABEL maintainer=edgd1er@hotmail.com
 
+#prepare base image for v4-stable, alpha, beta: all v4 versions
 #add apt-cacher setting if present:
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 #hadolint ignore=DL3008
@@ -35,17 +36,19 @@ RUN if [[ -n ${aptCacher:-} ]]; then printf "Acquire::http::Proxy \"http://%s:31
     && apt-get update && apt-get install -y --no-install-recommends wget rsync lsof iproute2 \
 	curl apt-transport-https software-properties-common net-tools gettext snmp \
     && add-apt-repository non-free  && apt-get update && apt-get install -y --no-install-recommends supervisor \
-	python python3 python3-pip python3-setuptools iputils-ping libcurl3-gnutls librsync-dev \
+	python3 python3-pip python3-setuptools iputils-ping libcurl3-gnutls librsync-dev \
     passwd usbutils usb.ids ntp ca-certificates unzip sudo cron locate tar telnet logrotate fail2ban dos2unix \
-    ntpdate htop vim smbclient git libexpat1 ssl-cert ffmpeg usbutils snmp-mibs-downloader\
-    cutycapt at mariadb-client mariadb-common bzip2 gpg gpg-agent gpgconf xz-utils udev\
+    ntpdate htop vim smbclient git libexpat1 ssl-cert ffmpeg usbutils \
+    cutycapt at mariadb-client mariadb-common bzip2 gpg gpg-agent gpgconf xz-utils udev jq\
     #mbrola removed (not available for armhf )
     #add server apache
     apache2 apache2-utils \
     && update-ca-certificates --fresh \
+    #install python2 pip from boostrap as not in repo anymore for debian 10
+    && if [[ ${DISTRO} =~ buster ]]; then apt-get install -y --no-install-recommends python python2 snmp-mibs-downloader; \
     #install python2 pip from boostrap as not in repo anymore for debian 11
-    && if [[ ${DISTRO} =~ bullseye ]]; then curl https://bootstrap.pypa.io/pip/2.7/get-pip.py | python - \
-    else apt-get install -y --no-install-recommends python2;fi \
+    elif [[ ${DISTRO} =~ bullseye ]]; then apt-get install -y --no-install-recommends python; curl https://bootstrap.pypa.io/pip/2.7/get-pip.py | python - \
+    ; apt-get install -y --no-install-recommends python2 snmp-mibs-downloader; fi \
     #cannot install php as php5 or 7 might be option. leave install.sh install needed php package
     #clean temp files
     && apt-get -y remove -y brltty  && apt-get upgrade -y \
@@ -67,75 +70,77 @@ RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     && wget -qO /etc/motd https://raw.githubusercontent.com/jeedom/core/$VERSION/install/motd \
     && apt-get autoremove -y --purge && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/* \
-    #get from jeedom s stable install files
+    #from jeedom-core, get install file
     ## latest version
     && wget -qO /root/install_docker.sh https://raw.githubusercontent.com/jeedom/core/${VERSION}/install/install.sh \
-    # tagged version
-    && if [[ "latest" != "${JDM_VERSION}" ]] && [[ "${VERSION}" == "V4-stable" ]]; then \
-    sed -i "s#https://github.com/jeedom/core/archive/\${VERSION}.zip#https://github.com/jeedom/core/archive/refs/tags/\${JDM_VERSION}.zip#" /root/install_docker.sh ; fi \
     && chmod +x /root/install_docker.sh \
-    #&& echo "url install: $(grep -oP '(?<=  wget )(--no-check-certificate |)([^ ]+)' /root/install_docker.sh | grep -oP 'https.+')" || true \
+    # tagged version
     ##########################################
-    # Adapt install_docker to docker
-    # fix jeedom install.sh for unattended install
-    # fix jeedom-core, allowing to define mysql not being local
-    # apt-get for unattended install
-    && sed -i "s#MYSQL_JEEDOM_PASSWD=.*#MYSQL_JEEDOM_PASSWD=\$\(tr -cd \'a-f0-9\' \< /dev/urandom \| head -c 15\)#" /root/install_docker.sh \
-    && sed -i "s/systemctl daemon-reload/:/" /root/install_docker.sh \
-    && sed -i "s#rm /var/lib/mysql/ib_logfile\*#:#" /root/install_docker.sh \
-    && sed -i -E "s#mysql -uroot($| )#mysql -uroot -p\${MYSQL_ROOT_PASSWD} -h \${MYSQL_JEEDOM_HOST} -P\${MYSQL_JEEDOM_PORT} \${MYSQL_JEEDOM_DBNAME} #g" /root/install_docker.sh \
+    # Adapt install_docker to docker: fix jeedom install.sh for unattended install
+    && sed -i "/systemctl daemon-reload/d" /root/install_docker.sh \
+    && sed -r 's;(rm /var/lib/mysql/ib.*);# \1;' /root/install_docker.sh \
+    && sed -i -E "s#\(mysql|mariadb\) -uroot($| )#mysql -uroot -p\${MYSQL_ROOT_PASSWD} -h \${MYSQL_JEEDOM_HOST} -P\${MYSQL_JEEDOM_PORT} \${MYSQL_JEEDOM_DBNAME} #g" /root/install_docker.sh \
     && grep "^MYSQL_JEEDOM_PASSWD=" /root/install_docker.sh || true \
     && grep "mysql -uroot" /root/install_docker.sh || true \
     && sed -i 's#-y install "#-y --no-install-recommends install "#' /root/install_docker.sh \
     && sed -i "s#apt install#apt-get install -y --no-install-recommends#" /root/install_docker.sh \
-    # cut mysql/mariadb server configuration
-    #V4
+    #V4: no mysql/mariadb server inside jeedom image
     && sed -i 's/mariadb-server//' /root/install_docker.sh \
-    && sed -i 's/service_action stop mysql/return 0/' /root/install_docker.sh \
-    && sed -i 's/service_action status mariadb/true/g' /root/install_docker.sh \
-    && sed -i 's/service_action status mysql/true/g' /root/install_docker.sh \
-    && sed -i 's/service_action restart apache2/\:/' /root/install_docker.sh \
-    #V3
-    && sed -i 's/systemctl restart apache2/\:/' /root/install_docker.sh \
-    && sed -i 's/systemctl stop mysql/return 0/' /root/install_docker.sh \
+    #V4: no systemd services in docker
+    && sed -i '/service_action\(\){/i return 0' /root/install_docker.sh \
+    && sed -ri 's/service_action (start|stop|status|restart).*/true/' /root/install_docker.sh \
+    #v4: no systemd services in docker
+    && sed -ri '/systemctl (start|stop|status|restart).*/d' /root/install_docker.sh \
     # set jeedom version v3 or v4
-    && sed -i "s/VERSION=V4-stable/VERSION=\${VERSION}/g" /root/install_docker.sh \
+    && sed -i "s/VERSION=V4-stable/VERSION=\${VERSION}/g" /root/install_docker.sh
     ##########################################
-    && echo "root:${SHELL_ROOT_PASSWORD}" | chpasswd \
+RUN echo "root:${SHELL_ROOT_PASSWORD}" | chpasswd \
     && echo "Installing jeedom version: ${VERSION} / ${JDM_VERSION}" \
-    # step 2 install mainpackage
-    && /root/install_docker.sh -s 2 -v ${VERSION}\
+    # 4.4 install -d 0 = external database
+    && if [[ ${VERSION} =~ (alpha|beta|V4-stable) ]] ; then DATABASE="-d 0"; else DATABASE="" ; fi \
+    # step 2 install mainpackage - add too many packages.
+    # && /root/install_docker.sh -s 2 -v ${VERSION}\
     # step 3 install mysql server
     && echo "Etape 3: non faite: installation en local de la BDD" \
+    && apt-get update \
     # install apache
-    && /root/install_docker.sh -s 4 -v ${VERSION} \
+    && echo "Etape 4: install apache" \
+    && /root/install_docker.sh -s 4 -v "${VERSION}" "${DATABASE}"\
     # s5 install php
-    && /root/install_docker.sh -s 5 -v ${VERSION} \
+    && echo "Etape 5: install php" \
+    && /root/install_docker.sh -s 5 -v "${VERSION}" "${DATABASE}"\
     # s6 install jeedom download
-    && /root/install_docker.sh -s 6 -v ${VERSION} \
-    && sed -i '/"mariadb-server" .*/d' /var/www/html/install/packages.json \
-	#Step 7 = apache SSL + php conf + mysql server conf
-    && /root/install_docker.sh -s 7 -v ${VERSION} \
-    # Next steps are executed in init.
-    #V3 S8 =  db param done at runtime. / V4: later in build\
+    && echo "Etape 6: install jeedom" \
+    && /root/install_docker.sh -s 6 -v "${VERSION}" "${DATABASE}"\
+    ## remove bugged php line
+    # remove CR/LR : php /var/www/html/install/packages.php
+    && sed -i "s/'version' => \$npm/'version' => rtrim(\$npm)/" /var/www/html/core/class/system.class.php \
+    #&& sed -r -i "s/('remark' => isset)/#\1/" /var/www/html/core/class/system.class.php \
+    #remove unneeded package: no db server inside jeedom image, no chromium
+    && sed -i '/mariadb-server/d' /var/www/html/install/packages.json \
+    && sed -i "/chromium/d" /var/www/html/install/packages.json \
+    #v4 s7 = mariadb server conf: skipped
+    #v4 S8 = jeedom customization later in build: skipped
     && find /var/www/html/ -type d -exec chmod 755 {} \; \
     && find /var/www/html/ -type f -exec chmod 744 {} \; \
     && chown -R www-data:www-data /var/www/html/ \
-    #v3 S9 =  install.php done at runtime. / V4: drop database , DB creds done at runtime \
-    #v3 s10 = post install (cron ) / v4: install.php done at runtime.
-    #v4 s11 = none / v4: post install (cron )
-    && if [ $VERSION = "release" ]; then /root/install_docker.sh -s 10 -v ${VERSION} \
-    else /root/install_docker.sh -s 8 -v ${VERSION};/root/install_docker.sh -s 11 -v ${VERSION}; fi \
+    #v4 S9 = drop database , DB creds done at runtime
+    #v4 s10 = install.php done at runtime.
+    #v4 s11 = post install (cron )
+    && /root/install_docker.sh -s 8 -v ${VERSION};/root/install_docker.sh -s 11 -v "${VERSION}" "${DATABASE}" \
+    && echo "alias pipupdate='pip3 list --outdated --format json |jq -r .[].name | xargs -I % apt install -y python3-%'" | tee -a ~/.bashrc \
+    && echo "alias phppackage='php /var/www/html/install/packages.php'" | tee -a ~/.bashrc \
+    && echo "alias phpinstall='php /var/www/html/install/install.php'" | tee -a ~/.bashrc \
     # rpi
     && [[ ! -f /sbin/udevadm ]] && ln -sfn /bin/udevadm /sbin/udevadm || true \
     && apt-get remove -y x11-common \
     # untouched data dir
-    && cp -Rp /var/www/html/data/ /var/www/html/.data/ \
+    && if [[ -d /var/www/html/data/ ]]; then cp -Rp /var/www/html/data/ /var/www/html/.data/ ; fi \
     # clean caches
     && apt-get autoremove -y --purge && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /var/log/supervisor/  \
-    && if [[ -n $aptCacher ]]; then echo "" > /etc/apt/apt.conf.d/01proxy; fi
+    && if [[ -n "$aptCacher" ]]; then echo "" > /etc/apt/apt.conf.d/01proxy; fi
 
 COPY --chmod=755 init.sh /root/init.sh
 COPY --chmod=755 extras.sh /root/extras.sh

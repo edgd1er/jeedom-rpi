@@ -84,12 +84,6 @@ RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     && sed -i 's#-y install "#-y --no-install-recommends install "#' /root/install_docker.sh \
     && sed -i "s#apt install#apt-get install -y --no-install-recommends#" /root/install_docker.sh \
     # cut mysql/mariadb server configuration
-    #V4
-    && sed -i 's/mariadb-server//' /root/install_docker.sh \
-    && sed -i 's/service_action stop mysql/return 0/' /root/install_docker.sh \
-    && sed -i 's/service_action status mariadb/true/g' /root/install_docker.sh \
-    && sed -i 's/service_action status mysql/true/g' /root/install_docker.sh \
-    && sed -i 's/service_action restart apache2/\:/' /root/install_docker.sh \
     #V3
     && sed -i 's/systemctl restart apache2/\:/' /root/install_docker.sh \
     && sed -i 's/systemctl stop mysql/return 0/' /root/install_docker.sh \
@@ -112,13 +106,13 @@ RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
 	#Step 7 = apache SSL + php conf + mysql server conf
     && /root/install_docker.sh -s 7 -v ${VERSION} \
     # Next steps are executed in init.
-    #V3 S8 =  db param done at runtime. / V4: later in build\
+    #V3 S8 =  db param done at runtime.
     && find /var/www/html/ -type d -exec chmod 755 {} \; \
     && find /var/www/html/ -type f -exec chmod 744 {} \; \
     && chown -R www-data:www-data /var/www/html/ \
-    #v3 S9 =  install.php done at runtime. / V4: drop database , DB creds done at runtime \
-    #v3 s10 = post install (cron ) / v4: install.php done at runtime.
-    #v4 s11 = none / v4: post install (cron )
+    #v3 S9 =  install.php done at runtime.
+    #v3 s10 = post install (cron )
+    #v3 s11 = none
     && if [ $VERSION = "release" ]; then /root/install_docker.sh -s 10 -v ${VERSION} \
     else /root/install_docker.sh -s 8 -v ${VERSION};/root/install_docker.sh -s 11 -v ${VERSION}; fi \
     && update-ca-certificates --fresh \
