@@ -1,4 +1,4 @@
-name: Docker buildx armhf+amd64 v4
+name: Docker buildx armhf+amd64 v4 stable
 
 on:
   workflow_dispatch:

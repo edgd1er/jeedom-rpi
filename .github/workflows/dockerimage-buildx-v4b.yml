@@ -1,0 +1,38 @@
+name: Docker buildx armhf+amd64 v4 beta
+
+on:
+  workflow_dispatch:
+    inputs:
+      JDM_VERSION:
+        description: 'jeedom version'
+        required: true
+        default: 'beta'
+        type: string
+      IMAGE:
+        description: 'image name'
+        default: 'jeedom-rpi'
+        required: true
+        type: string
+      DISTRO:
+        description: 'base image'
+        default: 'bookworm-slim'
+        required: true
+        type: string
+      PUSH:
+        description: 'push true/false'
+        required: true
+        default: true
+        type: boolean
+
+jobs:
+  build-v4-beta:
+    uses: ./.github/workflows/dockerimage-buildx-template.yml
+    with:
+      image-name: ${{ inputs.IMAGE }}
+      build-context: './Docker'
+      jdm_version: ${{ inputs.JDM_VERSION }}
+      tag: ${{ inputs.JDM_VERSION }}
+      version: ${{ inputs.JDM_VERSION }}
+      distro: ${{ inputs.DISTRO }}
+      push: ${{ inputs.PUSH }}
+    secrets: inherit
