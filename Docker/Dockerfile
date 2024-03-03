@@ -128,9 +128,12 @@ RUN echo "root:${SHELL_ROOT_PASSWORD}" | chpasswd \
     #v4 s10 = install.php done at runtime.
     #v4 s11 = post install (cron )
     && /root/install_docker.sh -s 8 -v ${VERSION};/root/install_docker.sh -s 11 -v "${VERSION}" "${DATABASE}" \
+    && echo "alias salias='source ~/.bashrc'" | tee -a ~/.bashrc \
+    && echo "alias modalias='vim ~/.bashrc'" | tee -a ~/.bashrc \
     && echo "alias pipupdate='pip3 list --outdated --format json |jq -r .[].name | xargs -I % apt install -y python3-%'" | tee -a ~/.bashrc \
     && echo "alias phppackage='php /var/www/html/install/packages.php'" | tee -a ~/.bashrc \
     && echo "alias phpinstall='php /var/www/html/install/install.php'" | tee -a ~/.bashrc \
+    && echo "function pipinstall(){ pip3 install --break-system-packages --upgrade \${1} ;}" | tee -a ~/.bashrc \
     # rpi
     && [[ ! -f /sbin/udevadm ]] && ln -sfn /bin/udevadm /sbin/udevadm || true \
     && apt-get remove -y x11-common \

@@ -15,7 +15,7 @@ E_PUSH=0
 # force zwave-ui as external container + version
 E_ZWAVE=0
 #Default zwavejs-ui version
-E_ZWAVEVER=${E_ZWAVEVER:-"9.8.2"}
+E_ZWAVEVER=${E_ZWAVEVER:-"9.9.1"}
 
 #Functions
 usage() {
@@ -31,7 +31,7 @@ usage() {
 pushbullet() {
   if [[ -d /var/www/html/plugins/pushbullet ]]; then
     [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall pushbullet-python || true
-    pip3 install websocket-client pushbullet.py
+    pip3 install --break-system-packages websocket-client pushbullet-python
     # pushbullet: replace object with jeeObject
     sed -i 's/(object/(jeeObject/' /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
     grep -iP "\((|jee)object" /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
@@ -56,8 +56,9 @@ meross() {
     echo "install jq, g++, python3-dev and meross-iot"
     # Meross
     apt-get install -y --no-install-recommends jq g++ python3-dev
-    pip3 install --upgrade pip meross_iot
+    pip3 install --break-system-packages --upgrade pip meross_iot
     # MerossSync
+    sed -i 's/pip install/pip install --break-system-packages/g' /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh
     /bin/bash /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh /tmp/jeedom/MerosSync/dependance
   fi
 }
@@ -72,7 +73,7 @@ installDep() {
   NODE_MAJOR=18
   echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
   apt-get install -y --no-install-recommends build-essential g++ python3-dev nodejs
-  python3 -m pip install --upgrade pip
+  python3 -m pip install --break-system-packages --upgrade pip
   #old style dependencies
   find /var/www/html/plugins/ -type f -path '*sources*' -iname 'install*.sh' -exec {} \;
   #new style dependencies
