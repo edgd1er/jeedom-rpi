@@ -32,6 +32,13 @@ pushbullet() {
   if [[ -d /var/www/html/plugins/pushbullet ]]; then
     [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall pushbullet-python || true
     pip3 install --break-system-packages websocket-client pushbullet-python
+    [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall --break-system-packages pushbullet-python || true
+    pipx uninstall websocket-client
+    pip3 install --break-system-packages websocket-client pushbullet.py
+    #Fix listener
+    if [[ 0 -eq $() ]]; then
+      sed -i "s/on_message(self, message)/on_message(self, t, message)/" /usr/local/lib/python3.11/dist-packages/pushbullet/listener.py
+    fi
     # pushbullet: replace object with jeeObject
     sed -i 's/(object/(jeeObject/' /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
     grep -iP "\((|jee)object" /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php

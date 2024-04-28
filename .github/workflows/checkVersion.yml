@@ -4,7 +4,7 @@ on:
     - cron: "0 17 * * *"
   workflow_dispatch:
 env:
-  ZWAVE_VERSION: 9.9.0
+  ZWAVE_VERSION: 9.11.1
 
 jobs:
   check-j4_version:

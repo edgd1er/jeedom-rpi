@@ -16,9 +16,9 @@
 Forked from https://github.com/CodaFog/jeedom-rpi
 
 | Last Version                                               | Commit Date |
-|------------------------------------------------------------|-------------|
-| [v4.3.23](https://doc.jeedom.com/fr_FR/core/4.3/changelog) | 24/03/03    |
-| [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02    |
+|------------------------------------------------------------|------------|
+| [v4.4.5](https://doc.jeedom.com/fr_FR/core/4.3/changelog)  | 24/04/28   |
+| [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02   |
 
 /!\ According to jeedom, 3.3.60 will be the last update to v3.
 
