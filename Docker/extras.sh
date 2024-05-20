@@ -7,13 +7,13 @@
 
 set -eu -o pipefail
 # install dependancies
-E_DEP=0
+E_DEP=${E_DEP:-0}
 # fix meross installation
-E_MEROSS=0
+E_MEROSS=${E_MEROSS:-0}
 # fix pushbullet
-E_PUSH=0
+E_PUSH=${E_PUSH:-0}
 # force zwave-ui as external container + version
-E_ZWAVE=0
+E_ZWAVE=${E_ZWAVE:-0}
 #Default zwavejs-ui version
 E_ZWAVEVER=${E_ZWAVEVER:-"9.9.1"}
 
