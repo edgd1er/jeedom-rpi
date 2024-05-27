@@ -82,6 +82,7 @@ jobs:
             VERSION=${{ inputs.version }}
             DISTRO=${{ inputs.distro }}
             JDM_VERSION=${{ inputs.jdm_version }}
+            aptCacher: ''
           tags: ${{ secrets.DOCKER_USER }}/${{ inputs.image-name }}:${{ inputs.tag }}
 
   inspect-security:

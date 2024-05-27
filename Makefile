@@ -57,4 +57,4 @@ ver: ## check version
 
 run:
 	@echo "run container"
-	docker compose up
+	docker compose up --build
