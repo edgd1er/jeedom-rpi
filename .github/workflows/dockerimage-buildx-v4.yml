@@ -20,16 +20,6 @@ on:
     paths-ignore:
       - '.github/**'
 
-env:
-  IMAGE: jeedom-rpi
-  TAG: v4-latest
-  VERSION: V4-stable
-  DISTRO: buster-slim
-  JDM_VERSION: latest
-  aptCacher: ''
-  PUSH: true
-
-
 jobs:
   build-bullseye-v4:
     uses: ./.github/workflows/dockerimage-buildx-template.yml
@@ -39,7 +29,9 @@ jobs:
       jdm_version: latest
       tag: v4-latest
       version: V4-stable
-      distro: bullseye-slim
+      #12 stable bookworm
+      #11 oldstable bullseye
+      distro: 11-slim
       build-dockerfile: './Docker/Dockerfile'
       push: true
     secrets: inherit
@@ -52,6 +44,7 @@ jobs:
       jdm_version: latest
       tag: buster-v4-latest
       version: V4-stable
-      distro: buster-slim
+      #10 buster oldoldstable
+      distro: 10-slim
       push: true
     secrets: inherit

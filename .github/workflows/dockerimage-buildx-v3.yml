@@ -14,12 +14,6 @@ on:
   #  paths-ignore:
   #    - '.github/**'
 
-env:
-  IMAGE: jeedom-rpi
-  TAG: v3-latest
-  VERSION: release
-  DISTRO: buster-slim
-  aptCacher: ''
 
 jobs:
   getenv:

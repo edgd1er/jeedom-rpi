@@ -15,7 +15,9 @@ E_PUSH=${E_PUSH:-0}
 # force zwave-ui as external container + version
 E_ZWAVE=${E_ZWAVE:-0}
 #Default zwavejs-ui version
-E_ZWAVEVER=${E_ZWAVEVER:-"9.9.1"}
+E_ZWAVEVER=${E_ZWAVEVER:-"9.12.0"}
+#Debian 12 needs --break-system-packages
+BKS=""
 
 #Functions
 usage() {
@@ -31,10 +33,10 @@ usage() {
 pushbullet() {
   if [[ -d /var/www/html/plugins/pushbullet ]]; then
     [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall pushbullet-python || true
-    pip3 install --break-system-packages websocket-client pushbullet-python
-    [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall --break-system-packages pushbullet-python || true
+    pip3 install ${BKS} websocket-client pushbullet-python
+    [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall ${BKS} pushbullet-python || true
     pipx uninstall websocket-client
-    pip3 install --break-system-packages websocket-client pushbullet.py
+    pip3 install ${BKS} websocket-client pushbullet.py
     #Fix listener
     if [[ 0 -eq $() ]]; then
       sed -i "s/on_message(self, message)/on_message(self, t, message)/" /usr/local/lib/python3.11/dist-packages/pushbullet/listener.py
@@ -63,9 +65,9 @@ meross() {
     echo "install jq, g++, python3-dev and meross-iot"
     # Meross
     apt-get install -y --no-install-recommends jq g++ python3-dev
-    pip3 install --break-system-packages --upgrade pip meross_iot
+    pip3 install ${BKS} --upgrade pip meross_iot
     # MerossSync
-    sed -i 's/pip install/pip install --break-system-packages/g' /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh
+    sed -i 's/pip install/pip install ${BKS}/g' /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh
     /bin/bash /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh /tmp/jeedom/MerosSync/dependance
   fi
 }
@@ -80,7 +82,7 @@ installDep() {
   NODE_MAJOR=18
   echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
   apt-get install -y --no-install-recommends build-essential g++ python3-dev nodejs
-  python3 -m pip install --break-system-packages --upgrade pip
+  python3 -m pip install ${BKS} --upgrade pip
   #old style dependencies
   find /var/www/html/plugins/ -type f -path '*sources*' -iname 'install*.sh' -exec {} \;
   #new style dependencies
@@ -89,42 +91,55 @@ installDep() {
 
 # use case: zwavejs-ui is running elsewhere (other container, other server, ...)
 # do not install nodejs, yarn, do not clone zwavejs-ui, change zwavejs-ui's expected version.
+# better option: https://github.com/lxrootard/zwavejs (allow remote zwavejs-ui)
 fixZwaveUI() {
+  echo "better option: https://github.com/lxrootard/zwavejs (allow remote zwavejs-ui)"
   echo "Force zwavejs-ui expected version, bypass zwavejs-ui installation, expect it to run elsewhere (other server, other container , ...)"
   #change version expected: zwavejs/core/config/zwavejs.config.ini: wantedVersion=8.9.0
   sed -E -i "s#^wantedVersion=[0-9]\.[0-9]{1,2}\..#wantedVersion=${E_ZWAVEVER}#" /var/www/html/plugins/zwavejs/core/config/zwavejs.config.ini
   grep "wantedVersion=" /var/www/html/plugins/zwavejs/core/config/zwavejs.config.ini
 
-  # do not clone zwavejs ui
-  sed -i -E 's/^git clone --branch .*/#&/g' /var/www/html/plugins/zwavejs/resources/pre_install.sh
   # do not install zwave js, nor dependencies
-  sed -i '/npm/,+2d' /var/www/html/plugins/zwavejs/plugin_info/packages.json
-  sed -i '/apt/,+2d' /var/www/html/plugins/zwavejs/plugin_info/packages.json
-  sed -i -E 's/^sudo yarn.*/#&/' /var/www/html/plugins/zwavejs/resources/post_install.sh
-  # zwavejs.class.php: remove yarn start / node is not local
+  echo -e "{\"plugin\": {\"mqtt2\": {}},\"apt\": {},\"pre-install\": {},\"post-install\": {}}"| jq . >/var/www/html/plugins/zwavejs/plugin_info/packages.json
+  # remove kill from plugin as no daemon are running.
+  sed -i '/isRunning() {/a \ \           return true;' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  sed -i '/deamon_stop() {/a \ \             return true;' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  #sed -i '232i        return $return;' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  # do not start daemon
+  sed -i "s/\$cmd .= ' yarn start';/#\$cmd .= ' yarn start';/" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  sed -i 's/ exec(\$cmd)/#exec(\$cmd)/' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  # remove kill from plugin as no daemon are running.
+  sed -i 's/ system::kill\(\#system::kill\(/' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   # remove yarn start / node is not local
-  sed -i -E 's/ yarn start/# yarn start/g' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
-  sed -i -E 's/^cd zwave-js-ui/#&/g' /var/www/html/plugins/zwavejs/resources/post_install.sh
-  # node is not local:   simulate daemon detection
-  sed -i -E 's#server/bin/www.js#php#g' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+
   # remove node modules check as project was not cloned.
   mkdir -p /var/www/html/plugins/zwavejs/resources/zwave-js-ui/
   touch /var/www/html/plugins/zwavejs/resources/zwave-js-ui/node_modules
-  #docker-compose exec web sed -i 's#/../../resources/zwave-js-ui/node_modules#/../../resources/no_zwave-js-ui#' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   # detect nodeID_XX as XX
   echo "in zwavejsui uncheck 'Use nodes name instead of numeric nodeIDs' in parameters"
   # log debug unknown key
   sed -i "s/'\.__('Le message reçu est de type inconnu', __FILE__)/, key: '.\$key.__('. Le message reçu est de type inconnu', __FILE__)/" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   # remove port controle
-  if [[ $(grep -c "if (@!file_exists($port)" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php) -eq 0 ]]; then
-    sed -i "sed '/if (@!file_exists($port)) {/,+3d'" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  if [[ $(grep -c 'if (@!file_exists($port)' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php) -eq 0 ]]; then
+    sed -i '/if (@!file_exists($port)) {/,+3d' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   fi
-  #if [[ $(grep -c "//if ($port != 'auto'" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php) -eq 0 ]]; then
-  #  #sed -i "sed '/ if if ($port != 'auto' {/,+3d'" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
-  #fi
+}
+
+fixPipx() {
+  if [[ 1 -eq $(grep -c "VERSION_ID=12" /etc/os-release) ]]; then
+    sed -i "s/pipx install --force-reinstall --upgrade /pip3 install --break system-packages /g" /var/www/html/core/class/system.class.php
+    sed -i "s/pip3 install -force /pip3 install --break system-packages /g" /var/www/html/core/class/system.class.php
+
+  fi
+  pipx ensurepath
 }
 
 #Main
+source /etc/os-release
+#Debian 12 does not allow installation through pip3 without
+if [[ $VERSION_ID == "12" ]]; then
+  BKS="--break-system-packages"
+fi
 while getopts "dhpmvz" option; do
   case $option in
   d)
@@ -149,6 +164,7 @@ while getopts "dhpmvz" option; do
   esac
 done
 
+fixPipx
 if [[ 1 -eq ${E_PUSH:-0} ]]; then
   pushbullet
 fi

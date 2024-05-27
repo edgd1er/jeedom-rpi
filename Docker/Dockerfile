@@ -1,5 +1,5 @@
 #hadolint global ignore=SC3010
-ARG DISTRO=bullseye-slim
+ARG DISTRO=11-slim
 FROM debian:${DISTRO} as base
 
 ENV SHELL_ROOT_PASSWORD password
@@ -130,9 +130,10 @@ RUN echo "root:${SHELL_ROOT_PASSWORD}" | chpasswd \
     && /root/install_docker.sh -s 8 -v ${VERSION};/root/install_docker.sh -s 11 -v "${VERSION}" "${DATABASE}" \
     && echo "alias salias='source ~/.bashrc'" | tee -a ~/.bashrc \
     && echo "alias modalias='vim ~/.bashrc'" | tee -a ~/.bashrc \
-    && echo "alias pipupdate='pip3 list --outdated --format json |jq -r .[].name | xargs -I % apt install -y python3-%'" | tee -a ~/.bashrc \
+    && echo "func setZwaveJsVersion(){ sed -E -i \"s#^wantedVersion=[0-9]\.[0-9]{1,2}\..#wantedVersion=${1:-9.12.0}#\" /var/www/html/plugins/zwavejs/core/config/zwavejs.config.ini ;}" | tee -a ~/.bashrc \
     && echo "alias phppackage='php /var/www/html/install/packages.php'" | tee -a ~/.bashrc \
     && echo "alias phpinstall='php /var/www/html/install/install.php'" | tee -a ~/.bashrc \
+    && echo "alias pipupdate='pip3 list --outdated --format json |jq -r .[].name | xargs -I % apt install -y python3-%'" | tee -a ~/.bashrc \
     && echo "function pipinstall(){ pip3 install --break-system-packages --upgrade \${1} ;}" | tee -a ~/.bashrc \
     # rpi
     && [[ ! -f /sbin/udevadm ]] && ln -sfn /bin/udevadm /sbin/udevadm || true \
