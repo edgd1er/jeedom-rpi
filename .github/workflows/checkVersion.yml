@@ -18,6 +18,8 @@ jobs:
           ls -al .
           local_version=$( grep -oP "(?<=v)4\.[0-9\.]+" README.md )
           ver=$(curl -s "https://raw.githubusercontent.com/jeedom/core/V4-stable/core/config/version")
+          echo "alpha version: $(curl -s "https://raw.githubusercontent.com/jeedom/core/alpha/core/config/version")"
+          echo "beta version: $(curl -s "https://raw.githubusercontent.com/jeedom/core/beta/core/config/version")"
           echo "latest built version: ${local_version}, latest github version: ${ver}"
           if [[ ${local_version} == ${ver} ]]; then exit 0; fi
           curl -s "https://raw.githubusercontent.com/jeedom/core/V4-stable/docs/fr_FR/changelog.md" | grep -A20 -P "## ${ver}" | sed '/^$/d' | head -10
