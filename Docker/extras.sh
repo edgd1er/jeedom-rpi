@@ -35,10 +35,10 @@ pushbullet() {
     [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall pushbullet-python || true
     pip3 install ${BKS} websocket-client pushbullet-python
     [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall ${BKS} pushbullet-python || true
-    pipx uninstall websocket-client
+    [[ -n $(which pipx) ]] && pipx uninstall websocket-client || true
     pip3 install ${BKS} websocket-client pushbullet.py
     #Fix listener
-    if [[ 0 -eq $() ]]; then
+    if [[ -f /usr/local/lib/python3.11/dist-packages/pushbullet/listener.py ]] && [[ 0 -eq $(grep -c "on_message(self, t, message)") ]]; then
       sed -i "s/on_message(self, message)/on_message(self, t, message)/" /usr/local/lib/python3.11/dist-packages/pushbullet/listener.py
     fi
     # pushbullet: replace object with jeeObject
@@ -128,10 +128,11 @@ fixZwaveUI() {
 fixPipx() {
   if [[ 1 -eq $(grep -c "VERSION_ID=12" /etc/os-release) ]]; then
     sed -i "s/pipx install --force-reinstall --upgrade /pip3 install --break system-packages /g" /var/www/html/core/class/system.class.php
+    else
     sed -i "s/pip3 install -force /pip3 install --break system-packages /g" /var/www/html/core/class/system.class.php
 
   fi
-  pipx ensurepath
+  [[ -n $(which pipx) ]] && pipx ensurepath || true
 }
 
 #Main
