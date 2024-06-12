@@ -34,9 +34,9 @@ pushbullet() {
   if [[ -d /var/www/html/plugins/pushbullet ]]; then
     [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall pushbullet-python || true
     pip3 install ${BKS} websocket-client pushbullet-python
-    [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall ${BKS} pushbullet-python || true
+    [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall -y ${BKS} pushbullet-python || true
     [[ -n $(which pipx) ]] && pipx uninstall websocket-client || true
-    pip3 install ${BKS} websocket-client pushbullet.py
+    pip3 install -y ${BKS} websocket-client pushbullet.py
     #Fix listener
     if [[ -f /usr/local/lib/python3.11/dist-packages/pushbullet/listener.py ]] && [[ 0 -eq $(grep -c "on_message(self, t, message)") ]]; then
       sed -i "s/on_message(self, message)/on_message(self, t, message)/" /usr/local/lib/python3.11/dist-packages/pushbullet/listener.py
