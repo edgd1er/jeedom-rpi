@@ -32,7 +32,7 @@ usage() {
 
 pushbullet() {
   if [[ -d /var/www/html/plugins/pushbullet ]]; then
-    [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall pushbullet-python || true
+    [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall -y pushbullet-python || true
     pip3 install ${BKS} websocket-client pushbullet-python
     [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall -y ${BKS} pushbullet-python || true
     [[ -n $(which pipx) ]] && pipx uninstall websocket-client || true
@@ -65,9 +65,9 @@ meross() {
     echo "install jq, g++, python3-dev and meross-iot"
     # Meross
     apt-get install -y --no-install-recommends jq g++ python3-dev
-    pip3 install ${BKS} --upgrade pip meross_iot
+    pip3 install ${BKS} --upgrade pip meross_iot==$(<$BASEDIR/meross-iot_version.txt)
     # MerossSync
-    sed -i 's/pip install/pip install ${BKS}/g' /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh
+    sed -i 's/pip install me/pip install ${BKS} me/g' /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh
     /bin/bash /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh /tmp/jeedom/MerosSync/dependance
   fi
 }
