@@ -15,7 +15,7 @@ E_PUSH=${E_PUSH:-0}
 # force zwave-ui as external container + version
 E_ZWAVE=${E_ZWAVE:-0}
 #Default zwavejs-ui version
-E_ZWAVEVER=${E_ZWAVEVER:-"9.12.0"}
+E_ZWAVEVER=${E_ZWAVEVER:-"9.14.4"}
 #Debian 12 needs --break-system-packages
 BKS=""
 
@@ -32,14 +32,13 @@ usage() {
 
 pushbullet() {
   if [[ -d /var/www/html/plugins/pushbullet ]]; then
-    [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall -y pushbullet-python || true
-    pip3 install ${BKS} websocket-client pushbullet-python
     [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall -y ${BKS} pushbullet-python || true
-    [[ -n $(which pipx) ]] && pipx uninstall websocket-client || true
-    pip3 install -y ${BKS} websocket-client pushbullet.py
+    [[ -n $(which pipx) ]] && pipx uninstall -y websocket-client || true
+    pip3 install ${BKS} websocket-client pushbullet.py
     #Fix listener
-    if [[ -f /usr/local/lib/python3.11/dist-packages/pushbullet/listener.py ]] && [[ 0 -eq $(grep -c "on_message(self, t, message)") ]]; then
-      sed -i "s/on_message(self, message)/on_message(self, t, message)/" /usr/local/lib/python3.11/dist-packages/pushbullet/listener.py
+    lstnr=/usr/local/lib/python3.11/dist-packages/pushbullet/listener.py
+    if [[ -f ${lstnr} ]] && [[ 0 -eq $(grep -c "on_message(self, t, message)" ${lstnr}) ]]; then
+      sed -i "s/on_message(self, message)/on_message(self, t, message)/" ${lstnr}
     fi
     # pushbullet: replace object with jeeObject
     sed -i 's/(object/(jeeObject/' /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
@@ -65,9 +64,9 @@ meross() {
     echo "install jq, g++, python3-dev and meross-iot"
     # Meross
     apt-get install -y --no-install-recommends jq g++ python3-dev
-    pip3 install ${BKS} --upgrade pip meross_iot==$(<$BASEDIR/meross-iot_version.txt)
+    pip3 install ${BKS} --upgrade pip meross_iot==$(</var/www/html/plugins/MerosSync/resources/meross-iot_version.txt)
     # MerossSync
-    sed -i 's/pip install me/pip install ${BKS} me/g' /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh
+    sed -i "s/pip install me/pip install ${BKS} me/g" /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh
     /bin/bash /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh /tmp/jeedom/MerosSync/dependance
   fi
 }
@@ -100,7 +99,7 @@ fixZwaveUI() {
   grep "wantedVersion=" /var/www/html/plugins/zwavejs/core/config/zwavejs.config.ini
 
   # do not install zwave js, nor dependencies
-  echo -e "{\"plugin\": {\"mqtt2\": {}},\"apt\": {},\"pre-install\": {},\"post-install\": {}}"| jq . >/var/www/html/plugins/zwavejs/plugin_info/packages.json
+  echo -e "{\"plugin\": {\"mqtt2\": {}},\"apt\": {},\"pre-install\": {},\"post-install\": {}}" | jq . >/var/www/html/plugins/zwavejs/plugin_info/packages.json
   # remove kill from plugin as no daemon are running.
   sed -i '/isRunning() {/a \ \           return true;' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   sed -i '/deamon_stop() {/a \ \             return true;' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
@@ -128,7 +127,7 @@ fixZwaveUI() {
 fixPipx() {
   if [[ 1 -eq $(grep -c "VERSION_ID=12" /etc/os-release) ]]; then
     sed -i "s/pipx install --force-reinstall --upgrade /pip3 install --break system-packages /g" /var/www/html/core/class/system.class.php
-    else
+  else
     sed -i "s/pip3 install -force /pip3 install --break system-packages /g" /var/www/html/core/class/system.class.php
 
   fi

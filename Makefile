@@ -52,8 +52,8 @@ ver: ## check version
 	  fi ; \
 	if [[ $${zwave} != v$${ZWAVE_VER} ]]; then \
 	  echo "zwave-js-ui update detected: https://raw.githubusercontent.com/zwave-js/zwave-js-ui/"; \
-	  sed -i -E "s/ ZWAVE_VERSION:.+/ ZWAVE_VERSION: $${zwave#v*}/" .github/workflows/checkVersion.yml; fi ;
-
+	  sed -i -E "s/ ZWAVE_VERSION:.+/ ZWAVE_VERSION: $${zwave#v*}/" .github/workflows/checkVersion.yml; \
+	  sed -i -E "s/E_ZWAVEVER:-\".+/E_ZWAVEVER:-\"$${zwave#v*}\"}/" Docker/extras.sh; fi ;
 
 run:
 	@echo "run container"
