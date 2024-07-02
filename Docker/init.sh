@@ -194,9 +194,9 @@ else
       mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} ${MYSQL_JEEDOM_DBNAME} </var/www/html/install/install.sql
     fi
     #s10 = post install (cron ) /s11 for v4
-    /root/install_docker.sh -s 10 ${DATABASE}
+    /root/install_docker.sh -s 10 ${DATABASE} -i docker
     #s11 = jeedom check
-    /root/install_docker.sh -s 11 ${DATABASE}
+    /root/install_docker.sh -s 11 ${DATABASE} -i docker
     #reset admin password
     echo "${VERT}Admin password is now admin${NORMAL}"
     mysql_sql "use ${MYSQL_JEEDOM_DBNAME};REPLACE INTO user SET login='admin',password='c7ad44cbad762a5da0a452f9e854fdc1e0e7a52a38015f23f3eab1d80b931dd472634dfac71cd34ebc35d16ab7fb8a90c81f975113d6c7538dc69dd8de9077ec',profils='admin', enable='1';"
@@ -217,11 +217,11 @@ else
     #S9 drop jeedom database
     echo -e "Step 9 skipped: database drop/create"
     #s10 jeedom_installation
-    /root/install_docker.sh -s 10 ${DATABASE}
+    /root/install_docker.sh -s 10 ${DATABASE} -i docker
     #s10 = post install (cron ) /s11 for v4
-    /root/install_docker.sh -s 11 ${DATABASE}
+    /root/install_docker.sh -s 11 ${DATABASE} -i docker
     #s12 = jeedom_check
-    /root/install_docker.sh -s 12 ${DATABASE}
+    /root/install_docker.sh -s 12 ${DATABASE} -i docker
     #force reset when admin already exists
     [[ 1 -eq ${res} ]] && echo "Admin password, now, is admin" && php /var/www/html/install/reset_password_admin.php admin admin
     # update-ca-certificates --fresh

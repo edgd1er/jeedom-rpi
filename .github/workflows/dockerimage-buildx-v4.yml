@@ -8,17 +8,12 @@ on:
         required: true
         default: 'latest'
         type: string
-  pull_request:
-    branches:
-      - master
-    paths-ignore:
-      - '.github/**'
-  push:
-    branches:
-      - master
-      - gh_pb
-    paths-ignore:
-      - '.github/**'
+#  push:
+#    branches:
+#      - master
+#      - gh_pb
+#    paths-ignore:
+#      - '.github/**'
 
 jobs:
   build-bullseye-v4:

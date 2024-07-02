@@ -77,7 +77,7 @@ RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     # tagged version
     ##########################################
     # Adapt install_docker to docker: fix jeedom install.sh for unattended install
-    && sed -i "/systemctl daemon-reload/d" /root/install_docker.sh \
+    && sed -i "s/systemctl daemon-reload/true/g" /root/install_docker.sh \
     && sed -r 's;(rm /var/lib/mysql/ib.*);# \1;' /root/install_docker.sh \
     && sed -i -E "s#\(mysql|mariadb\) -uroot($| )#mysql -uroot -p\${MYSQL_ROOT_PASSWD} -h \${MYSQL_JEEDOM_HOST} -P\${MYSQL_JEEDOM_PORT} \${MYSQL_JEEDOM_DBNAME} #g" /root/install_docker.sh \
     && grep "^MYSQL_JEEDOM_PASSWD=" /root/install_docker.sh || true \
@@ -97,7 +97,7 @@ RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
 RUN echo "root:${SHELL_ROOT_PASSWORD}" | chpasswd \
     && echo "Installing jeedom version: ${VERSION} / ${JDM_VERSION}" \
     # 4.4 install -d 0 = external database
-    && if [[ ${VERSION} =~ (alpha|beta|V4-stable) ]] ; then DATABASE="-d 0"; else DATABASE="" ; fi \
+    && if [[ ${VERSION,,} =~ (alpha|beta|v4-stable) ]] ; then DATABASE="-d 0"; else DATABASE="" ; fi \
     # step 2 install mainpackage - add too many packages.
     # && /root/install_docker.sh -s 2 -v ${VERSION}\
     # step 3 install mysql server
@@ -105,13 +105,13 @@ RUN echo "root:${SHELL_ROOT_PASSWORD}" | chpasswd \
     && apt-get update \
     # install apache
     && echo "Etape 4: install apache" \
-    && /root/install_docker.sh -s 4 -v "${VERSION}" "${DATABASE}"\
+    && /root/install_docker.sh -s 4 -v "${VERSION}" "${DATABASE}" -i docker\
     # s5 install php
     && echo "Etape 5: install php" \
-    && /root/install_docker.sh -s 5 -v "${VERSION}" "${DATABASE}"\
+    && /root/install_docker.sh -s 5 -v "${VERSION}" "${DATABASE}" -i docker\
     # s6 install jeedom download
     && echo "Etape 6: install jeedom" \
-    && /root/install_docker.sh -s 6 -v "${VERSION}" "${DATABASE}"\
+    && /root/install_docker.sh -s 6 -v "${VERSION}" "${DATABASE}" -i docker\
     ## remove bugged php line
     # remove CR/LR : php /var/www/html/install/packages.php
     && sed -i "s/'version' => \$npm/'version' => rtrim(\$npm)/" /var/www/html/core/class/system.class.php \
@@ -127,7 +127,7 @@ RUN echo "root:${SHELL_ROOT_PASSWORD}" | chpasswd \
     #v4 S9 = drop database , DB creds done at runtime
     #v4 s10 = install.php done at runtime.
     #v4 s11 = post install (cron )
-    && /root/install_docker.sh -s 8 -v ${VERSION};/root/install_docker.sh -s 11 -v "${VERSION}" "${DATABASE}" \
+    && /root/install_docker.sh -s 8 -v ${VERSION};/root/install_docker.sh -s 11 -v "${VERSION}" "${DATABASE}" -i docker\
     && echo "alias salias='source ~/.bashrc'" | tee -a ~/.bashrc \
     && echo "alias modalias='vim ~/.bashrc'" | tee -a ~/.bashrc \
     && echo "function setZwaveJsVersion(){ sed -E -i \"s#^wantedVersion=[0-9]\.[0-9]{1,2}\..#wantedVersion=${1:-9.12.0}#\" /var/www/html/plugins/zwavejs/core/config/zwavejs.config.ini ;}" | tee -a ~/.bashrc \
