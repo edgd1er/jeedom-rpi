@@ -26,7 +26,7 @@ jobs:
       version: master
       #12 stable bookworm
       #11 oldstable bullseye
-      distro: 11-slim
+      distro: 12-slim
       build-dockerfile: './Docker/Dockerfile'
       push: true
     secrets: inherit
@@ -37,9 +37,9 @@ jobs:
       image-name: jeedom-rpi
       build-context: './Docker'
       jdm_version: latest
-      tag: buster-v4-latest
+      tag: bullseye-v4-latest
       version: master
       #10 buster oldoldstable
-      distro: 10-slim
+      distro: 11-slim
       push: true
     secrets: inherit
