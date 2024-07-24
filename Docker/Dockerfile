@@ -24,7 +24,7 @@ EXPOSE 443
 
 LABEL maintainer=edgd1er@hotmail.com
 
-#prepare base image for v4-stable, alpha, beta: all v4 versions
+#prepare base image for master, alpha, beta: all v4 versions
 #add apt-cacher setting if present:
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 #hadolint ignore=DL3008
@@ -92,12 +92,12 @@ RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     #v4: no systemd services in docker
     && sed -ri '/systemctl (start|stop|status|restart).*/d' /root/install_docker.sh \
     # set jeedom version v3 or v4
-    && sed -i "s/VERSION=V4-stable/VERSION=\${VERSION}/g" /root/install_docker.sh
+    && sed -i "s/VERSION=master/VERSION=\${VERSION}/g" /root/install_docker.sh
     ##########################################
 RUN echo "root:${SHELL_ROOT_PASSWORD}" | chpasswd \
     && echo "Installing jeedom version: ${VERSION} / ${JDM_VERSION}" \
     # 4.4 install -d 0 = external database
-    && if [[ ${VERSION,,} =~ (alpha|beta|v4-stable) ]] ; then DATABASE="-d 0"; else DATABASE="" ; fi \
+    && if [[ ${VERSION,,} =~ (alpha|beta|master) ]] ; then DATABASE="-d 0"; else DATABASE="" ; fi \
     # step 2 install mainpackage - add too many packages.
     # && /root/install_docker.sh -s 2 -v ${VERSION}\
     # step 3 install mysql server

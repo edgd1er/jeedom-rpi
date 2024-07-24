@@ -15,7 +15,7 @@ E_PUSH=${E_PUSH:-0}
 # force zwave-ui as external container + version
 E_ZWAVE=${E_ZWAVE:-0}
 #Default zwavejs-ui version
-E_ZWAVEVER=${E_ZWAVEVER:-"9.14.4"}
+E_ZWAVEVER=${E_ZWAVEVER:-"9.16.2"}
 #Debian 12 needs --break-system-packages
 BKS=""
 
@@ -50,7 +50,6 @@ pushbullet() {
       # pushbullet: activation du log du daemon
       sed -i 's#/dev/null#/var/www/html/log/pushbullet_daemon.log#' /var/www/html/plugins/pushbullet/core/class/pushbullet.class.php
       sed -i "s#/tmp/pushbullet.log#/var/www/html/log/pushbullet.log#" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py
-
     fi
     # pushbullet: replace obsolete websocket
     if [[ -d /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket ]]; then

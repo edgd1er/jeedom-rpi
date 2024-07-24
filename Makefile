@@ -25,11 +25,11 @@ buildv3: ## build v3 image
 
 build: ## build v4 image with bullseye
 	@echo -e "\n\nbuild image ...v4"
-	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="V4-stable" --build-arg DISTRO="bullseye-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-latest ./Docker
+	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="master" --build-arg DISTRO="bullseye-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-latest ./Docker
 
 buildb: ## build v4 image with buster
 	@echo -e "\n\nbuild image ...v4 buster"
-	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="V4-stable" --build-arg DISTRO="buster-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:buster-v4-latest ./Docker
+	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="master" --build-arg DISTRO="buster-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:buster-v4-latest ./Docker
 
 alpha: ## build v4 alpha image --no-cache
 	@echo -e "\n\nbuild image ...v4 alpha"
@@ -41,13 +41,13 @@ beta: ## build v4 beta image --no-cache
 
 ver: ## check version
 	@JDM_VER=$$( grep -oP "(?<=v)4\.[0-9\.]+" README.md ) ; \
-	jdm=$$( curl -s "https://raw.githubusercontent.com/jeedom/core/V4-stable/core/config/version"); \
+	jdm=$$( curl -s "https://raw.githubusercontent.com/jeedom/core/master/core/config/version"); \
 	zwave=$$( curl -s "https://api.github.com/repos/zwave-js/zwave-js-ui/releases/latest" | jq -r .tag_name) ; \
 	ZWAVE_VER=$$(grep -oP "(?<=ZWAVE_VERSION: ).+" .github/workflows/checkVersion.yml) ; \
 	echo "Jeedom local: $${JDM_VER} remote: $${jdm}" ; \
 	echo "Zwave-ui-js local: $${ZWAVE_VER} remote: $${zwave#v*}" ; \
 	if [[ $${jdm} != $${JDM_VER} ]]; then \
-	  echo "Jeedom update detected: https://raw.githubusercontent.com/jeedom/core/V4-stable/core/config/version" ;\
+	  echo "Jeedom update detected: https://raw.githubusercontent.com/jeedom/core/master/core/config/version" ;\
 	  sed -i -E "s/#JDM_VERSION:.+/#JDM_VERSION: $${jdm}/" docker-compose.yml; \
 	  fi ; \
 	if [[ $${zwave} != v$${ZWAVE_VER} ]]; then \

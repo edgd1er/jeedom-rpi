@@ -10,8 +10,8 @@ SETX=""
 XDEBUG=${XDEBUG:-0}
 # external database arg for install
 DATABASE=""
-#Release=3.3.57 / V4-stable=4.3.X Beta=4.4.X / Alpha=4.4.X
-if [[ ${VERSION} =~ (V4-stable|alpha|beta) ]]; then
+#Release=3.3.57 / master=4.3.X Beta=4.4.X / Alpha=4.4.X
+if [[ ${VERSION} =~ (master|alpha|beta) ]]; then
   DATABASE="-d 0"
 fi
 
@@ -201,7 +201,7 @@ else
     echo "${VERT}Admin password is now admin${NORMAL}"
     mysql_sql "use ${MYSQL_JEEDOM_DBNAME};REPLACE INTO user SET login='admin',password='c7ad44cbad762a5da0a452f9e854fdc1e0e7a52a38015f23f3eab1d80b931dd472634dfac71cd34ebc35d16ab7fb8a90c81f975113d6c7538dc69dd8de9077ec',profils='admin', enable='1';"
   else
-    #V4-stable
+    #master
     cp ${WEBSERVER_HOME}/install/fail2ban.jeedom.conf /etc/fail2ban/jail.d/jeedom.conf
     # create helper reset password
     sed "s/^\$username = .*/\$username = \"\$argv[1]\";/" /var/www/html/install/reset_password.php >/var/www/html/install/reset_password_admin.php
