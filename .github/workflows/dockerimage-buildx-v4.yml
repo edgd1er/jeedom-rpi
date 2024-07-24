@@ -23,7 +23,7 @@ jobs:
       build-context: './Docker'
       jdm_version: latest
       tag: v4-latest
-      version: V4-stable
+      version: master
       #12 stable bookworm
       #11 oldstable bullseye
       distro: 11-slim
@@ -38,7 +38,7 @@ jobs:
       build-context: './Docker'
       jdm_version: latest
       tag: buster-v4-latest
-      version: V4-stable
+      version: master
       #10 buster oldoldstable
       distro: 10-slim
       push: true

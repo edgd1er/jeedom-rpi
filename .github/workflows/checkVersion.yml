@@ -4,7 +4,7 @@ on:
     - cron: "0 17 * * *"
   workflow_dispatch:
 env:
-  ZWAVE_VERSION: 9.14.4
+  ZWAVE_VERSION: 9.16.2
 
 jobs:
   check-j4_version:
@@ -17,16 +17,17 @@ jobs:
         run: |
           ls -al .
           local_version=$( grep -oP "(?<=v)4\.[0-9\.]+" README.md )
-          ver=$(curl -s "https://raw.githubusercontent.com/jeedom/core/V4-stable/core/config/version")
+          ver=$(curl -s "https://raw.githubusercontent.com/jeedom/core/master/core/config/version")
           echo "alpha version: $(curl -s "https://raw.githubusercontent.com/jeedom/core/alpha/core/config/version")"
           echo "beta version: $(curl -s "https://raw.githubusercontent.com/jeedom/core/beta/core/config/version")"
           echo "latest built version: ${local_version}, latest github version: ${ver}"
           if [[ ${local_version} == ${ver} ]]; then exit 0; fi
-          curl -s "https://raw.githubusercontent.com/jeedom/core/V4-stable/docs/fr_FR/changelog.md" | grep -A20 -P "## ${ver}" | sed '/^$/d' | head -10
+          curl -s "https://raw.githubusercontent.com/jeedom/core/master/docs/fr_FR/changelog.md" | grep -A20 -P "## ${ver}" | sed '/^$/d' | head -10
           exit 1
 
   check-j3_version:
       runs-on: ubuntu-latest
+      if: false
       steps:
         - name: Checkout
           uses: actions/checkout@v4

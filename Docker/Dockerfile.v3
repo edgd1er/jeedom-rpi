@@ -65,7 +65,7 @@ RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     ## latest version
     && wget -qO /root/install_docker.sh https://raw.githubusercontent.com/jeedom/core/${VERSION}/install/install.sh \
     # tagged version
-    && if [[ "latest" != "${JDM_VERSION}" ]] && [[ "${VERSION}" == "V4-stable" ]]; then \
+    && if [[ "latest" != "${JDM_VERSION}" ]] && [[ "${VERSION}" == "master" ]]; then \
     sed -i "s#https://github.com/jeedom/core/archive/\${VERSION}.zip#https://github.com/jeedom/core/archive/refs/tags/\${JDM_VERSION}.zip#" /root/install_docker.sh ; fi \
     && chmod +x /root/install_docker.sh \
     #&& echo "url install: $(grep -oP '(?<=  wget )(--no-check-certificate |)([^ ]+)' /root/install_docker.sh | grep -oP 'https.+')" || true \

@@ -29,8 +29,8 @@ on:
         default: false
         type: boolean
       version:
-        description: 'V4-stable'
-        default: 'V4-stable'
+        description: 'master'
+        default: 'master'
         required: true
         type: string
       distro:

@@ -15,10 +15,10 @@
 
 Forked from https://github.com/CodaFog/jeedom-rpi
 
-| Last Version                                                | Commit Date |
-|-------------------------------------------------------------|-------------|
-| [v4.4.8.1](https://doc.jeedom.com/fr_FR/core/4.3/changelog) | 24/06/29    |
-| [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog)  | 23/01/02    |
+| Last Version                                                | Commit Date                                                |
+|-------------------------------------------------------------|------------------------------------------------------------|
+| [v4.4.8.1](https://doc.jeedom.com/fr_FR/core/4.3/changelog) | 24/06/29                                                   |
+| [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog)  | 23/01/02 / branch deleted on 2024/07/22. V3 build disabled |
 
 /!\ According to jeedom, 3.3.60 will be the last update to v3.
 
@@ -66,7 +66,7 @@ Images are build for arm/v6, arm/v7 and amd64
 This readme shows a **Dockerfile** of a dockerized [Jeedom](https://www.jeedom.com) based on a debian buster slim image.
 The mysql database is based on linuxserver mariadb image on a distinct container.
 
-Jeedom major version is given as a parameter, release if for jeedom v3, V4-stable for v4.
+Jeedom major version is given as a parameter, release if for jeedom v3, master for v4.
 
 Docker Hub: https://hub.docker.com/r/edgd1er/jeedom-rpi
 
@@ -96,8 +96,7 @@ example:
 1. Install [Docker](https://www.docker.com/) on your Raspberry pi.
 
 2. Rename docker-compose-armhf.yml to docker-compose.yml and define values in environment section.(mysql database,
-   architecture disribution (amd64-debian, armv7hf-debian ), jeedom version (release, v4-stable), aptcacher if
-   apt-cache-ng is installed, empty string if not. release is latest v3.
+   architecture disribution (amd64-debian, armv7hf-debian ), jeedom version (release).
 
 version values for jeedom version: v3/v4
 
