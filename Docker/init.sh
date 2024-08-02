@@ -176,7 +176,9 @@ else
   sed -r -i "/mariadb-server/d" /var/www/html/install/packages.json
   sed -r -i "/chromium/d" /var/www/html/install/packages.json
   #fix fail2ban conf
-  sed -i 's#/var/log/apache2/*error$#/var/log/apache2/*error*#g' /etc/fail2ban/jail.d/jeedom.conf
+  if [[ -f /etc/fail2ban/jail.d/jeedom.conf ]]; then
+    sed -i 's#/var/log/apache2/*error$#/var/log/apache2/*error*#g' /etc/fail2ban/jail.d/jeedom.conf
+  fi
   #mysql is not local to jeedom container
   #set db creds
   step_8_jeedom_configuration
