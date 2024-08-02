@@ -15,10 +15,10 @@
 
 Forked from https://github.com/CodaFog/jeedom-rpi
 
-| Last Version                                               | Commit Date                                                                    |
-|------------------------------------------------------------|--------------------------------------------------------------------------------|
-| [v4.4.9](https://doc.jeedom.com/fr_FR/core/4.3/changelog)  | 24/07/24 major change in repo, v4-stable replace with master. move to bookworm |
-| [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02 / branch deleted on 2024/07/22. V3 build disabled                     |
+| Last Version                                               | Commit Date                                                                               |
+|------------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| [v4.4.9](https://doc.jeedom.com/fr_FR/core/4.3/changelog)  | 24/07/24 major change in repo, v4-stable replace with master. move to bookworm base image |
+| [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02 / branch deleted on 2024/07/22. V3 build disabled                                |
 
 /!\ According to jeedom, 3.3.60 will be the last update to v3.
 

@@ -16,7 +16,7 @@ on:
 #      - '.github/**'
 
 jobs:
-  build-bullseye-v4:
+  build-bookworm-v4:
     uses: ./.github/workflows/dockerimage-buildx-template.yml
     with:
       image-name: jeedom-rpi
@@ -24,14 +24,13 @@ jobs:
       jdm_version: latest
       tag: v4-latest
       version: master
-      #12 stable bookworm
-      #11 oldstable bullseye
+      #12 bookworm stable
       distro: 12-slim
       build-dockerfile: './Docker/Dockerfile'
       push: true
     secrets: inherit
 
-  build-buster-v4:
+  build-bullseye-v4:
     uses: ./.github/workflows/dockerimage-buildx-template.yml
     with:
       image-name: jeedom-rpi
@@ -39,6 +38,7 @@ jobs:
       jdm_version: latest
       tag: bullseye-v4-latest
       version: master
+      #11 bullseye oldstable
       #10 buster oldoldstable
       distro: 11-slim
       push: true

@@ -44,7 +44,10 @@ ver: ## check version
 	jdm=$$( curl -s "https://raw.githubusercontent.com/jeedom/core/master/core/config/version"); \
 	zwave=$$( curl -s "https://api.github.com/repos/zwave-js/zwave-js-ui/releases/latest" | jq -r .tag_name) ; \
 	ZWAVE_VER=$$(grep -oP "(?<=ZWAVE_VERSION: ).+" .github/workflows/checkVersion.yml) ; \
-	echo "Jeedom local: $${JDM_VER} remote: $${jdm}" ; \
+	echo "v4 Jeedom local: $${JDM_VER} remote: $${jdm}" ; \
+	jdmb=$$( curl -s "https://raw.githubusercontent.com/jeedom/core/beta/core/config/version"); \
+	jdma=$$( curl -s "https://raw.githubusercontent.com/jeedom/core/alpha/core/config/version"); \
+	echo "alpha: $${jdma}, beta: $${jdmb}" ; \
 	echo "Zwave-ui-js local: $${ZWAVE_VER} remote: $${zwave#v*}" ; \
 	if [[ $${jdm} != $${JDM_VER} ]]; then \
 	  echo "Jeedom update detected: https://raw.githubusercontent.com/jeedom/core/master/core/config/version" ;\
