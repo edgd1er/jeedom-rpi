@@ -20,11 +20,12 @@ Forked from https://github.com/CodaFog/jeedom-rpi
 | [v4.4.9](https://doc.jeedom.com/fr_FR/core/4.3/changelog)  | 24/07/24 major change in repo, v4-stable replace with master. move to bookworm base image |
 | [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02 / branch deleted on 2024/07/22. V3 build disabled                                |
 
-/!\ According to jeedom, 3.3.60 will be the last update to v3.
-
+/!\ Asof 2024/07/30, v4-latest docker tag is now based on bookworm (v12). many plugins are still migrating to v12.
+https://community.jeedom.com/t/compatibilite-des-plugins-avec-debian-12-bookworm-php-8-python-3-11/126200/142
 /!\ Asof 2023/01/02, v4-latest docker tag is now based on bullseye (v11) as zwave plugin has migrated to zwave-js-ui
 plugin. v4-buster-latest (v10) is available for plugins not compatible with debian:bullseye (V11).
 
+/!\ According to jeedom, 3.3.60 will be the last update to v3.
 * technical explanation: https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.13.0#time64_requirements
 * two way to fix: https://docs.linuxserver.io/faq#libseccomp
 
@@ -61,9 +62,9 @@ Please note that:
   using: `cat /dev/urandom | tr -dc '0-9a-zA-Z' | fold -w 32 | head -1` and mounted as a binded volume
   Plugins store encrypted values (enedis, may be others ..), so association will have to be done again.
 
-Images are build for arm/v6, arm/v7 and amd64
+Images are build for arm/v7, arm64 and amd64
 
-This readme shows a **Dockerfile** of a dockerized [Jeedom](https://www.jeedom.com) based on a debian buster slim image.
+This readme shows a **Dockerfile** of a dockerized [Jeedom](https://www.jeedom.com) based on a debian bookworm slim image.
 The mysql database is based on linuxserver mariadb image on a distinct container.
 
 Jeedom major version is given as a parameter, release if for jeedom v3, master for v4.
@@ -75,13 +76,8 @@ Docker Hub: https://hub.docker.com/r/edgd1er/jeedom-rpi
 * [linuxserver/mariadb](https://hub.docker.com/r/linuxserver/mariadb)
 * [https://hub.docker.com/_/debian](https://github.com/debuerreotype/docker-debian-artifacts/blob/686d9f6eaada08a754bc7abf6f6184c65c5b378f/buster/Dockerfile)
 
-upgrade to bullseye postponed due to plugins still using
-python2.7 ( [openzwave](https://github.com/jeedom/plugin-openzwave/blob/beta/docs/en_US/index.md), maybe others ...)
-
-According to [Jeedom's documentation](https://doc.jeedom.com/en_US/plugins/automation%20protocol/zwavejs/): "ZwaveJs:
-This plugin is compatible with Debian 11 “Bullseye” and is therefore the official plugin to be preferred to manage your
-Z-Wave network in Jeedom." No Hope to have Zwave plugin to be ported on bullseye. Please see [zwaveJs](##zwajeJs)
-section, if you plan to us that plugin.
+page for plugin status: compatible / incompatible bookworm
+https://community.jeedom.com/t/compatibilite-des-plugins-avec-debian-12-bookworm-php-8-python-3-11/126200/142
 
 ### Installation
 
@@ -116,17 +112,17 @@ version values for jeedom version: v3/v4
 ### Environment variables
 
 The Jeedom user should be existing in the remote database.
-Mysql Root password should be in the command line that run the container. If the MYSQL_JEEDOM_DBNAME schema does
+Mysql Root password should be in the command line that run the container. If the MARIADB_JEEDOM_DBNAME schema does
 not exists, it will created.
 if LOGS_TO_STDOUT is set to yes, apache logs are sent to container's stdout.
 
 ```   - TZ=Europe/Paris
       - ROOT_PASSWORD shell root password
-      - MYSQL_JEEDOM_HOST mysql hostname
-      - MYSQL_JEEDOM_PORT mysql port
-      - MYSQL_JEEDOM_DBNAME mysql Database name
-      - MYSQL_JEEDOM_USERNAME mysql jeedom username
-      - MYSQL_JEEDOM_PASSWD mysql username password
+      - MARIADB_JEEDOM_HOST mysql hostname
+      - MARIADB_JEEDOM_PORT mysql port
+      - MARIADB_JEEDOM_DBNAME mysql Database name
+      - MARIADB_JEEDOM_USERNAME mysql jeedom username
+      - MARIADB_JEEDOM_PASSWD mysql username password
 ```
 
 ### Upgrade
@@ -156,8 +152,8 @@ the hereunder variables may be replaced by secrets:
 
 - JEEDOM_ENCRYPTION_KEY
 - ROOT_PASSWD
-- MYSQL_ROOT_PASSWD
-- MYSQL_JEEDOM_PASSWD
+- MARIADB_ROOT_PASSWD
+- MARIADB_JEEDOM_PASSWD
 
 create a file with that name in the docker-compose.yml's directory.
 
@@ -220,11 +216,11 @@ services:
     environment:
       - TZ=Europe/Paris
       - ROOT_PASSWORD=rootPassword
-      - MYSQL_JEEDOM_HOST=mysql
-      - MYSQL_JEEDOM_PORT=3306
-      - MYSQL_JEEDOM_DBNAME=jeedom_test
-      - MYSQL_JEEDOM_USERNAME=jeedom
-      - MYSQL_JEEDOM_PASSWD=jeedom
+      - MARIADB_JEEDOM_HOST=mysql
+      - MARIADB_JEEDOM_PORT=3306
+      - MARIADB_JEEDOM_DBNAME=jeedom_test
+      - MARIADB_JEEDOM_USERNAME=jeedom
+      - MARIADB_JEEDOM_PASSWD=jeedom
     #   devices:
     #   - "/dev/ttyUSB0:/dev/ttyUSB0
     #   - "/dev/ttyACM0:/dev/ttyACM0"
@@ -240,10 +236,10 @@ services:
       - "3316:3306"
     environment:
       - TZ=Europe/Paris
-      - MYSQL_ROOT_PASSWORD=changeIt
-      - MYSQL_DATABASE=jeedom_test
-      - MYSQL_USER=jeedom
-      - MYSQL_PASSWORD=jeedom
+      - MARIADB_ROOT_PASSWORD=changeIt
+      - MARIADB_DATABASE=jeedom_test
+      - MARIADB_USER=jeedom
+      - MARIADB_PASSWORD=jeedom
     volumes:
       - ./Docker/allow_root_access.sql:/docker-entrypoint-initdb.d/allow_root_access.sql
       #- ./sqldata:/var/lib/mysql
@@ -308,6 +304,10 @@ The hereafter commands will:
   # log debug unknown key
   docker compose exec web sed -i "s/'\.__('Le message reçu est de type inconnu', __FILE__)/, key: '.\$key.__('. Le message reçu est de type inconnu', __FILE__)/" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
 ```
+
+A similar method, is suggested with this repository: https://github.com/lxrootard/zwavejs.git
+the idea is the allow directly in jeedom to use a distant container.
+
 
 ## Fixes broken plugins: pushbullet, speedtest
 
