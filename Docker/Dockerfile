@@ -1,10 +1,11 @@
 #hadolint global ignore=SC3010
-ARG DISTRO=11-slim
+ARG DISTRO=12-slim
 FROM debian:${DISTRO} AS base
 
 ENV SHELL_ROOT_PASSWORD=password
 ENV APACHE_HTTP_PORT=80
 ENV APACHE_HTTPS_PORT=443
+ENV LOGS_TO_STDOUT=n
 ENV SSH_PORT=22
 ENV MODE_HOST=0
 ENV MYSQL_ROOT_PASSWD=password
@@ -54,7 +55,7 @@ RUN if [[ -n ${aptCacher:-} ]]; then printf "Acquire::http::Proxy \"http://%s:31
     && apt-get -y remove -y brltty  && apt-get upgrade -y \
     && apt-get autoremove -y --purge && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /var/run/sshd -p /var/log/supervisor
+    && mkdir -p /var/run/sshd
 
 FROM base
 
@@ -144,7 +145,6 @@ RUN echo "root:${SHELL_ROOT_PASSWORD}" | chpasswd \
     # clean caches
     && apt-get autoremove -y --purge && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /var/log/supervisor/  \
     && if [[ -n "$aptCacher" ]]; then echo "" > /etc/apt/apt.conf.d/01proxy; fi
 
 COPY --chmod=755 init.sh /root/init.sh
@@ -162,5 +162,7 @@ VOLUME /var/www/html/data
 VOLUME /var/www/html/backup
 VOLUME /var/www/html/tmp
 VOLUME /var/www/html/log/
+VOLUME /var/log/
+
 
 

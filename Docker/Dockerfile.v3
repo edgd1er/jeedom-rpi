@@ -46,7 +46,7 @@ RUN if [[ -n ${aptCacher:-} ]]; then printf "Acquire::http::Proxy \"http://%s:31
     && apt-get -y remove -y brltty  && apt-get upgrade -y \
     && apt-get autoremove -y --purge && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /var/run/sshd -p /var/log/supervisor
+    && mkdir -p /var/run/sshd
 
 FROM base
 

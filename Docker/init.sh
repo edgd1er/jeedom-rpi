@@ -177,8 +177,12 @@ else
   sed -r -i "/chromium/d" /var/www/html/install/packages.json
   #fix fail2ban conf
   if [[ -f /etc/fail2ban/jail.d/jeedom.conf ]]; then
-    sed -i 's#/var/log/apache2/*error$#/var/log/apache2/*error*#g' /etc/fail2ban/jail.d/jeedom.conf
+    echo
+    #sed -i 's#/var/log/apache2/*error$#/var/log/apache2/*error*#g' /etc/fail2ban/jail.d/jeedom.conf
   fi
+  #fix compose install
+  sed -i '/sudo rm \/usr\/local\/bin\/composer/d' /var/www/html/resources/install_composer.sh
+
   #mysql is not local to jeedom container
   #set db creds
   step_8_jeedom_configuration
@@ -237,7 +241,7 @@ chmod 777 /dev/tty*
 #chmod 755 -R /var/www/html
 #chown -R www-data:www-data /var/www/html
 #needed when using tempfs
-mkdir -p /var/log/supervisor/ -p /run/lock/ -p /var/log/apache2/ -p /var/log/fail2ban -p /var/run/fail2ban
+mkdir -p /run/lock/ -p /var/www/html/log/{apache2,fail2ban} -p /var/run/fail2ban
 
 #enable xdebug
 if [ ${XDEBUG:-0} = "1" ]; then
@@ -253,7 +257,7 @@ xdebug.remote_eable=true
 xdebug.mode=develop,debug
 xdebug.remote_host=${XDEBUG_HOST:-"host.docker.internal"}
 xdebug.remote_port=${XDEBUG_PORT:-9003}
-xdebug.log=${XDEBUG_LOGFILE:-"/var/log/apache2/php_debug.log"}
+xdebug.log=${XDEBUG_LOGFILE:-"/var/www/html/log/php_debug.log"}
 xdebug.idekey='idekey'
 xdebug.start_with_request=yes" | tee -a ${phpconf}
     sed -r "s/^error_reporting = .*/error_reporting = E_ALL/" ${phpconf}
@@ -264,11 +268,14 @@ xdebug.start_with_request=yes" | tee -a ${phpconf}
   fi
 fi
 
+sed -i 's#/var/log/apache2#/var/www/html/log/#' /etc/apache2/envvars
+sed -i 's#/var/log/apache2#/var/www/html/log#' /etc/logrotate.d/apache2
+
 if [[ ${LOGS_TO_STDOUT,,} =~ y ]]; then
   echo "Send apache logs to stdout/err"
-  [[ -f /var/log/apache2/access.log ]] && mv /var/log/apache2/{access,error}.log /var/log/apache2/access_.log && mv /var/log/apache2/error.log /var/log/apache2/error_.log
-  ln -sf /proc/1/fd/1 /var/log/apache2/access.log
-  ln -sf /proc/1/fd/1 /var/log/apache2/error.log
+  [[ -f /var/log/apache2/access.log ]] && rm -Rf /var/log/apache2/* || true
+  ln -sf /proc/1/fd/1 /var/www/html/log/access.log
+  ln -sf /proc/1/fd/1 /var/www/html/log/error.log
 else
   [[ -L /var/log/apache2/access.log ]] && rm -f /var/log/apache2/{access,error}.log && echo "Remove apache symlink to stdout/stderr" || echo
 fi
@@ -291,9 +298,10 @@ supervisorctl start apache2
 #cannot start fail2ban when logs are redirected
 if [[ ${LOGS_TO_STDOUT,,} =~ n ]]; then
   #place apache logs at proper location
-  sed -i "s#/var/www/html/log#/var/log/apache2#" /etc/fail2ban/jail.d/jeedom.conf
-  sed -i "s#/http\*\.#/*#" /etc/fail2ban/jail.d/jeedom.conf
-  sed -i 's#\*error$#\*error\*#g' /etc/fail2ban/jail.d/jeedom.conf
+
+  #sed -i "s#/var/www/html/log#/var/log/apache2#" /etc/fail2ban/jail.d/jeedom.conf
+  #sed -i "s#/http\*\.#/*#" /etc/fail2ban/jail.d/jeedom.conf
+  #sed -i 's#\*error$#\*error\*#g' /etc/fail2ban/jail.d/jeedom.conf
   supervisorctl start fail2ban
 fi
 
