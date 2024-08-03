@@ -8,12 +8,12 @@ ENV APACHE_HTTPS_PORT=443
 ENV LOGS_TO_STDOUT=n
 ENV SSH_PORT=22
 ENV MODE_HOST=0
-ENV MYSQL_ROOT_PASSWD=password
-ENV MYSQL_JEEDOM_HOST=localhost
-ENV MYSQL_JEEDOM_PASSWD=jeedom
-ENV MYSQL_JEEDOM_DBNAME=jeedom
-ENV MYSQL_JEEDOM_USERNAME=jeedom
-ENV MYSQL_JEEDOM_PORT=3306
+ENV MARIADB_ROOT_PASSWD=password
+ENV MARIADB_JEEDOM_HOST=localhost
+ENV MARIADB_JEEDOM_PASSWD=jeedom
+ENV MARIADB_JEEDOM_DBNAME=jeedom
+ENV MARIADB_JEEDOM_USERNAME=jeedom
+ENV MARIADB_JEEDOM_PORT=3306
 ENV XDEBUG=0
 ENV XDEBUG_HOST=localhost
 ENV XEBUG_PORT=9003
@@ -80,8 +80,8 @@ RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     # Adapt install_docker to docker: fix jeedom install.sh for unattended install
     && sed -i "s/systemctl daemon-reload/true/g" /root/install_docker.sh \
     && sed -r 's;(rm /var/lib/mysql/ib.*);# \1;' /root/install_docker.sh \
-    && sed -i -E "s#\(mysql|mariadb\) -uroot($| )#mysql -uroot -p\${MYSQL_ROOT_PASSWD} -h \${MYSQL_JEEDOM_HOST} -P\${MYSQL_JEEDOM_PORT} \${MYSQL_JEEDOM_DBNAME} #g" /root/install_docker.sh \
-    && grep "^MYSQL_JEEDOM_PASSWD=" /root/install_docker.sh || true \
+    && sed -i -E "s#\(mysql|mariadb\) -uroot($| )#mysql -uroot -p\${MARIADB_ROOT_PASSWD} -h \${MARIADB_JEEDOM_HOST} -P\${MARIADB_JEEDOM_PORT} \${MARIADB_JEEDOM_DBNAME} #g" /root/install_docker.sh \
+    && grep "^MARIADB_JEEDOM_PASSWD=" /root/install_docker.sh || true \
     && grep "mysql -uroot" /root/install_docker.sh || true \
     && sed -i 's#-y install "#-y --no-install-recommends install "#' /root/install_docker.sh \
     && sed -i "s#apt install#apt-get install -y --no-install-recommends#" /root/install_docker.sh \

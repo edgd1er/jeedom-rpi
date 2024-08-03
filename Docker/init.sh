@@ -24,10 +24,10 @@ setTimeZone() {
 }
 
 mysql_sql() {
-  if [ "localhost" == "${MYSQL_JEEDOM_HOST}" ]; then
-    echo "$@" | mysql -uroot -P${MYSQL_JEEDOM_PORT}
+  if [ "localhost" == "${MARIADB_JEEDOM_HOST}" ]; then
+    echo "$@" | mysql -uroot -P${MARIADB_JEEDOM_PORT}
   else
-    echo "$@" | mysql -u${MYSQL_JEEDOM_USERNAME} -p${MYSQL_JEEDOM_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT}
+    echo "$@" | mysql -u${MARIADB_JEEDOM_USERNAME} -p${MARIADB_JEEDOM_PASSWD} -h ${MARIADB_JEEDOM_HOST} -P${MARIADB_JEEDOM_PORT}
   fi
   if [ $? -ne 0 ]; then
     echo "${ROUGE}Ne peut exécuter $* dans MySQL - Annulation${NORMAL}"
@@ -36,25 +36,25 @@ mysql_sql() {
 }
 
 #not need when in mysql is in another container ( db, user are created then env values)
-step_8_mysql_create_db() {
+step_8_MARIADB_create_db() {
   echo "---------------------------------------------------------------------"
   echo "${JAUNE}commence l'étape 8 configuration de mysql ${NORMAL}"
-  isDB=$(mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} -BNe "show databases;" | grep -c ${MYSQL_JEEDOM_DBNAME})
-  [[ 0 -eq ${isDB} ]] && mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} -e "CREATE DATABASE ${MYSQL_JEEDOM_DBNAME};"
-  isUser=$(mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} -BNe "select user from mysql.user where user='jeedom';" | wc -l)
-  [[ 0 -eq ${isUser} ]] && mysql_sql "CREATE USER '${MYSQL_JEEDOM_USERNAME}'@'%' IDENTIFIED BY '${MYSQL_JEEDOM_PASSWD}';"
-  mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} -e "GRANT ALL PRIVILEGES ON ${MYSQL_JEEDOM_DBNAME}.* TO '${MYSQL_JEEDOM_USERNAME}'@'%';"
+  isDB=$(mysql -uroot -p${MARIADB_ROOT_PASSWD} -h ${MARIADB_JEEDOM_HOST} -P${MARIADB_JEEDOM_PORT} -BNe "show databases;" | grep -c ${MARIADB_JEEDOM_DBNAME})
+  [[ 0 -eq ${isDB} ]] && mysql -uroot -p${MARIADB_ROOT_PASSWD} -h ${MARIADB_JEEDOM_HOST} -P${MARIADB_JEEDOM_PORT} -e "CREATE DATABASE ${MARIADB_JEEDOM_DBNAME};"
+  isUser=$(mysql -uroot -p${MARIADB_ROOT_PASSWD} -h ${MARIADB_JEEDOM_HOST} -P${MARIADB_JEEDOM_PORT} -BNe "select user from mysql.user where user='jeedom';" | wc -l)
+  [[ 0 -eq ${isUser} ]] && mysql_sql "CREATE USER '${MARIADB_JEEDOM_USERNAME}'@'%' IDENTIFIED BY '${MARIADB_JEEDOM_PASSWD}';"
+  mysql -uroot -p${MARIADB_ROOT_PASSWD} -h ${MARIADB_JEEDOM_HOST} -P${MARIADB_JEEDOM_PORT} -e "GRANT ALL PRIVILEGES ON ${MARIADB_JEEDOM_DBNAME}.* TO '${MARIADB_JEEDOM_USERNAME}'@'%';"
 }
 
 step_8_jeedom_configuration() {
   echo "${VERT}Etape 8: informations de login pour la BDD${NORMAL}"
   ls -al ${WEBSERVER_HOME}/core/config/
   cp -p ${WEBSERVER_HOME}/core/config/common.config.sample.php ${WEBSERVER_HOME}/core/config/common.config.php
-  sed -i "s/#PASSWORD#/${MYSQL_JEEDOM_PASSWD}/g" ${WEBSERVER_HOME}/core/config/common.config.php
-  sed -i "s/#DBNAME#/${MYSQL_JEEDOM_DBNAME}/g" ${WEBSERVER_HOME}/core/config/common.config.php
-  sed -i "s/#USERNAME#/${MYSQL_JEEDOM_USERNAME}/g" ${WEBSERVER_HOME}/core/config/common.config.php
-  sed -i "s/#PORT#/${MYSQL_JEEDOM_PORT}/g" ${WEBSERVER_HOME}/core/config/common.config.php
-  sed -i "s/#HOST#/${MYSQL_JEEDOM_HOST}/g" ${WEBSERVER_HOME}/core/config/common.config.php
+  sed -i "s/#PASSWORD#/${MARIADB_JEEDOM_PASSWD}/g" ${WEBSERVER_HOME}/core/config/common.config.php
+  sed -i "s/#DBNAME#/${MARIADB_JEEDOM_DBNAME}/g" ${WEBSERVER_HOME}/core/config/common.config.php
+  sed -i "s/#USERNAME#/${MARIADB_JEEDOM_USERNAME}/g" ${WEBSERVER_HOME}/core/config/common.config.php
+  sed -i "s/#PORT#/${MARIADB_JEEDOM_PORT}/g" ${WEBSERVER_HOME}/core/config/common.config.php
+  sed -i "s/#HOST#/${MARIADB_JEEDOM_HOST}/g" ${WEBSERVER_HOME}/core/config/common.config.php
 
   echo "${VERT}Etape 8: Configuration des sites Web sur Apache${NORMAL}"
   cp ${WEBSERVER_HOME}/install/apache_security /etc/apache2/conf-available/security.conf
@@ -106,15 +106,16 @@ if [ ! -f /.dockerinit ]; then
 fi
 
 #Get vars from secrets
-for s in JEEDOM_ENCRYPTION_KEY MYSQL_ROOT_PASSWD MYSQL_JEEDOM_PASSWD ROOT_PASSWD; do
+for s in JEEDOM_ENCRYPTION_KEY MARIADB_ROOT_PASSWD MARIADB_JEEDOM_PASSWD ROOT_PASSWD; do
   if [[ -f /run/secrets/${s} ]]; then
     echo "Reading ${s} from secrets"
     eval ${s}=$(cat /run/secrets/${s})
     [[ 1 -eq ${DEBUG} ]] && echo "${s}: ${!s}" || true
   fi
 done
+
 #fix mysql user as secret
-[[ -f /run/secrets/MYSQL_JEEDOM_PASSWD ]] && sed -i "s/\${MYSQL_JEEDOM_PASSWD}/${MYSQL_JEEDOM_PASSWD}/g" /root/install_docker.sh || true
+[[ -f /run/secrets/MARIADB_JEEDOM_PASSWD ]] && sed -i "s/\${MARIADB_JEEDOM_PASSWD}/${MARIADB_JEEDOM_PASSWD}/g" /root/install_docker.sh || true
 
 # check if env jeedom encryption key is defined
 if [[ -n ${JEEDOM_ENCRYPTION_KEY} ]]; then
@@ -127,17 +128,27 @@ fi
 
 #set root password
 if [ -z ${ROOT_PASSWD} ]; then
-  ROOT_PASSWD=$(tr -cd 'a-f0-9' </dev/urandom | head -c 20)
+  ROOT_PASSWD=$(openssl rand -base64 32 | tr -d /=+ | cut -c 15)
   echo "Use generate password : ${ROOT_PASSWD}"
 fi
 echo "root:${ROOT_PASSWD}" | chpasswd
 
 #define ports, activate ssl
-echo "Listen 80" >/etc/apache2/ports.conf
-echo "Listen 443" >>/etc/apache2/ports.conf
-sed -i -E "s/\<VirtualHost \*:(.*)\>/VirtualHost \*:80/" /etc/apache2/sites-available/000-default.conf
-[[ $(a2query -m ssl | grep -c "^ssl") -eq 0 ]] && a2enmod ssl
-sed -i -E "s/\<VirtualHost \*:(.*)\>/VirtualHost \*:${APACHE_HTTPS_PORT}/" /etc/apache2/sites-available/default-ssl.conf
+if [[ 3 -ne $(grep -cP "(80|${APACHE_HTTPS_PORT})" /etc/apache2/ports.conf) ]]; then
+echo "Listen 80
+
+<IfModule ssl_module>
+	Listen ${APACHE_HTTPS_PORT}
+</IfModule>
+
+<IfModule mod_gnutls.c>
+	Listen ${APACHE_HTTPS_PORT}
+</IfModule>" >/etc/apache2/ports.conf
+  sed -i -E "s/\<VirtualHost \*:(.*)\>/VirtualHost \*:80/" /etc/apache2/sites-available/000-default.conf
+  sed -i -E "s/\<VirtualHost \*:(.*)\>/VirtualHost \*:${APACHE_HTTPS_PORT}/" /etc/apache2/sites-available/default-ssl.conf
+fi
+
+[[ $(a2query -m ssl | grep -c "^ssl") -eq 0 ]] && a2enmod ssl || true
 [[ $(a2query -s default-ssl | grep -c "^default-ssl") -eq 0 ]] && a2ensite default-ssl
 [[ $(a2query -s 000-default | grep -c "^000-default") -eq 0 ]] && a2ensite 000-default
 
@@ -155,9 +166,10 @@ else
   #generate db param
   WEBSERVER_HOME=/var/www/html
   #fix jeedom install.sh for unattended install
-  sed -i "s#^MYSQL_JEEDOM_PASSWD=.*#MYSQL_JEEDOM_PASSWD=\$\(tr -cd \'a-f0-9\' \< /dev/urandom \| head -c 15\)#" /root/install_docker.sh
+  MARIADB_JEEDOM_PASSWD=${MARIADB_JEEDOM_PASSWD:-$(openssl rand -base64 32 | tr -d /=+ | cut -c -15)}
+  sed -i "s#^MARIADB_JEEDOM_PASSWD=.*#MARIADB_JEEDOM_PASSWD=\$\(openssl rand -base64 32 | tr -d /=+ \| cut -c -15\)#" /root/install_docker.sh
   #fix jeedom-core, allowing to define mysql not being local
-  sed -i "s#mysql -uroot#mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} ${MYSQL_JEEDOM_DBNAME}#" /root/install_docker.sh
+  sed -i "s#mysql -uroot#mysql -uroot -p${MARIADB_ROOT_PASSWD} -h ${MARIADB_JEEDOM_HOST} -P${MARIADB_JEEDOM_PORT} ${MARIADB_JEEDOM_DBNAME}#" /root/install_docker.sh
   #S8 =  db param done when running docker.
   while true; do
     result=$(mysql_sql "show grants for 'jeedom'@'%';")
@@ -180,24 +192,24 @@ else
     echo
     #sed -i 's#/var/log/apache2/*error$#/var/log/apache2/*error*#g' /etc/fail2ban/jail.d/jeedom.conf
   fi
-  #fix compose install
+  #remove rm as composer was never installed
   sed -i '/sudo rm \/usr\/local\/bin\/composer/d' /var/www/html/resources/install_composer.sh
 
   #mysql is not local to jeedom container
   #set db creds
   step_8_jeedom_configuration
   #create database if needed
-  step_8_mysql_create_db
+  step_8_MARIADB_create_db
   if [[ "release" == "$VERSION" ]]; then
     #V3
-    echo "V3 is EOL (End of Life), V4.3 is the suggested version. V4.2 is legacy"
+    echo "V3 is EOL (End of Life), V4.4 is the suggested version. V4.3 is legacy"
     #S9 =  install.php done when running docker.
     #broken /root/install_docker.sh -s 9
     #DBCLass is looking for language before having created the schema.
-    isTables=$(mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} ${MYSQL_JEEDOM_DBNAME} -e "show tables;" | wc -l)
+    isTables=$(mysql -uroot -p${MARIADB_ROOT_PASSWD} -h ${MARIADB_JEEDOM_HOST} -P${MARIADB_JEEDOM_PORT} ${MARIADB_JEEDOM_DBNAME} -e "show tables;" | wc -l)
     if [[ 0 -eq ${isTables} ]]; then
       echo "Mysql jeedom schema is created as no table were found, and install is bugged and check for languga in config table before creating the schema"
-      mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} ${MYSQL_JEEDOM_DBNAME} </var/www/html/install/install.sql
+      mysql -uroot -p${MARIADB_ROOT_PASSWD} -h ${MARIADB_JEEDOM_HOST} -P${MARIADB_JEEDOM_PORT} ${MARIADB_JEEDOM_DBNAME} </var/www/html/install/install.sql
     fi
     #s10 = post install (cron ) /s11 for v4
     /root/install_docker.sh -s 10 ${DATABASE} -i docker
@@ -205,7 +217,7 @@ else
     /root/install_docker.sh -s 11 ${DATABASE} -i docker
     #reset admin password
     echo "${VERT}Admin password is now admin${NORMAL}"
-    mysql_sql "use ${MYSQL_JEEDOM_DBNAME};REPLACE INTO user SET login='admin',password='c7ad44cbad762a5da0a452f9e854fdc1e0e7a52a38015f23f3eab1d80b931dd472634dfac71cd34ebc35d16ab7fb8a90c81f975113d6c7538dc69dd8de9077ec',profils='admin', enable='1';"
+    mysql_sql "use ${MARIADB_JEEDOM_DBNAME};REPLACE INTO user SET login='admin',password='c7ad44cbad762a5da0a452f9e854fdc1e0e7a52a38015f23f3eab1d80b931dd472634dfac71cd34ebc35d16ab7fb8a90c81f975113d6c7538dc69dd8de9077ec',profils='admin', enable='1';"
   else
     #master
     cp ${WEBSERVER_HOME}/install/fail2ban.jeedom.conf /etc/fail2ban/jail.d/jeedom.conf
@@ -213,7 +225,7 @@ else
     sed "s/^\$username = .*/\$username = \"\$argv[1]\";/" /var/www/html/install/reset_password.php >/var/www/html/install/reset_password_admin.php
     sed -i "s/^\$password = .*/\$password = \"\$argv[2]\";/" /var/www/html/install/reset_password_admin.php
     #remove admin password save if already exists in db
-    isTables=$(mysql -uroot -p${MYSQL_ROOT_PASSWD} -h ${MYSQL_JEEDOM_HOST} -P${MYSQL_JEEDOM_PORT} ${MYSQL_JEEDOM_DBNAME} -e "show tables;" | wc -l)
+    isTables=$(mysql -uroot -p${MARIADB_ROOT_PASSWD} -h ${MARIADB_JEEDOM_HOST} -P${MARIADB_JEEDOM_PORT} ${MARIADB_JEEDOM_DBNAME} -e "show tables;" | wc -l)
     if [[ ${isTables:-0} -gt 0 ]]; then
       echo "User admin already exists, removing its creation"
       sed -i '/\$user->save();/d' /var/www/html/install/install.php
