@@ -15,7 +15,7 @@ E_PUSH=${E_PUSH:-0}
 # force zwave-ui as external container + version
 E_ZWAVE=${E_ZWAVE:-0}
 #Default zwavejs-ui version
-E_ZWAVEVER=${E_ZWAVEVER:-"9.16.4"}
+E_ZWAVEVER=${E_ZWAVEVER:-"9.17.0"}
 #Debian 12 needs --break-system-packages
 BKS=""
 
@@ -68,6 +68,12 @@ meross() {
     sed -i "s/pip install me/pip install ${BKS} me/g" /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh
     /bin/bash /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh /tmp/jeedom/MerosSync/dependance
   fi
+}
+
+nutfix(){
+  #fix for php8
+  sed -i 's/\[ \$versionPHP = "7" \]/\[\[ \$versionPHP =~ (7|8) \]\]/g' /var/www/html/plugins/Nut_free/ressources/install.sh
+  sed -i 's/"7"/"8"/g' /var/www/html/plugins/Nut_free/ressources/install.sh
 }
 
 installDep() {
