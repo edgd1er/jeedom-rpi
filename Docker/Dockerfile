@@ -3,6 +3,7 @@ ARG DISTRO=12-slim
 FROM debian:${DISTRO} AS base
 
 ENV SHELL_ROOT_PASSWORD=password
+ENV WEBSERVER_HOME=/var/www/html
 ENV APACHE_HTTP_PORT=80
 ENV APACHE_HTTPS_PORT=443
 ENV LOGS_TO_STDOUT=n
@@ -122,15 +123,21 @@ RUN echo "root:${SHELL_ROOT_PASSWORD}" | chpasswd \
     && sed -i "/chromium/d" /var/www/html/install/packages.json \
     #v4 s7 = mariadb server conf: skipped
     #v4 S8 = jeedom customization later in build: skipped
-    && find /var/www/html/ -type d -exec chmod 755 {} \; \
-    && find /var/www/html/ -type f -exec chmod 744 {} \; \
-    && chown -R www-data:www-data /var/www/html/ \
-    #v4 S9 = drop database , DB creds done at runtime
-    #v4 s10 = install.php done at runtime.
-    #v4 s11 = post install (cron )
-    && /root/install_docker.sh -s 8 -v ${VERSION};/root/install_docker.sh -s 11 -v "${VERSION}" "${DATABASE}" -i docker\
+    # s7 skipped: param maria svc
+    # s8 apache/php setting
+    && /root/install.sh -s 8 -v "${VERSION}" "${DATABASE}" -i docker \
+    # s9 create db (skipped when docker)
+    && /root/install.sh -s 9 -v "${VERSION}" "${DATABASE}" -i docker \
+    # s10 composer
+    && /root/install.sh -s 10 -v "${VERSION}" "${DATABASE}" -i docker \
+    # s11 jdm post
+    && /root/install.sh -s 11 -v "${VERSION}" "${DATABASE}" -i docker \
+    # Add logs for http connections
+    && if [[ 0 -eq $(grep Custom /etc/apache2/sites-available/000-default.conf) ]]; then \
+    sed -i "$ i\CustomLog \${APACHE_LOG_DIR}/access.log combined" 000-default.conf ; fi \
     && echo "alias salias='source ~/.bashrc'" | tee -a ~/.bashrc \
     && echo "alias modalias='vim ~/.bashrc'" | tee -a ~/.bashrc \
+    && echo "function setadmin(){ php \"${WEBSERVER_HOME}/core/php/jeecli.php\" user password admin \"${1:-admin}\" }" | tee -a ~/.bashrc \
     && echo "function setZwaveJsVersion(){ sed -E -i \"s#^wantedVersion=[0-9]\.[0-9]{1,2}\..#wantedVersion=${1:-9.12.0}#\" /var/www/html/plugins/zwavejs/core/config/zwavejs.config.ini ;}" | tee -a ~/.bashrc \
     && echo "function getZwaveJsVersion(){ cat /var/www/html/plugins/zwavejs/core/config/zwavejs.config.ini ;}" | tee -a ~/.bashrc \
     && echo "alias phppackage='php /var/www/html/install/packages.php'" | tee -a ~/.bashrc \
@@ -144,7 +151,7 @@ RUN echo "root:${SHELL_ROOT_PASSWORD}" | chpasswd \
     && if [[ -d /var/www/html/data/ ]]; then cp -Rp /var/www/html/data/ /var/www/html/.data/ ; fi \
     # clean caches
     && apt-get autoremove -y --purge && apt-get autoclean \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/* && echo >${WEBSERVER_HOME}/initialisation \
     && if [[ -n "$aptCacher" ]]; then echo "" > /etc/apt/apt.conf.d/01proxy; fi
 
 COPY --chmod=755 init.sh /root/init.sh
@@ -163,6 +170,3 @@ VOLUME /var/www/html/backup
 VOLUME /var/www/html/tmp
 VOLUME /var/www/html/log/
 VOLUME /var/log/
-
-
-
