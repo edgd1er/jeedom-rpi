@@ -74,7 +74,7 @@ RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     # fix jeedom install.sh for unattended install
     # fix jeedom-core, allowing to define mysql not being local
     # apt-get for unattended install
-    && sed -i "s#MARIADB_JEEDOM_PASSWD=.*#MARIADB_JEEDOM_PASSWD=\$\(openssl rand -base64 32 \| tr -d \/=+ \| cut -c -15)#" /root/install_docker.sh \
+    && sed -i "s#MARIADB_JEEDOM_PASSWD=.*#MARIADB_JEEDOM_PASSWD=\$\(openssl rand -base64 32 \| tr -d \/=+ \| cut -c1-15)#" /root/install_docker.sh \
     && sed -i "s/systemctl daemon-reload/:/" /root/install_docker.sh \
     && sed -i "s#rm /var/lib/mysql/ib_logfile\*#:#" /root/install_docker.sh \
     && sed -i -E "s#mysql -uroot($| )#mysql -uroot -p\${MARIADB_ROOT_PASSWD} -h \${MARIADB_JEEDOM_HOST} -P\${MARIADB_JEEDOM_PORT} \${MARIADB_JEEDOM_DBNAME} #g" /root/install_docker.sh \
