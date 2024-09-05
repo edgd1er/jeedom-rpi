@@ -8,15 +8,15 @@ services:
       - "3316:3306"
     environment:
       - TZ=Europe/Paris
-      - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/MARIADB_ROOT_PASSWD
+      - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/DB_ROOTPASSWORD
       #- MYSQL_ROOT_PASSWORD=changeIt # deprecated
       - MYSQL_DATABASE=jeedom
       - MYSQL_USER=jeedom
       #- MYSQL_PASSWORD=changeIt # deprecated
-      - FILE__MYSQL_PASSWORD=/run/secrets/MARIADB_JEEDOM_PASSWD
+      - FILE__MYSQL_PASSWORD=/run/secrets/DB_PASSWORD
     secrets:
-      - MARIADB_ROOT_PASSWD
-      - MARIADB_JEEDOM_PASSWD
+      - DB_ROOTPASSWORD
+      - DB_PASSWORD
     volumes:
       - ./sqldata:/config
       - run_mysql:/run
@@ -53,18 +53,18 @@ services:
     environment:
       - TZ=Europe/Paris
       - JEEDOM_ENC_KEY= #<get key from /var/www/html/data/jeedom_encryption.key to keep database secrets consistent>
-      - ROOT_PASSWORD= # deprecated, replaced by secrets
-      - MARIADB_ROOT_PASSWD= # deprecated, replaced by secrets
-      - MARIADB_JEEDOM_HOST=mysql
-      - MARIADB_JEEDOM_PORT=3306
-      - MARIADB_JEEDOM_DBNAME=jeedom
-      - MARIADB_JEEDOM_USERNAME=jeedom
-      - MARIADB_JEEDOM_PASSWD= # deprecated, replaced by secrets
+      - ROOT_PASSWD= # deprecated, replaced by secrets
+      - DB_ROOTPASSWORD= # deprecated, replaced by secrets
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=jeedom
+      - DB_USERNAME=jeedom
+      - DB_PASSWORD= # deprecated, replaced by secrets
       - LOGS_TO_STDOUT=y
     secrets:
       - JEEDOM_ENCRYPTION_KEY
-      - MARIADB_ROOT_PASSWD
-      - MARIADB_JEEDOM_PASSWD
+      - DB_ROOTPASSWORD
+      - DB_PASSWORD
       - ROOT_PASSWD
     #devices:
     #  - "/dev/ttyUSB0:/dev/ttyUSB0"
@@ -78,12 +78,12 @@ services:
 secrets:
   JEEDOM_ENCRYPTION_KEY:
     file: ./JEEDOM_ENCRYPTION_KEY
-  MARIADB_ROOT_PASSWD:
-    file: ./MARIADB_ROOT_PASSWD
-  MARIADB_JEEDOM_PASSWD:
-    file: ./MARIADB_JEEDOM_PASSWD
+  DB_ROOTPASSWORD:
+    file: ./DB_ROOTPASSWORD
+  DB_PASSWORD:
+    file: ./DB_PASSWORD
   ROOT_PASSWD:
-    file: ./ROOT_PASSWD
+    file: ./ROOT_PASSWORD
 volumes:
   tmpfs_root_cache:
     driver_opts:

@@ -14,8 +14,7 @@ sqldata/
 /log/
 /Docker/Dockerfile_split.buildx
 JEEDOM_ENCRYPTION_KEY
-MARIADB_JEEDOM_PASSWD
-MARIADB_ROOT_PASSWD
+DB_*
 ROOT_PASSWD
 !docker-compose.yml
 !docker-compose-no-secrets.yml
