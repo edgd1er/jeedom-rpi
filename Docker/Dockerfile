@@ -2,24 +2,22 @@
 ARG DISTRO=12-slim
 FROM debian:${DISTRO} AS base
 
-ENV SHELL_ROOT_PASSWORD=password
 ENV WEBSERVER_HOME=/var/www/html
 ENV APACHE_HTTP_PORT=80
 ENV APACHE_HTTPS_PORT=443
 ENV LOGS_TO_STDOUT=n
 ENV SSH_PORT=22
 ENV MODE_HOST=0
-ENV MARIADB_ROOT_PASSWD=password
-ENV MARIADB_JEEDOM_HOST=localhost
-ENV MARIADB_JEEDOM_PASSWD=jeedom
-ENV MARIADB_JEEDOM_DBNAME=jeedom
-ENV MARIADB_JEEDOM_USERNAME=jeedom
-ENV MARIADB_JEEDOM_PORT=3306
+ENV DB_ROOTPASSWD=password
+ENV DB_HOST=""
+ENV DB_PASSWD=jeedom
+ENV DB_NAME=jeedom
+ENV DB_USERNAME=jeedom
+ENV DB_PORT=3306
 ENV XDEBUG=0
 ENV XDEBUG_HOST=localhost
 ENV XEBUG_PORT=9003
 ARG aptCacher
-
 
 EXPOSE 80
 EXPOSE 443
@@ -58,7 +56,7 @@ RUN if [[ -n ${aptCacher:-} ]]; then printf "Acquire::http::Proxy \"http://%s:31
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /var/run/sshd
 
-FROM base
+FROM base as final
 
 #Performs versions specific actions
 ARG VERSION
@@ -80,9 +78,9 @@ RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     ##########################################
     # Adapt install_docker to docker: fix jeedom install.sh for unattended install
     && sed -i "s/systemctl daemon-reload/true/g" /root/install_docker.sh \
-    && sed -r 's;(rm /var/lib/mysql/ib.*);# \1;' /root/install_docker.sh \
-    && sed -i -E "s#\(mysql|mariadb\) -uroot($| )#mysql -uroot -p\${MARIADB_ROOT_PASSWD} -h \${MARIADB_JEEDOM_HOST} -P\${MARIADB_JEEDOM_PORT} \${MARIADB_JEEDOM_DBNAME} #g" /root/install_docker.sh \
-    && grep "^MARIADB_JEEDOM_PASSWD=" /root/install_docker.sh || true \
+    && sed -ir 's;(rm /var/lib/mysql/ib.*);# \1;' /root/install_docker.sh \
+    && sed -i -E "s#\(mysql |mariadb \) -uroot($| )#mysql -uroot -p\${DB_ROOTPASSWD} -h \${DB_HOST} -P\${DB_PORT} -D \${DB_NAME} #g" /root/install_docker.sh \
+    && grep "^DB_PASSWD=" /root/install_docker.sh || true \
     && grep "mysql -uroot" /root/install_docker.sh || true \
     && sed -i 's#-y install "#-y --no-install-recommends install "#' /root/install_docker.sh \
     && sed -i "s#apt install#apt-get install -y --no-install-recommends#" /root/install_docker.sh \
@@ -96,8 +94,7 @@ RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     # set jeedom version v3 or v4
     && sed -i "s/VERSION=master/VERSION=\${VERSION}/g" /root/install_docker.sh
     ##########################################
-RUN echo "root:${SHELL_ROOT_PASSWORD}" | chpasswd \
-    && echo "Installing jeedom version: ${VERSION} / ${JDM_VERSION}" \
+RUN echo "Installing jeedom version: ${VERSION} / ${JDM_VERSION}" \
     # 4.4 install -d 0 = external database
     && if [[ ${VERSION,,} =~ (alpha|beta|master) ]] ; then DATABASE="-d 0"; else DATABASE="" ; fi \
     # step 2 install mainpackage - add too many packages.

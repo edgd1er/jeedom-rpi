@@ -15,10 +15,11 @@
 
 Forked from https://github.com/CodaFog/jeedom-rpi
 
-| Last Version                                               | Commit Date                                                                               |
-|------------------------------------------------------------|-------------------------------------------------------------------------------------------|
-| [v4.4.14](https://doc.jeedom.com/fr_FR/core/4.3/changelog) | 26/08/24 major change in repo, v4-stable replace with master. move to bookworm base image |
-| [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02 / branch deleted on 2024/07/22. V3 build disabled                                |
+| Last Version                                               | Commit Date                                                                                                     |
+|------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| [v4.4.15](https://doc.jeedom.com/fr_FR/core/4.3/changelog) | 04/09/24 changes in vars to match newly added vars in jeedom/core docker image. MARIADB_* are stille supported. |
+| [v4.4.9](https://doc.jeedom.com/fr_FR/core/4.3/changelog)  | 24/07/24 major change in repo, master branch replace v4-stable. move to bookworm                                |
+| [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02 / branch deleted on 2024/07/22. V3 build disabled                                                      |
 
 /!\ Asof 2024/07/30, v4-latest docker tag is now based on bookworm (v12). many plugins are still migrating to v12.
 https://community.jeedom.com/t/compatibilite-des-plugins-avec-debian-12-bookworm-php-8-python-3-11/126200/142
@@ -112,17 +113,17 @@ version values for jeedom version: v3/v4
 ### Environment variables
 
 The Jeedom user should be existing in the remote database.
-Mysql Root password should be in the command line that run the container. If the MARIADB_JEEDOM_DBNAME schema does
+Mysql Root password should be in the command line that run the container. If the DB_NAME schema does
 not exists, it will created.
 if LOGS_TO_STDOUT is set to yes, apache logs are sent to container's stdout.
 
 ```   - TZ=Europe/Paris
-      - ROOT_PASSWORD shell root password
-      - MARIADB_JEEDOM_HOST mysql hostname
-      - MARIADB_JEEDOM_PORT mysql port
-      - MARIADB_JEEDOM_DBNAME mysql Database name
-      - MARIADB_JEEDOM_USERNAME mysql jeedom username
-      - MARIADB_JEEDOM_PASSWD mysql username password
+      - ROOT_PASSWD shell root password
+      - DB_HOST mysql hostname
+      - DB_PORT mysql port
+      - DB_NAME mysql Database name
+      - DB_USERNAME mysql jeedom username
+      - DB_PASSWORD mysql username password
 ```
 
 ### Upgrade
@@ -152,8 +153,8 @@ the hereunder variables may be replaced by secrets:
 
 - JEEDOM_ENCRYPTION_KEY
 - ROOT_PASSWD
-- MARIADB_ROOT_PASSWD
-- MARIADB_JEEDOM_PASSWD
+- DB_ROOTPASSWORD
+- DB_PASSWORD
 
 create a file with that name in the docker-compose.yml's directory.
 
@@ -215,12 +216,12 @@ services:
       - /var/www/html/log:rw,size=32M
     environment:
       - TZ=Europe/Paris
-      - ROOT_PASSWORD=rootPassword
-      - MARIADB_JEEDOM_HOST=mysql
-      - MARIADB_JEEDOM_PORT=3306
-      - MARIADB_JEEDOM_DBNAME=jeedom_test
-      - MARIADB_JEEDOM_USERNAME=jeedom
-      - MARIADB_JEEDOM_PASSWD=jeedom
+      - ROOT_PASSWD=rootPassword
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=jeedom_test
+      - DB_USERNAME=jeedom
+      - DB_PASSWD=jeedom
     #   devices:
     #   - "/dev/ttyUSB0:/dev/ttyUSB0
     #   - "/dev/ttyACM0:/dev/ttyACM0"
@@ -236,10 +237,10 @@ services:
       - "3316:3306"
     environment:
       - TZ=Europe/Paris
-      - MARIADB_ROOT_PASSWORD=changeIt
-      - MARIADB_DATABASE=jeedom_test
-      - MARIADB_USER=jeedom
-      - MARIADB_PASSWORD=jeedom
+      - DB_ROOTPASSWORD=changeIt
+      - DB_DATABASE=jeedom_test
+      - DB_USER=jeedom
+      - DB_PASSWORD=jeedom
     volumes:
       - ./Docker/allow_root_access.sql:/docker-entrypoint-initdb.d/allow_root_access.sql
       #- ./sqldata:/var/lib/mysql
