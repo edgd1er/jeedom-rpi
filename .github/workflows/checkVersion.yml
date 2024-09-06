@@ -4,7 +4,7 @@ on:
     - cron: "0 17 * * *"
   workflow_dispatch:
 env:
-  ZWAVE_VERSION: 9.18.0
+  ZWAVE_VERSION: 9.18.1
 
 jobs:
   check-j4_version:
@@ -16,7 +16,7 @@ jobs:
         id: getJ4version
         run: |
           ls -al .
-          local_version=$( grep -oP "(?<=v)4\.[0-9\.]+" README.md )
+          local_version=$( grep -oP "(?<=v)4\.[0-9\.]+" README.md | head -1 )
           ver=$(curl -s "https://raw.githubusercontent.com/jeedom/core/master/core/config/version")
           echo "alpha version: $(curl -s "https://raw.githubusercontent.com/jeedom/core/alpha/core/config/version")"
           echo "beta version: $(curl -s "https://raw.githubusercontent.com/jeedom/core/beta/core/config/version")"

@@ -16,6 +16,15 @@ if [[ ${VERSION} =~ (master|alpha|beta) ]]; then
 fi
 
 #Variable conversions
+JEEDOM_ENCRYPTION_KEY=${JEEDOM_ENCRYPTION_KEY:-${JEEDOM_ENC_KEY}}
+
+DB_ROOTPASSWD=${MARIADB_ROOT_PASSWD:-""}
+DB_PASSWORD=${DB_PASSWORD:-${MARIADB_JEEDOM_PASSWD}}
+DB_NAME=${DB_NAME:-${MARIADB_JEEDOM_DBNAME}}
+DB_USERNAME=${DB_USERNAME:-${MARIADB_JEEDOM_USERNAME}}
+DB_PORT=${DB_PORT:-${MARIADB_JEEDOM_PORT}}
+DB_HOST=${DB_HOST:-${MARIADB_JEEDOM_HOST}}
+
 DB_ROOTPASSWD=${MARIADB_ROOT_PASSWD:-""}
 DB_PASSWORD=${DB_PASSWORD:-"changeIt"}
 DB_NAME=${DB_NAME:-"jeedom"}
@@ -92,7 +101,7 @@ apache_setup() {
   if [[ 3 -ne $(grep -cP "(${APACHE_HTTP_PORT}|${APACHE_HTTPS_PORT})" /etc/apache2/ports.conf) ]]; then
     echo "Ports update for apache2: ${APACHE_HTTP_PORT}, ${APACHE_HTTPS_PORT}"
     echo "Listen ${APACHE_HTTP_PORT}
-
+JEEDOM_ENCRYPTION_KEY=${JEEDOM_ENCRYPTION_KEY:-${JEEDOM_ENC_KEY}}
 <IfModule ssl_module>
 	Listen ${APACHE_HTTPS_PORT:-443}
 </IfModule>
@@ -129,20 +138,28 @@ save_db_decrypt_key() {
     #write jeedom encryption key if different
     if [[ ! -e ${WEBSERVER_HOME}/data/jeedom_encryption.key ]] || [[ "$(cat ${WEBSERVER_HOME}/data/jeedom_encryption.key)" != "${JEEDOM_ENCRYPTION_KEY}" ]]; then
       echo "Writing jeedom encryption key as defined in env"
-      echo "${JEEDOM_ENCRYPTION_KEY}" >${WEBSERVER_HOME}/data/jeedom_encryption.key
+      print "${JEEDOM_ENCRYPTION_KEY}" >${WEBSERVER_HOME}/data/jeedom_encryption.key
     fi
+    else
+      echo "No JEEDOM_ENCRYPTION_KEY variable found. IF databasse is already populated, secrets will be lost."
   fi
 }
 
 wait_for_db() {
   while true; do
-    res=$(mysql -u${DB_USERNAME} -p${DB_PASSWORD} -h ${DB_HOST} -P${DB_PORT} -D${DB_NAME} -BNe "show databases;")
+    res=$(mysql -u${DB_USERNAME} -p${DB_PASSWORD} -h ${DB_HOST} -P${DB_PORT} -D${DB_NAME} -BNe "show databases;" || true)
     if [[ ${res} != "" ]]; then
       break
     fi
     echo "database not available: ${res}"
     sleep 5
   done
+}
+
+fix_sudo(){
+  if [[ 0 -eq $(grep -c www-data /etc/sudoers) ]]; then
+    echo "www-data ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/www
+  fi
 }
 
 ### Main
@@ -184,12 +201,18 @@ db_creds
 #populateVolumes if needed
 populateVolume /var/www/html/.data ${WEBSERVER_HOME}/data
 
+#fix sudo
+fix_sudo
+
 #wait db to be up
 wait_for_db
 
 if [ -f ${WEBSERVER_HOME}/initialisation ]; then
   JEEDOM_INSTALL=0
   [[ ! -f /root/install_docker.sh ]] && echo -e "\n*************** ERROR, no /root/install_docker.sh file ***********\n" && exit
+  #recreate tem plugins dir
+  for d in plugins/*; do mkdir -p /tmp/jeedom/${d#*/} ;done
+  rm ${WEBSERVER_HOME}/initialisation
   #allow fail2ban to start even on docker
   touch /var/log/auth.log
   #fix jeedom install.sh for unattended install
@@ -271,6 +294,17 @@ xdebug.start_with_request=yes" | tee -a ${phpconf}
     export XDEBUG_SESSION=1
   fi
 fi
+
+echo """
+Major change in variables names, old vars are still supported
+New name: JEEDOM_ENCRYPTION_KEY, was JEEDOM_ENCKEY
+New name: DB_ROOTPASSWD, was MARIADB_ROOT_PASSWD
+New name: DB_PASSWORD, was  MARIADB_JEEDOM_PASSWD
+New name: DB_NAME, was MARIADB_JEEDOM_DBNAME
+New name: DB_USERNAME, was MARIADB_JEEDOM_USERNAME
+New name: DB_PORT, was  MARIADB_JEEDOM_PORT
+New name: DB_HOST, was MARIADB_JEEDOM_HOST
+"""
 
 if [[ ${LOGS_TO_STDOUT,,} =~ [yo] ]]; then
   echo "Send apache logs to stdout/err"
