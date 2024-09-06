@@ -38,7 +38,7 @@ RUN if [[ -n ${aptCacher:-} ]]; then printf "Acquire::http::Proxy \"http://%s:31
     && add-apt-repository non-free  && apt-get update && apt-get install -y --no-install-recommends supervisor \
 	python3 python3-pip python3-setuptools iputils-ping libcurl3-gnutls librsync-dev \
     passwd usbutils usb.ids ntp ca-certificates unzip sudo cron locate tar telnet logrotate fail2ban dos2unix \
-    ntpdate htop vim smbclient git libexpat1 ssl-cert ffmpeg usbutils \
+    ntpdate htop vim smbclient git libexpat1 ssl-cert ffmpeg usbutils ssh \
     cutycapt at mariadb-client mariadb-common bzip2 gpg gpg-agent gpgconf xz-utils udev jq\
     #mbrola removed (not available for armhf )
     #add server apache
@@ -104,14 +104,18 @@ RUN echo "Installing jeedom version: ${VERSION} / ${JDM_VERSION}" \
     && apt-get update \
     # install apache
     && echo "Etape 4: install apache" \
-    && /root/install_docker.sh -s 4 -v "${VERSION}" "${DATABASE}" -i docker\
+    && /root/install_docker.sh -s 4 -v "${VERSION}" -i docker "${DATABASE}" \
     # s5 install php
     && echo "Etape 5: install php" \
-    && /root/install_docker.sh -s 5 -v "${VERSION}" "${DATABASE}" -i docker\
+    && /root/install_docker.sh -s 5 -v "${VERSION}" -i docker "${DATABASE}" \
+    && rm -rf /var/lib/apt/lists/*
+
     # s6 install jeedom download
-    && echo "Etape 6: install jeedom" \
-    && /root/install_docker.sh -s 6 -v "${VERSION}" "${DATABASE}" -i docker\
-    ## remove bugged php line
+RUN echo "Etape 6: install jeedom" \
+    && /root/install_docker.sh -s 6 -v "${VERSION}" -i docker "${DATABASE}" \
+    # remove bugged php line
+    && sed -r -i "/sudo rm .*/d " /var/www/html/resources/install_composer.sh \
+    && find /var/www/html/ -type f -iname "*.sh" -exec chmod +x {} \; \
     # remove CR/LR : php /var/www/html/install/packages.php
     && sed -i "s/'version' => \$npm/'version' => rtrim(\$npm)/" /var/www/html/core/class/system.class.php \
     #&& sed -r -i "s/('remark' => isset)/#\1/" /var/www/html/core/class/system.class.php \
@@ -122,25 +126,25 @@ RUN echo "Installing jeedom version: ${VERSION} / ${JDM_VERSION}" \
     #v4 S8 = jeedom customization later in build: skipped
     # s7 skipped: param maria svc
     # s8 apache/php setting
-    && /root/install.sh -s 8 -v "${VERSION}" "${DATABASE}" -i docker \
-    # s9 create db (skipped when docker)
-    && /root/install.sh -s 9 -v "${VERSION}" "${DATABASE}" -i docker \
+    && bash -x /root/install_docker.sh -s 8 -v ${VERSION} -i docker "${DATABASE}" \
+    # s9 create db
+    && /root/install_docker.sh -s 9 -v ${VERSION} -i docker "${DATABASE}" \
     # s10 composer
-    && /root/install.sh -s 10 -v "${VERSION}" "${DATABASE}" -i docker \
+    && /root/install_docker.sh -s 10 -v ${VERSION} -i docker "${DATABASE}" \
     # s11 jdm post
-    && /root/install.sh -s 11 -v "${VERSION}" "${DATABASE}" -i docker \
+    && /root/install_docker.sh -s 11 -v ${VERSION} -i docker "${DATABASE}" \
     # Add logs for http connections
-    && if [[ 0 -eq $(grep Custom /etc/apache2/sites-available/000-default.conf) ]]; then \
-    sed -i "$ i\CustomLog \${APACHE_LOG_DIR}/access.log combined" 000-default.conf ; fi \
+    && if [[ 0 -eq $(grep combined /etc/apache2/sites-available/000-default.conf) ]]; then \
+    sed -i "$ i\CustomLog \${APACHE_LOG_DIR}/access.log combined" /etc/apache2/sites-available/000-default.conf ; fi \
     && echo "alias salias='source ~/.bashrc'" | tee -a ~/.bashrc \
     && echo "alias modalias='vim ~/.bashrc'" | tee -a ~/.bashrc \
-    && echo "function setadmin(){ php \"${WEBSERVER_HOME}/core/php/jeecli.php\" user password admin \"${1:-admin}\" }" | tee -a ~/.bashrc \
+    && echo "function setadmin(){ php \"${WEBSERVER_HOME}/core/php/jeecli.php\" user password admin \"${1:-admin}\" ; }" | tee -a ~/.bashrc \
     && echo "function setZwaveJsVersion(){ sed -E -i \"s#^wantedVersion=[0-9]\.[0-9]{1,2}\..#wantedVersion=${1:-9.12.0}#\" /var/www/html/plugins/zwavejs/core/config/zwavejs.config.ini ;}" | tee -a ~/.bashrc \
     && echo "function getZwaveJsVersion(){ cat /var/www/html/plugins/zwavejs/core/config/zwavejs.config.ini ;}" | tee -a ~/.bashrc \
     && echo "alias phppackage='php /var/www/html/install/packages.php'" | tee -a ~/.bashrc \
     && echo "alias phpinstall='php /var/www/html/install/install.php'" | tee -a ~/.bashrc \
     && echo "alias pipupdate='pip3 list --outdated --format json |jq -r .[].name | xargs -I % apt install -y python3-%'" | tee -a ~/.bashrc \
-    && echo "function pipinstall(){ pip3 install --break-system-packages --upgrade \${1} ;}" | tee -a ~/.bashrc \
+    && echo "function pipinstall(){ pip3 install --break-system-packages --upgrade \${1} ; }" | tee -a ~/.bashrc \
     # rpi
     && [[ ! -f /sbin/udevadm ]] && ln -sfn /bin/udevadm /sbin/udevadm || true \
     && apt-get remove -y x11-common \
@@ -148,8 +152,8 @@ RUN echo "Installing jeedom version: ${VERSION} / ${JDM_VERSION}" \
     && if [[ -d /var/www/html/data/ ]]; then cp -Rp /var/www/html/data/ /var/www/html/.data/ ; fi \
     # clean caches
     && apt-get autoremove -y --purge && apt-get autoclean \
-    && rm -rf /var/lib/apt/lists/* && echo >${WEBSERVER_HOME}/initialisation \
-    && if [[ -n "$aptCacher" ]]; then echo "" > /etc/apt/apt.conf.d/01proxy; fi
+    && rm -rf /var/lib/apt/lists/* && echo >"${WEBSERVER_HOME}/initialisation" \
+    && if [[ -n "$aptCacher" ]]; then echo "">/etc/apt/apt.conf.d/01proxy; fi
 
 COPY --chmod=755 init.sh /root/init.sh
 COPY --chmod=755 extras.sh /root/extras.sh

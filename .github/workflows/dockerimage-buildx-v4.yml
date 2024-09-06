@@ -11,7 +11,6 @@ on:
 #  push:
 #    branches:
 #      - master
-#      - gh_pb
 #    paths-ignore:
 #      - '.github/**'
 
@@ -30,16 +29,3 @@ jobs:
       push: true
     secrets: inherit
 
-  build-bullseye-v4:
-    uses: ./.github/workflows/dockerimage-buildx-template.yml
-    with:
-      image-name: jeedom-rpi
-      build-context: './Docker'
-      jdm_version: latest
-      tag: bullseye-v4-latest
-      version: master
-      #11 bullseye oldstable
-      #10 buster oldoldstable
-      distro: 11-slim
-      push: true
-    secrets: inherit
