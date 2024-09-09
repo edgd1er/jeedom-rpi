@@ -138,7 +138,7 @@ save_db_decrypt_key() {
     #write jeedom encryption key if different
     if [[ ! -e ${WEBSERVER_HOME}/data/jeedom_encryption.key ]] || [[ "$(cat ${WEBSERVER_HOME}/data/jeedom_encryption.key)" != "${JEEDOM_ENCRYPTION_KEY}" ]]; then
       echo "Writing jeedom encryption key as defined in env"
-      print "${JEEDOM_ENCRYPTION_KEY}" >${WEBSERVER_HOME}/data/jeedom_encryption.key
+      printf "${JEEDOM_ENCRYPTION_KEY}">${WEBSERVER_HOME}/data/jeedom_encryption.key
     fi
     else
       echo "No JEEDOM_ENCRYPTION_KEY variable found. IF databasse is already populated, secrets will be lost."
@@ -210,7 +210,7 @@ wait_for_db
 if [ -f ${WEBSERVER_HOME}/initialisation ]; then
   JEEDOM_INSTALL=0
   [[ ! -f /root/install_docker.sh ]] && echo -e "\n*************** ERROR, no /root/install_docker.sh file ***********\n" && exit
-  #recreate tem plugins dir
+  #recreate tmp plugins dir
   for d in plugins/*; do mkdir -p /tmp/jeedom/${d#*/} ;done
   rm ${WEBSERVER_HOME}/initialisation
   #allow fail2ban to start even on docker
