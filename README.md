@@ -17,8 +17,9 @@ Forked from https://github.com/CodaFog/jeedom-rpi
 
 | Last Version                                               | Commit Date                                                                                                     |
 |------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
-| [v4.4.15](https://doc.jeedom.com/fr_FR/core/4.3/changelog) | 04/09/24 changes in vars to match newly added vars in jeedom/core docker image. MARIADB_* are stille supported. |
-| [v4.4.9](https://doc.jeedom.com/fr_FR/core/4.3/changelog)  | 24/07/24 major change in repo, master branch replace v4-stable. move to bookworm                                |
+| [v4.4.16](https://doc.jeedom.com/fr_FR/core/4.4/changelog) | 06/09/24                                                                                                        |
+| [v4.4.15](https://doc.jeedom.com/fr_FR/core/4.4/changelog) | 04/09/24 changes in vars to match newly added vars in jeedom/core docker image. MARIADB_* are stille supported. |
+| [v4.4.9](https://doc.jeedom.com/fr_FR/core/4.4/changelog)  | 24/07/24 major change in repo, master branch replace v4-stable. move to bookworm                                |
 | [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02 / branch deleted on 2024/07/22. V3 build disabled                                                      |
 
 /!\ Asof 2024/07/30, v4-latest docker tag is now based on bookworm (v12). many plugins are still migrating to v12.
@@ -32,14 +33,14 @@ plugin. v4-buster-latest (v10) is available for plugins not compatible with debi
 
   deb files: http://ftp.debian.org/debian/pool/main/libs/libseccomp/
 
-A Jeedom Docker image for Raspberry Pi based on debian image.
+A Jeedom Docker image for amd64 (PC), arm64 (Raspberry Pi 3/4), armv7 based on debian image.
 
 Difference from fork:
 
 - Update image, install a version at build time
 - Use supervisor to handle cron, apache and logs. (allow proper shutdown through PID 1 signal)
 - Image is ready to use
-- Updated base image: debian bullseye-slim
+- Updated base image: debian bookworm-slim
 - Added https support
 - Healthcheck
 - Handle services with supervisor.
@@ -53,8 +54,8 @@ Please note that:
 - jeedom version (V3 or v4) will be downloaded during image building, so the core project is the version at build time.
 - Jeedom V3 (named release) is deprecated. Image is built, but v4 is my daily drive.
 - If you wish to use zwavejs plugin, see [zwavejs](##zwaveJs) section.
-- upon upgrade, if no environment variable `JEEDOM_ENC_KEY` is set, the jeedom_encryption key will be changed, and
-  decryption of encrypted values will be impossible. You can either restore a jeedom backup, set the `JEEDOM_ENC_KEY`
+- upon upgrade, if no environment variable `JEEDOM_ENCRYPTION_KEY` is set, the jeedom_encryption key will be changed, and
+  decryption of encrypted values will be impossible. You can either restore a jeedom backup, set the `JEEDOM_ENCRYPTION_KEY`
   variable, or have a SQL update query ready to reassign these values:
   apipro, apimarket, samba::backup::password, samba::backup::ip, samba::backup::username, ldap:password, ldap:host,
   ldap:username, dns::token, api
@@ -194,11 +195,9 @@ mounted in a volume.
 ### Example of a docker-compose
 
 ```
-version: '3.5'
 services:
   web:
-    image: edgd1er/jeedom-rpi:armhf-latest
-    #image: edgd1er/jeedom-rpi:amd86-latest
+    image: edgd1er/jeedom-rpi:v4-latest
     restart: unless-stopped
     expose:
       - "80"
@@ -210,10 +209,9 @@ services:
       - backup:/var/www/html/backup/
       - data:/var/www/html/data/
     tmpfs:
-      - /run:rw,size=10M
-      - /tmp:rw,size=64M
-      - /var/log:rw,size=32M
-      - /var/www/html/log:rw,size=32M
+      - /var/www/html/tmp/
+      - /var/cache/
+      - /root/.cache
     environment:
       - TZ=Europe/Paris
       - ROOT_PASSWD=rootPassword
@@ -224,7 +222,6 @@ services:
       - DB_PASSWD=jeedom
     #   devices:
     #   - "/dev/ttyUSB0:/dev/ttyUSB0
-    #   - "/dev/ttyACM0:/dev/ttyACM0"
     #   - "/dev/ttyAMA0:/dev/ttyAMA0"
     depends_on:
       - mysql
@@ -242,8 +239,7 @@ services:
       - DB_USER=jeedom
       - DB_PASSWORD=jeedom
     volumes:
-      - ./Docker/allow_root_access.sql:/docker-entrypoint-initdb.d/allow_root_access.sql
-      #- ./sqldata:/var/lib/mysql
+      - sqldata:/var/lib/mysql
 ```
 
 ### Upgrade
