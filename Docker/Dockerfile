@@ -56,7 +56,7 @@ RUN if [[ -n ${aptCacher:-} ]]; then printf "Acquire::http::Proxy \"http://%s:31
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /var/run/sshd
 
-FROM base as final
+FROM base AS final
 
 #Performs versions specific actions
 ARG VERSION
