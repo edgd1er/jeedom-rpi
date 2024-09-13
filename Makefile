@@ -40,7 +40,7 @@ beta: ## build v4 beta image --no-cache
 	docker buildx build --load --progress plain  --build-arg aptCacher="${aptCacher}" --build-arg VERSION="beta" --build-arg DISTRO="bookworm-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:beta ./Docker
 
 ver: ## check version
-	@JDM_VER=$$( grep -oP "(?<=v)4\.[0-9\.]+" README.md ) ; \
+	@JDM_VER=$$( grep -oP "(?<=v)4\.[0-9\.]+" README.md |head -1) ; \
 	jdm=$$( curl -s "https://raw.githubusercontent.com/jeedom/core/master/core/config/version"); \
 	zwave=$$( curl -s "https://api.github.com/repos/zwave-js/zwave-js-ui/releases/latest" | jq -r .tag_name) ; \
 	ZWAVE_VER=$$(grep -oP "(?<=ZWAVE_VERSION: ).+" .github/workflows/checkVersion.yml) ; \
