@@ -15,7 +15,7 @@ E_PUSH=${E_PUSH:-0}
 # force zwave-ui as external container + version
 E_ZWAVE=${E_ZWAVE:-0}
 #Default zwavejs-ui version
-E_ZWAVEVER=${E_ZWAVEVER:-"9.18.0"}
+E_ZWAVEVER=${E_ZWAVEVER:-"9.21.1"}
 #Debian 12 needs --break-system-packages
 BKS=""
 
@@ -89,7 +89,7 @@ installDep() {
   apt-get install -y --no-install-recommends build-essential g++ python3-dev nodejs
   python3 -m pip install ${BKS} --upgrade pip
   #old style dependencies
-  find /var/www/html/plugins/ -type f -path '*sources*' -iname 'install*.sh' -exec {} \;
+  find /var/www/html/plugins/ -type f -path '*sources*' -iname 'install*.sh' -print -exec bash +e {} \;
   #new style dependencies
   apt-get install -y $(find /var/www/html/plugins -type f -name packages.json -exec jq -s '.[]|select(.apt!=null)|.apt|keys' {} \; | tr -d '\"][\n,')
 }

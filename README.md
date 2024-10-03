@@ -17,7 +17,7 @@ Forked from https://github.com/CodaFog/jeedom-rpi
 
 | Last Version                                               | Commit Date                                                                                                     |
 |------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
-| [v4.4.17](https://doc.jeedom.com/fr_FR/core/4.4/changelog) | 12/09/24                                                                                                        |
+| [v4.4.18](https://doc.jeedom.com/fr_FR/core/4.4/changelog) | 02/10/24                                                                                                       |
 | [v4.4.15](https://doc.jeedom.com/fr_FR/core/4.4/changelog) | 04/09/24 changes in vars to match newly added vars in jeedom/core docker image. MARIADB_* are stille supported. |
 | [v4.4.9](https://doc.jeedom.com/fr_FR/core/4.4/changelog)  | 24/07/24 major change in repo, master branch replace v4-stable. move to bookworm                                |
 | [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02 / branch deleted on 2024/07/22. V3 build disabled                                                      |
