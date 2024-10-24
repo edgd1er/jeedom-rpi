@@ -15,7 +15,7 @@ E_PUSH=${E_PUSH:-0}
 # force zwave-ui as external container + version
 E_ZWAVE=${E_ZWAVE:-0}
 #Default zwavejs-ui version
-E_ZWAVEVER=${E_ZWAVEVER:-"9.21.1"}
+E_ZWAVEVER=${E_ZWAVEVER:-"9.24.0"}
 #Debian 12 needs --break-system-packages
 BKS=""
 
