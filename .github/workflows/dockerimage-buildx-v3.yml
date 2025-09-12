@@ -22,7 +22,7 @@ jobs:
       - name: env
         run: |
           env
-  build-images:
+  build-v3:
     uses: ./.github/workflows/dockerimage-buildx-template.yml
     with:
       image-name: jeedom-rpi
