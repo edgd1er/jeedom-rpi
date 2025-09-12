@@ -15,7 +15,7 @@ on:
 #      - '.github/**'
 
 jobs:
-  build-bookworm-v4:
+  build-v4:
     uses: ./.github/workflows/dockerimage-buildx-template.yml
     with:
       image-name: jeedom-rpi
