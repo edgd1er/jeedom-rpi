@@ -1,0 +1,28 @@
+# .github/workflows/delete-container-versions.yml
+name: Delete Untagged Container Versions
+
+on:
+  workflow_call:
+    inputs:
+      package_name:
+        required: true
+        type: string
+      package_type:
+        required: true
+        type: string
+      min_versions_to_keep:
+        required: false
+        type: number
+        default: 30
+
+jobs:
+  delete_versions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete all untagged container versions
+        uses: actions/delete-package-versions@v5
+        with:
+          delete-only-untagged-versions: 'false'
+          min-versions-to-keep: ${{ inputs.min_versions_to_keep }}
+          package-name: ${{ inputs.package_name }}
+          package-type: ${{ inputs.package_type }}

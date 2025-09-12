@@ -1,7 +1,8 @@
 #hadolint global ignore=SC3010
-ARG DISTRO=12-slim
+ARG DISTRO=13-trixie
 FROM debian:${DISTRO} AS base
 
+ARG DISTRO
 ENV WEBSERVER_HOME=/var/www/html
 ENV APACHE_HTTP_PORT=80
 ENV APACHE_HTTPS_PORT=443
@@ -34,15 +35,20 @@ RUN if [[ -n ${aptCacher:-""} ]]; then printf "Acquire::http::Proxy \"http://%s:
     && printf "#/etc/dpkg/dpkg.cfg.d/01_nodoc\n\n# Delete locales\npath-exclude=/usr/share/locale/*\n\n# Delete man pages\npath-exclude=/usr/share/man/*\n\n# Delete docs\npath-exclude=/usr/share/doc/*\npath-include=/usr/share/doc/*/copyright" | tee /etc/dpkg/dpkg.cfg.d/03nodoc \
     #Massive apt install of jeedom requirements to optimise downloads
     && apt-get update && apt-get install -y --no-install-recommends wget rsync lsof iproute2 \
-	curl apt-transport-https software-properties-common net-tools gettext snmp \
-    && add-apt-repository non-free  && apt-get update && apt-get install -y --no-install-recommends supervisor \
+	curl apt-transport-https net-tools gettext snmp \
+    # Trixie specific: ntpsec replaces ntp (older version of ntpsec-ntpdate also needed)
+    && if [[ ${DISTRO} =~ trixie ]]; then apt-get install -y --no-install-recommends ntpsec-ntpdate ntpsec; else \
+    apt-get install -y --no-install-recommends software-properties-common ntpdate ntp && add-apt-repository non-free ; fi \
+    && apt-get update && apt-get install -y --no-install-recommends supervisor \
 	python3 python3-pip python3-setuptools iputils-ping libcurl3-gnutls librsync-dev \
-    passwd usbutils usb.ids ntp ca-certificates unzip sudo cron locate tar telnet logrotate fail2ban dos2unix \
-    ntpdate htop vim smbclient git libexpat1 ssl-cert ffmpeg usbutils ssh \
+    passwd usbutils usb.ids ca-certificates unzip sudo cron locate tar telnet logrotate fail2ban dos2unix \
+    htop vim smbclient git libexpat1 ssl-cert ffmpeg usbutils ssh \
     cutycapt at mariadb-client mariadb-common bzip2 gpg gpg-agent gpgconf xz-utils udev jq\
     #mbrola removed (not available for armhf )
     #add server apache
-    apache2 apache2-utils \
+    apache2 apache2-utils npm \
+    # install npm, and node with fixed version
+    && npm install n -g && n 20.18.1 \
     && update-ca-certificates --fresh \
     #install python2 pip from boostrap as not in repo anymore for debian 10
     && if [[ ${DISTRO} =~ buster ]]; then apt-get install -y --no-install-recommends python python2 snmp-mibs-downloader; \
@@ -110,11 +116,12 @@ RUN echo "Installing jeedom version: ${VERSION} / ${JDM_VERSION}" \
     && /root/install_docker.sh -s 5 -v "${VERSION}" -i docker "${DATABASE}" \
     && rm -rf /var/lib/apt/lists/*
 
+COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
     # s6 install jeedom download
 RUN echo "Etape 6: install jeedom" \
     && /root/install_docker.sh -s 6 -v "${VERSION}" -i docker "${DATABASE}" \
     # remove bugged php line
-    && sed -r -i "/sudo rm .*/d " /var/www/html/resources/install_composer.sh \
+    # && sed -r -i "/sudo rm .*/d " /var/www/html/resources/install_composer.sh \
     && find /var/www/html/ -type f -iname "*.sh" -exec chmod +x {} \; \
     # remove CR/LR : php /var/www/html/install/packages.php
     && sed -i "s/'version' => \$npm/'version' => rtrim(\$npm)/" /var/www/html/core/class/system.class.php \
@@ -129,8 +136,9 @@ RUN echo "Etape 6: install jeedom" \
     && bash -x /root/install_docker.sh -s 8 -v ${VERSION} -i docker "${DATABASE}" \
     # s9 create db
     && /root/install_docker.sh -s 9 -v ${VERSION} -i docker "${DATABASE}" \
-    # s10 composer
-    && /root/install_docker.sh -s 10 -v ${VERSION} -i docker "${DATABASE}" \
+    # s10 composer \
+    && composer install --no-ansi --no-dev --no-interaction --no-plugins --no-progress --no-scripts --optimize-autoloader \
+    # && /root/install_docker.sh -s 10 -v ${VERSION} -i docker "${DATABASE}" \
     # s11 jdm post
     && /root/install_docker.sh -s 11 -v ${VERSION} -i docker "${DATABASE}" \
     # Add logs for http connections

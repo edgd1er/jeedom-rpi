@@ -15,7 +15,7 @@ E_PUSH=${E_PUSH:-0}
 # force zwave-ui as external container + version
 E_ZWAVE=${E_ZWAVE:-0}
 #Default zwavejs-ui version
-E_ZWAVEVER=${E_ZWAVEVER:-"9.24.0"}
+E_ZWAVEVER=${E_ZWAVEVER:-"11.2.1"}
 #Debian 12 needs --break-system-packages
 BKS=""
 
@@ -59,18 +59,31 @@ pushbullet() {
 }
 
 meross() {
+  # install meross iot as global package
   if [[ -d /var/www/html/plugins/MerosSync ]]; then
-    echo "install jq, g++, python3-dev and meross-iot"
-    # Meross
-    apt-get install -y --no-install-recommends jq g++ python3-dev
+    #grep -P '\$cmd = dirname.*pip list' core/class/MerosSync.class.php
+    mkdir -p /var/www/html/plugins/MerosSync/.venvs/merosssync/bin
+    ln -sf /usr/bin/pip3 /var/www/html/plugins/MerosSync/.venvs/merosssync/bin/pip
+    #sed -i 's#/tmp/jeedom/.venvs/merosssync/bin/pip#/tmp/jeedom/.venvs/merosssync/bin/python3 -m pip#' /var/www/html/plugins/MerosSync/core/class/MerosSync.class.php
+    # remove  $cmd = $MerosSync_path.'/.venvs/merosssync/bin/python3
+    sed -i "s#\$MerosSync_path.'/.venvs/merosssync/bin/#'#" /var/www/html/plugins/MerosSync/core/class/MerosSync.class.php
+    #do not install in venv
+    sed -i "s%\$BASEDIR/.venvs/merosssync/bin/%\#\$BASEDIR/.venvs/merosssync/bin/%" /var/www/html/plugins/MerosSync/resources/install_apt.sh
+
+    sed -i 's#/tmp/jeedom/.venvs/merosssync/bin/##' /var/www/html/plugins/MerosSync/resources/install_apt.sh
+    sed -i "s#\$cmd = dirname(__FILE__) . '/../../resources/.venvs/merosssync/bin/pip list#\$cmd = 'pip list#" /var/www/html/plugins/MerosSync/core/class/MerosSync.class.php
+    echo "install jq, g++, python3-dev, python3-venv and meross-iot"
+    # Meross install venv package
+    apt-get install -y --no-install-recommends jq g++ python3-dev python3-pycryptodome python3-venv
     pip3 install ${BKS} --upgrade pip meross_iot==$(</var/www/html/plugins/MerosSync/resources/meross-iot_version.txt)
     # MerossSync
     sed -i "s/pip install me/pip install ${BKS} me/g" /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh
     /bin/bash /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh /tmp/jeedom/MerosSync/dependance
+    #/tmp/jeedom/.venvs/merosssync/bin/python3 -m pip install pyCipher pyCryptodome
   fi
 }
 
-nutfix(){
+nutfix() {
   #fix for php8
   sed -i 's/\[ \$versionPHP = "7" \]/\[\[ \$versionPHP =~ (7|8) \]\]/g' /var/www/html/plugins/Nut_free/ressources/install.sh
   sed -i 's/"7"/"8"/g' /var/www/html/plugins/Nut_free/ressources/install.sh
@@ -88,10 +101,23 @@ installDep() {
   ${WEBSERVER_HOME}/resources/install_nodejs.sh
   apt-get install -y --no-install-recommends build-essential g++ python3-dev nodejs
   python3 -m pip install ${BKS} --upgrade pip
+  #remove unavailable package
+  sed -E -i "s/python-dev/python-dev-is-python3/" /var/www/html/plugins/pushbullet/plugin_info/packages.json
   #old style dependencies
   find /var/www/html/plugins/ -type f -path '*sources*' -iname 'install*.sh' -print -exec bash +e {} \;
   #new style dependencies
-  apt-get install -y $(find /var/www/html/plugins -type f -name packages.json -exec jq -s '.[]|select(.apt!=null)|.apt|keys' {} \; | tr -d '\"][\n,')
+  find /var/www/html/plugins -type f -name packages.json -exec jq -s '.[]|select(.apt!=null)|.apt|keys' {} \; | grep -vP "(pushbullet|python-dev)" | tr -d '\"][\n,'
+  apt-get install -y --no-install-recommends $(find /var/www/html/plugins -type f -name packages.json -exec jq -s '.[]|select(.apt!=null)|.apt|keys' {} \; | grep -vP "(pushbullet|python-dev)" | tr -d '\"][\n,')
+}
+
+changeZwaveVersion() {
+  E_ZWAVEVER=${1:-${E_ZWAVEVER}}
+  [[ -z ${E_ZWAVEVER} ]] && return || true
+  echo "Force zwavejs-ui expected version:"
+  #change version expected: zwavejs/core/config/zwavejs.config.ini: wantedVersion=8.9.0
+  sed -E -i "s#^wantedVersion=[0-9]\.[0-9]{1,2}\..#wantedVersion=${E_ZWAVEVER}#" /var/www/html/plugins/zwavejs/core/config/zwavejs.config.ini
+  grep "wantedVersion=" /var/www/html/plugins/zwavejs/core/config/zwavejs.config.ini
+
 }
 
 # use case: zwavejs-ui is running elsewhere (other container, other server, ...)
@@ -99,11 +125,9 @@ installDep() {
 # better option: https://github.com/lxrootard/zwavejs (allow remote zwavejs-ui)
 fixZwaveUI() {
   echo "better option: https://github.com/lxrootard/zwavejs (allow remote zwavejs-ui)"
-  echo "Force zwavejs-ui expected version, bypass zwavejs-ui installation, expect it to run elsewhere (other server, other container , ...)"
-  #change version expected: zwavejs/core/config/zwavejs.config.ini: wantedVersion=8.9.0
-  sed -E -i "s#^wantedVersion=[0-9]\.[0-9]{1,2}\..#wantedVersion=${E_ZWAVEVER}#" /var/www/html/plugins/zwavejs/core/config/zwavejs.config.ini
-  grep "wantedVersion=" /var/www/html/plugins/zwavejs/core/config/zwavejs.config.ini
-
+  changeZwaveVersion ${E_ZWAVEVER}
+  #no health exists for zwavejsui
+  sed -i -r 's/(return )\(\$b\)/\1true/' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   # do not install zwave js, nor dependencies
   echo -e "{\"plugin\": {\"mqtt2\": {}},\"apt\": {},\"pre-install\": {},\"post-install\": {}}" | jq . >/var/www/html/plugins/zwavejs/plugin_info/packages.json
   # remove kill from plugin as no daemon are running.

@@ -1,7 +1,11 @@
 # Jeedom-rpi
 
 ![Docker buildx armhf+amd64 v3](https://github.com/edgd1er/jeedom-rpi/workflows/Docker%20buildx%20armhf+amd64%20v3/badge.svg?branch=master)
-![Docker buildx armhf+amd64 v4](https://github.com/edgd1er/jeedom-rpi/workflows/Docker%20buildx%20armhf+amd64%20v4/badge.svg?branch=master)
+
+![Docker buildx armhf+amd64 v4 stable](https://github.com/edgd1er/jeedom-rpi/workflows/Docker%20buildx%20armhf+amd64%20v4%20stable/badge.svg?branch=main)
+
+![Docker buildx armhf+amd64 v4 beta](https://github.com/edgd1er/jeedom-rpi/workflows/Docker%20buildx%20armhf+amd64%20v4%20beta/badge.svg?branch=main)
+
 
 ![gh issues](https://badgen.net/github/open-issues/edgd1er/jeedom-rpi?icon=github&label=issues)
 ![Docker Pulls](https://badgen.net/docker/pulls/edgd1er/jeedom-rpi?icon=docker&label=pulls)
@@ -13,11 +17,16 @@
 ![Docker Size v3](https://badgen.net/docker/size/edgd1er/jeedom-rpi/v3-latest?icon=docker&label=Size%20v3)
 ![ImageLayers v3](https://badgen.net/docker/layers/edgd1er/jeedom-rpi?icon=docker&label=Layers%20v3)
 
+A Jeedom Docker image for amd64 (PC), arm64 (Raspberry Pi 3/4), armv7 based on debian image.
+
+
 Forked from https://github.com/CodaFog/jeedom-rpi
+
+Last version and major changes:
 
 | Last Version                                               | Commit Date                                                                                                     |
 |------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
-| [v4.4.19](https://doc.jeedom.com/fr_FR/core/4.4/changelog) | 24/10/24                                                                                                        |
+| [v4.4.20](https://doc.jeedom.com/fr_FR/core/4.4/changelog) | 09/09/25                                                                                                        |
 | [v4.4.15](https://doc.jeedom.com/fr_FR/core/4.4/changelog) | 04/09/24 changes in vars to match newly added vars in jeedom/core docker image. MARIADB_* are stille supported. |
 | [v4.4.9](https://doc.jeedom.com/fr_FR/core/4.4/changelog)  | 24/07/24 major change in repo, master branch replace v4-stable. move to bookworm                                |
 | [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02 / branch deleted on 2024/07/22. V3 build disabled                                                      |
@@ -33,7 +42,6 @@ plugin. v4-buster-latest (v10) is available for plugins not compatible with debi
 
   deb files: http://ftp.debian.org/debian/pool/main/libs/libseccomp/
 
-A Jeedom Docker image for amd64 (PC), arm64 (Raspberry Pi 3/4), armv7 based on debian image.
 
 Difference from fork:
 

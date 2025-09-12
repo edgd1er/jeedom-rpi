@@ -5,8 +5,8 @@ SHELL:=bash
 
 # Enable BuildKit for Docker build
 export DOCKER_BUILDKIT:=1
-export aptCacher:=192.168.53.208
-#export aptCacher:=""
+#export aptCacher:=192.168.53.212
+export aptCacher:=""
 progress:=auto #plain auto
 
 # https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
@@ -23,9 +23,14 @@ buildv3: ## build v3 image
 	## docker-compose -f docker-compose-dev.yml build
 	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="release" --build-arg DISTRO="buster-slim" -f Docker/Dockerfile.v3 -t edgd1er/jeedom-rpi:v3-latest ./Docker
 
+buildt: ## build v4 image with trixie
+	@echo -e "\n\nbuild image ...v4"
+	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="master" --build-arg DISTRO="trixie-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-latest ./Docker
+
 build: ## build v4 image with bullseye
 	@echo -e "\n\nbuild image ...v4"
-	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="master" --build-arg DISTRO="bullseye-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-latest ./Docker
+	#docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="master" --build-arg DISTRO="bullseye-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-latest ./Docker
+	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="master" --build-arg DISTRO="bookworm-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-latest ./Docker
 
 buildb: ## build v4 image with buster
 	@echo -e "\n\nbuild image ...v4 buster"
@@ -33,7 +38,7 @@ buildb: ## build v4 image with buster
 
 alpha: ## build v4 alpha image --no-cache
 	@echo -e "\n\nbuild image ...v4 alpha"
-	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="alpha" --build-arg DISTRO="bookworm-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:alpha ./Docker
+	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="alpha" --build-arg DISTRO="trixie-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:alpha ./Docker
 
 beta: ## build v4 beta image --no-cache
 	@echo -e "\n\nbuild image ...v4 beta" --no-cache
