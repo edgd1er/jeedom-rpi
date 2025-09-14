@@ -6,4 +6,4 @@ JEEDOM_ENCRYPTION_KEY
 DB_PASSWORD
 DB_ROOTPASSWORD
 ROOT_PASSWD
-docker-compose.yml
+compose.yml

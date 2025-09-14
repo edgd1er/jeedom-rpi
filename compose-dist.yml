@@ -52,7 +52,7 @@ services:
       - tmpfs_root_cache:/root/.cache
     environment:
       - TZ=Europe/Paris
-      - JEEDOM_ENC_KEY= #<get key from /var/www/html/data/jeedom_encryption.key to keep database secrets consistent>
+      - JEEDOM_ENCRYPTION_KEY= #<get key from /var/www/html/data/jeedom_encryption.key to keep database secrets consistent>
       - ROOT_PASSWD= # deprecated, replaced by secrets
       - DB_ROOTPASSWORD= # deprecated, replaced by secrets
       - DB_HOST=mysql

@@ -20,7 +20,7 @@ lint: ## stop all containers
 
 buildv3: ## build v3 image
 	@echo -e "build image ...v3"
-	## docker-compose -f docker-compose-dev.yml build
+	## docker compose -f compose-dev.yml build
 	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="release" --build-arg DISTRO="buster-slim" -f Docker/Dockerfile.v3 -t edgd1er/jeedom-rpi:v3-latest ./Docker
 
 buildt: ## build v4 image with trixie
@@ -56,7 +56,7 @@ ver: ## check version
 	echo "Zwave-ui-js local: $${ZWAVE_VER} remote: $${zwave#v*}" ; \
 	if [[ $${jdm} != $${JDM_VER} ]]; then \
 	  echo "Jeedom update detected: https://raw.githubusercontent.com/jeedom/core/master/core/config/version" ;\
-	  sed -i -E "s/#JDM_VERSION:.+/#JDM_VERSION: $${jdm}/" docker-compose.yml; \
+	  sed -i -E "s/#JDM_VERSION:.+/#JDM_VERSION: $${jdm}/" compose.yml; \
 	  fi ; \
 	if [[ $${zwave} != v$${ZWAVE_VER} ]]; then \
 	  echo "zwave-js-ui update detected: https://raw.githubusercontent.com/zwave-js/zwave-js-ui/"; \

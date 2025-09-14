@@ -16,7 +16,7 @@ sqldata/
 JEEDOM_ENCRYPTION_KEY
 DB_*
 ROOT_PASSWD
-!docker-compose.yml
-!docker-compose-no-secrets.yml
+!compose.yml
+!compose-no-secrets.yml
 
 env
