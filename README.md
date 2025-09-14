@@ -91,17 +91,17 @@ https://community.jeedom.com/t/compatibilite-des-plugins-avec-debian-12-bookworm
 
 ### Installation
 
-the docker-compose files are proposed as an example to build a running jeedom + mysql stack.
+the compose files are proposed as an example to build a running jeedom + mysql stack.
 mysql database is on a separate container.
 example:
 
 ```bash
-    docker-compose -f docker-compose.yml up -d
+    docker compose -f compose.yml up -d
 ```
 
 1. Install [Docker](https://www.docker.com/) on your Raspberry pi.
 
-2. Rename docker-compose-armhf.yml to docker-compose.yml and define values in environment section.(mysql database,
+2. Rename compose-armhf.yml to compose.yml and define values in environment section.(mysql database,
    architecture disribution (amd64-debian, armv7hf-debian ), jeedom version (release).
 
 version values for jeedom version: v3/v4
@@ -114,7 +114,7 @@ version values for jeedom version: v3/v4
 3. build and start the stack:
 
 ```
-    docker-compose -f docker-compose.yml up --build
+    docker compose -f compose.yml up --build
 ```
 
 4.Connect to your Raspberry IP or x86, at port 9180, or 9443 with a web browser and enjoy playing with Jeedom.
@@ -125,6 +125,9 @@ The Jeedom user should be existing in the remote database.
 Mysql Root password should be in the command line that run the container. If the DB_NAME schema does
 not exists, it will created.
 if LOGS_TO_STDOUT is set to yes, apache logs are sent to container's stdout.
+
+Variables containing sensitive data should be replaced by secrets.
+
 
 ```   - TZ=Europe/Paris
       - ROOT_PASSWD shell root password
@@ -149,10 +152,10 @@ To upgrade jeedom two options:
 
 JEEDOM_ENCRYPTION_KEY's value is to be found in `/var/www/htmldata/jeedom_encryption.key`
 
-* Work in progress: `/root/extras.sh`. No automatic launch, run: `/root/extras.sh` -h for help
+* Work in progress: `/root/extras.sh`. No automatic launch, run: `docker compose exec <jeedom service name> bash -c /root/extras.sh -<opt>` -h for help
   * Install dependancies (-d)
   * Fix pushbullet'plugin.(-p)
-  * Fix meross's plugin (-p)
+  * Fix meross's plugin (-m)
   * Change zwave plugin to use zwavejs-ui in an external container with a specific version (-z)
   * Change zwavejs-ui required version, disable local installation (project, node, yarm, ...). Expect a running container or service aside. export E_ZWAVEVER to set zwavejs-ui version to accept: example: export E_ZWAVEVER="9.8.2"
 
@@ -200,7 +203,9 @@ mounted in a volume.
 | jeedom    | /var/www/html/tmp                    | jeedom temp dir                   |
 | jeedom    | /var/www/html/log/                   | jeedom log dir                    |
 
-### Example of a docker-compose
+### Example of a docker compose
+
+this is an example of a docker compose file to run jeedom with a mysql database on a separate container. see file compose-dist.yml for a complete example.
 
 ```
 services:
@@ -222,12 +227,15 @@ services:
       - /root/.cache
     environment:
       - TZ=Europe/Paris
-      - ROOT_PASSWD=rootPassword
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_NAME=jeedom_test
       - DB_USERNAME=jeedom
-      - DB_PASSWD=jeedom
+    secrets:
+      - JEEDOM_ENCRYPTION_KEY
+      - DB_ROOTPASSWORD
+      - DB_PASSWORD
+      - ROOT_PASSWD
     #   devices:
     #   - "/dev/ttyUSB0:/dev/ttyUSB0
     #   - "/dev/ttyAMA0:/dev/ttyAMA0"
@@ -248,6 +256,16 @@ services:
       - DB_PASSWORD=jeedom
     volumes:
       - sqldata:/var/lib/mysql
+
+secrets:
+  JEEDOM_ENCRYPTION_KEY:
+    file: ./JEEDOM_ENCRYPTION_KEY
+  DB_ROOTPASSWORD:
+    file: ./DB_ROOTPASSWORD
+  DB_PASSWORD:
+    file: ./DB_PASSWORD
+  ROOT_PASSWD:
+    file: ./ROOT_PASSWORD
 ```
 
 ### Upgrade
@@ -267,7 +285,7 @@ Here is a list of folder where either static or conf files lost after each upgra
 At the moment, Jeedom can handle my roller shutter, fibaro plugs, stella Z radiator and fibaro door sensors. It may not
 be effective or applicable to your setup.
 
-Official plugin will install mqtt package, mqtt plugin, node, clone zwavejsUI, build a container. the plugin will start
+Official plugin will install mqtt package, mqtt plugin, node, clone zwavejsUI, build a container in the container. the plugin will start
 a container to run zwaveJsui. all that add more than 600Mb in the container and add too many dependancies.
 
 What needs to be done, to have a lighter container:
@@ -289,21 +307,21 @@ The hereafter commands will:
   docker compose cp web:/var/www/html/plugins/mqtt2/data/* mqtt/
   sed -i "s#/var/www/html/plugins/mqtt2/core/class/../../data#/mosquito/config#" /root/containers_conf/jeedom/mqtt2/mosquitto.conf
 #change version expected: zwavejs/core/config/zwavejs.config.ini: wantedVersion=8.6.1
-  docker-compose exec web sed -i 's#^wantedVersion=8\..\..#wantedVersion=8.11.0#' /var/www/html/plugins/zwavejs/core/config/zwavejs.config.ini
+  docker compose exec web sed -i 's#^wantedVersion=8\..\..#wantedVersion=8.11.0#' /var/www/html/plugins/zwavejs/core/config/zwavejs.config.ini
   # do not clone zwavejs ui
-  docker-compose exec web sed -i -E  's/git clone --branch .*//g' /var/www/html/plugins/zwavejs/resources/pre_install.sh
+  docker compose exec web sed -i -E  's/git clone --branch .*//g' /var/www/html/plugins/zwavejs/resources/pre_install.sh
   # do not install zwave js, nor dependencies
-  docker-compose exec web sed -i '/npm/,+2d' /var/www/html/plugins/zwavejs/plugin_info/packages.json
-  docker-compose exec web sed -i -E  's/sudo yarn.*//g' /var/www/html/plugins/zwavejs/resources/post_install.sh
-  docker-compose exec web sed -i -E  's/cd zwave-js-ui//g' /var/www/html/plugins/zwavejs/resources/post_install.sh
+  docker compose exec web sed -i '/npm/,+2d' /var/www/html/plugins/zwavejs/plugin_info/packages.json
+  docker compose exec web sed -i -E  's/sudo yarn.*//g' /var/www/html/plugins/zwavejs/resources/post_install.sh
+  docker compose exec web sed -i -E  's/cd zwave-js-ui//g' /var/www/html/plugins/zwavejs/resources/post_install.sh
   # zwavejs.class.php: remove yarn start / node is not local
   # remove yarn start / node is not local
-  docker-compose exec web sed -i -E  's/ yarn start//g' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  docker compose exec web sed -i -E  's/ yarn start//g' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   # node is not local: simulate daemon detection
-  docker-compose exec web sed -i -E  's#server/bin/www.js#php#g' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  docker compose exec web sed -i -E  's#server/bin/www.js#php#g' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   # remove node modules check as project was not cloned.
-  docker-compose exec web bash -c "mkdir -p /var/www/html/plugins/zwavejs/resources/zwave-js-ui/; touch /var/www/html/plugins/zwavejs/resources/zwave-js-ui/node_modules"
-  #docker-compose exec web sed -i 's#/../../resources/zwave-js-ui/node_modules#/../../resources/no_zwave-js-ui#' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  docker compose exec web bash -c "mkdir -p /var/www/html/plugins/zwavejs/resources/zwave-js-ui/; touch /var/www/html/plugins/zwavejs/resources/zwave-js-ui/node_modules"
+  #docker compose exec web sed -i 's#/../../resources/zwave-js-ui/node_modules#/../../resources/no_zwave-js-ui#' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   # detect nodeID_XX as XX
   echo "in zwavejsui uncheck 'Use nodes name instead of numeric nodeIDs' in parameters"
   # log debug unknown key
@@ -318,23 +336,23 @@ the idea is the allow directly in jeedom to use a distant container.
 
 ```bash
 # pushbullet: replace object with jeeObject
-  docker-compose exec web sed -i 's/(object/(jeeObject/' /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
-  docker-compose exec web grep -iP "\((|jee)object" /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
+  docker compose exec web sed -i 's/(object/(jeeObject/' /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
+  docker compose exec web grep -iP "\((|jee)object" /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
   # pushbullet: change tmp path
-  docker-compose exec web sed -i "s#path = os.path.dirname(os.path.realpath(__file__))+'/../../../../tmp'#path = '/tmp'#" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py
+  docker compose exec web sed -i "s#path = os.path.dirname(os.path.realpath(__file__))+'/../../../../tmp'#path = '/tmp'#" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py
   # pushbullet: activation du log du daemon
-  docker-compose exec web sed -i 's#/dev/null#/var/www/html/log/pushbullet_daemon.log#' /var/www/html/plugins/pushbullet/core/class/pushbullet.class.php
-  docker-compose exec web sed -i "s#/tmp/pushbullet.log#/var/www/html/log/pushbullet.log#" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py
+  docker compose exec web sed -i 's#/dev/null#/var/www/html/log/pushbullet_daemon.log#' /var/www/html/plugins/pushbullet/core/class/pushbullet.class.php
+  docker compose exec web sed -i "s#/tmp/pushbullet.log#/var/www/html/log/pushbullet.log#" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py
   # pushbullet: replace obsolete websocket
   if [[ 0 -lt $(docker compose exec web bash -c "ls -l /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket"| wc -l) ]]; then
-    docker-compose exec web bash -c "mv /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket.old"
+    docker compose exec web bash -c "mv /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket.old"
   fi
 
-  docker-compose exec web bash -c "sed -i 's#nice -n 19 /usr/bin/python #nice -n 19 /usr/bin/python3 #' /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py"
-  docker-compose exec web bash -c "sed -i 's# file(# open(#' /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py"
-  docker-compose exec web bash -c "apt-get install -y --no-install-recommends python-dev;/usr/bin/python -m pip install --upgrade pip websocket websocket-client"
+  docker compose exec web bash -c "sed -i 's#nice -n 19 /usr/bin/python #nice -n 19 /usr/bin/python3 #' /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py"
+  docker compose exec web bash -c "sed -i 's# file(# open(#' /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py"
+  docker compose exec web bash -c "apt-get install -y --no-install-recommends python-dev;/usr/bin/python -m pip install --upgrade pip websocket websocket-client"
   # Meross
-  docker-compose exec web bash -c "apt-get install -y --no-install-recommends g++ python3-dev; pip3 install --upgrade pip meross_iot"
+  docker compose exec web bash -c "apt-get install -y --no-install-recommends g++ python3-dev; pip3 install --upgrade pip meross_iot"
  ```
 
 ### Github
