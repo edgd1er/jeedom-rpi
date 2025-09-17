@@ -15,7 +15,7 @@ E_PUSH=${E_PUSH:-0}
 # force zwave-ui as external container + version
 E_ZWAVE=${E_ZWAVE:-0}
 #Default zwavejs-ui version
-E_ZWAVEVER=${E_ZWAVEVER:-"11.2.1"}
+E_ZWAVEVER=${E_ZWAVEVER:-"11.6.2"}
 #Debian 12 needs --break-system-packages
 BKS=""
 
@@ -138,10 +138,12 @@ fixZwaveUI() {
   sed -i "s/\$cmd .= ' yarn start';/#\$cmd .= ' yarn start';/" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   sed -i 's/ exec(\$cmd)/#exec(\$cmd)/' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   # remove kill from plugin as no daemon are running.
-  sed -i 's/ system::kill\(\#system::kill\(/' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  sed -i 's% system::kill(%#system::kill(%' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   # remove yarn start / node is not local
+  #echo fake package.json
+  echo '{ "name": "zwave-js-ui", "version": "${E_ZWAVEVER}" }' > /var/www/html/plugins/zwavejs/resources/zwave-js-ui/package.json
 
-  # remove node modules check as project was not cloned.
+    # remove node modules check as project was not cloned.
   mkdir -p /var/www/html/plugins/zwavejs/resources/zwave-js-ui/
   touch /var/www/html/plugins/zwavejs/resources/zwave-js-ui/node_modules
   # detect nodeID_XX as XX
@@ -207,3 +209,5 @@ fi
 if [[ 1 -eq ${E_DEP:-0} ]]; then
   installDep
 fi
+
+chown -R www-data:www-data /var/www/html/tmp
