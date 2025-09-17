@@ -137,8 +137,7 @@ RUN echo "Etape 6: install jeedom" \
     # s9 create db
     && /root/install_docker.sh -s 9 -v ${VERSION} -i docker "${DATABASE}" \
     # s10 composer \
-    && composer install --no-ansi --no-dev --no-interaction --no-plugins --no-progress --no-scripts --optimize-autoloader \
-    # && /root/install_docker.sh -s 10 -v ${VERSION} -i docker "${DATABASE}" \
+    && /root/install_docker.sh -s 10 -v ${VERSION} -i docker "${DATABASE}" \
     # s11 jdm post
     && /root/install_docker.sh -s 11 -v ${VERSION} -i docker "${DATABASE}" \
     # Add logs for http connections

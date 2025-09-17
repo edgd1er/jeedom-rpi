@@ -15,7 +15,7 @@ E_PUSH=${E_PUSH:-0}
 # force zwave-ui as external container + version
 E_ZWAVE=${E_ZWAVE:-0}
 #Default zwavejs-ui version
-E_ZWAVEVER=${E_ZWAVEVER:-"11.2.1"}
+E_ZWAVEVER=${E_ZWAVEVER:-"11.3.0"}
 #Debian 12 needs --break-system-packages
 BKS=""
 
@@ -207,3 +207,5 @@ fi
 if [[ 1 -eq ${E_DEP:-0} ]]; then
   installDep
 fi
+
+chown -R www-data:www-data /var/www/html/temp
