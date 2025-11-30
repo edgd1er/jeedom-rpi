@@ -26,7 +26,7 @@ Last version and major changes:
 
 | Last Version                                               | Commit Date                                                                                                     |
 |------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
-| [v4.4.20](https://doc.jeedom.com/fr_FR/core/4.4/changelog) | 09/09/25                                                                                                        |
+| [v4.5](https://doc.jeedom.com/fr_FR/core/4.4/changelog) | 30/11/25 changes in jeedom-core, no change in image.                                                            |
 | [v4.4.15](https://doc.jeedom.com/fr_FR/core/4.4/changelog) | 04/09/24 changes in vars to match newly added vars in jeedom/core docker image. MARIADB_* are stille supported. |
 | [v4.4.9](https://doc.jeedom.com/fr_FR/core/4.4/changelog)  | 24/07/24 major change in repo, master branch replace v4-stable. move to bookworm                                |
 | [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02 / branch deleted on 2024/07/22. V3 build disabled                                                      |

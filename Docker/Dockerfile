@@ -28,7 +28,7 @@ LABEL maintainer=edgd1er@hotmail.com
 #prepare base image for master, alpha, beta: all v4 versions
 #add apt-cacher setting if present:
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-#hadolint ignore=DL3008
+#hadolint ignore=DL3008,DL3016
 RUN if [[ -n ${aptCacher:-""} ]]; then printf "Acquire::http::Proxy \"http://%s:3142\";" "${aptCacher}">/etc/apt/apt.conf.d/01proxy \
     && printf "Acquire::https::Proxy \"http://%s:3142\";" "${aptCacher}">>/etc/apt/apt.conf.d/01proxy ; fi  \
     #&& echo "Dir::Cache \"\";\nDir::Cache::archives \"\";" | tee /etc/apt/apt.conf.d/02nocache && \
