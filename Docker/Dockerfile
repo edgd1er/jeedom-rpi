@@ -1,5 +1,5 @@
 #hadolint global ignore=SC3010
-ARG DISTRO=13-trixie
+ARG DISTRO=13-slim
 FROM debian:${DISTRO} AS base
 
 ARG DISTRO
@@ -33,30 +33,30 @@ RUN if [[ -n ${aptCacher:-""} ]]; then printf "Acquire::http::Proxy \"http://%s:
     && printf "Acquire::https::Proxy \"http://%s:3142\";" "${aptCacher}">>/etc/apt/apt.conf.d/01proxy ; fi  \
     #&& echo "Dir::Cache \"\";\nDir::Cache::archives \"\";" | tee /etc/apt/apt.conf.d/02nocache && \
     && printf "#/etc/dpkg/dpkg.cfg.d/01_nodoc\n\n# Delete locales\npath-exclude=/usr/share/locale/*\n\n# Delete man pages\npath-exclude=/usr/share/man/*\n\n# Delete docs\npath-exclude=/usr/share/doc/*\npath-include=/usr/share/doc/*/copyright" | tee /etc/dpkg/dpkg.cfg.d/03nodoc \
-    #Massive apt install of jeedom requirements to optimise downloads
+    #Massive apt install of jeedom requirements to optimise downloads \
     && apt-get update && apt-get install -y --no-install-recommends wget rsync lsof iproute2 \
 	curl apt-transport-https net-tools gettext snmp \
-    # Trixie specific: ntpsec replaces ntp (older version of ntpsec-ntpdate also needed)
-    && if [[ ${DISTRO} =~ trixie ]]; then apt-get install -y --no-install-recommends ntpsec-ntpdate ntpsec; else \
+    # Trixie specific: ntpsec replaces ntp (older version of ntpsec-ntpdate also needed) \
+    && if [[ ${DISTRO} =~ trixie ]]; then apt-get install -y --no-install-recommends ntpsec-ntpdate ntpsec chronyd; else \
     apt-get install -y --no-install-recommends software-properties-common ntpdate ntp && add-apt-repository non-free ; fi \
     && apt-get update && apt-get install -y --no-install-recommends supervisor \
 	python3 python3-pip python3-setuptools iputils-ping libcurl3-gnutls librsync-dev \
     passwd usbutils usb.ids ca-certificates unzip sudo cron locate tar telnet logrotate fail2ban dos2unix \
     htop vim smbclient git libexpat1 ssl-cert ffmpeg usbutils ssh \
     cutycapt at mariadb-client mariadb-common bzip2 gpg gpg-agent gpgconf xz-utils udev jq\
-    #mbrola removed (not available for armhf )
-    #add server apache
+    #mbrola removed (not available for armhf ) \
+    #add server apache \
     apache2 apache2-utils npm \
-    # install npm, and node with fixed version
-    && npm install n -g && n 20.18.1 \
+    # install npm, and node with fixed version \
+    && npm install n -g && n 20 \
     && update-ca-certificates --fresh \
-    #install python2 pip from boostrap as not in repo anymore for debian 10
+    #install python2 pip from boostrap as not in repo anymore for debian 10 \
     && if [[ ${DISTRO} =~ buster ]]; then apt-get install -y --no-install-recommends python python2 snmp-mibs-downloader; \
-    #install python2 pip from boostrap as not in repo anymore for debian 11
+    #install python2 pip from boostrap as not in repo anymore for debian 11 \
     elif [[ ${DISTRO} =~ bullseye ]]; then apt-get install -y --no-install-recommends python; curl https://bootstrap.pypa.io/pip/2.7/get-pip.py | python - \
     ; apt-get install -y --no-install-recommends python2 snmp-mibs-downloader; fi \
-    #cannot install php as php5 or 7 might be option. leave install.sh install needed php package
-    #clean temp files
+    #cannot install php as php5 or 7 might be option. leave install.sh install needed php package \
+    #clean temp files \
     && apt-get -y remove -y brltty  && apt-get upgrade -y \
     && apt-get autoremove -y --purge && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/* \
@@ -70,77 +70,82 @@ ENV VERSION=${VERSION}
 ARG JDM_VERSION=latest
 ARG aptCacher
 
+WORKDIR /var/www/html
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 RUN echo "install jeedom VERSION: $VERSION / ${JDM_VERSION}" \
     && wget -qO /root/.bashrc https://raw.githubusercontent.com/jeedom/core/$VERSION/install/bashrc \
     && wget -qO /etc/motd https://raw.githubusercontent.com/jeedom/core/$VERSION/install/motd \
     && apt-get autoremove -y --purge && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/* \
-    #from jeedom-core, get install file
-    ## latest version
+    #from jeedom-core, get install file \
+    ## latest version \
     && wget -qO /root/install_docker.sh https://raw.githubusercontent.com/jeedom/core/${VERSION}/install/install.sh \
     && chmod +x /root/install_docker.sh \
-    # tagged version
-    ##########################################
-    # Adapt install_docker to docker: fix jeedom install.sh for unattended install
+    # tagged version \
+    ########################################## \
+    # Adapt install_docker to docker: fix jeedom install.sh for unattended install \
+    && echo 'Remove daemon-stuff from /root/install_docker.sh' \
     && sed -i "s/systemctl daemon-reload/true/g" /root/install_docker.sh \
-    && sed -ir 's;(rm /var/lib/mysql/ib.*);# \1;' /root/install_docker.sh \
+    && sed -i -r 's;(rm /var/lib/mysql/ib.*);# \1;' /root/install_docker.sh \
     && sed -i -E "s#\(mysql |mariadb \) -uroot($| )#mysql -uroot -p\${DB_ROOTPASSWD} -h \${DB_HOST} -P\${DB_PORT} -D \${DB_NAME} #g" /root/install_docker.sh \
     && grep "^DB_PASSWD=" /root/install_docker.sh || true \
     && grep "mysql -uroot" /root/install_docker.sh || true \
     && sed -i 's#-y install "#-y --no-install-recommends install "#' /root/install_docker.sh \
     && sed -i "s#apt install#apt-get install -y --no-install-recommends#" /root/install_docker.sh \
-    #V4: no mysql/mariadb server inside jeedom image
+    #V4: no mysql/mariadb server inside jeedom image \
+    && echo 'Remove mariadb-server from /root/install_docker.sh' \
     && sed -i 's/mariadb-server//' /root/install_docker.sh \
-    #V4: no systemd services in docker
+    #V4: no systemd services in docker \
     && sed -i '/service_action\(\){/i return 0' /root/install_docker.sh \
     && sed -ri 's/service_action (start|stop|status|restart).*/true/' /root/install_docker.sh \
-    #v4: no systemd services in docker
+    #v4: no systemd services in docker \
+    && echo 'Remove systemctl from /root/install_docker.sh' \
     && sed -ri '/systemctl (start|stop|status|restart).*/d' /root/install_docker.sh \
-    # set jeedom version v3 or v4
-    && sed -i "s/VERSION=master/VERSION=\${VERSION}/g" /root/install_docker.sh
-    ##########################################
-RUN echo "Installing jeedom version: ${VERSION} / ${JDM_VERSION}" \
-    # 4.4 install -d 0 = external database
+    # set jeedom version v3 or v4 \
+    && echo 'replace version from /root/install_docker.sh' \
+    &&  sed -i "s/VERSION=master/VERSION=\${VERSION}/g" /root/install_docker.sh \
+    ########################################## \
+    && echo "Installing jeedom version: ${VERSION} / ${JDM_VERSION}" \
+    # 4.4 install -d 0 = external database \
     && if [[ ${VERSION,,} =~ (alpha|beta|master) ]] ; then DATABASE="-d 0"; else DATABASE="" ; fi \
-    # step 2 install mainpackage - add too many packages.
-    # && /root/install_docker.sh -s 2 -v ${VERSION}\
-    # step 3 install mysql server
+    # step 2 install mainpackage - add too many packages. \
+    # && /root/install_docker.sh -s 2 -v ${VERSION}\ \
+    # step 3 install mysql server \
     && echo "Etape 3: non faite: installation en local de la BDD" \
     && apt-get update \
-    # install apache
+    # install apache \
     && echo "Etape 4: install apache" \
     && /root/install_docker.sh -s 4 -v "${VERSION}" -i docker "${DATABASE}" \
-    # s5 install php
+    # s5 install php \
     && echo "Etape 5: install php" \
     && /root/install_docker.sh -s 5 -v "${VERSION}" -i docker "${DATABASE}" \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
-    # s6 install jeedom download
-RUN echo "Etape 6: install jeedom" \
-    && /root/install_docker.sh -s 6 -v "${VERSION}" -i docker "${DATABASE}" \
-    # remove bugged php line
+    && rm -rf /var/lib/apt/lists/* \
+    # s6 install jeedom download \
+    echo "Etape 6: install jeedom" \
+    && bash -x /root/install_docker.sh -s 6 -v "${VERSION}" -i docker "${DATABASE}" \
+    && ls -al /var/www/html \
+    # remove bugged php line \
     # && sed -r -i "/sudo rm .*/d " /var/www/html/resources/install_composer.sh \
     && find /var/www/html/ -type f -iname "*.sh" -exec chmod +x {} \; \
-    # remove CR/LR : php /var/www/html/install/packages.php
+    # remove CR/LR : php /var/www/html/install/packages.php \
     && sed -i "s/'version' => \$npm/'version' => rtrim(\$npm)/" /var/www/html/core/class/system.class.php \
     #&& sed -r -i "s/('remark' => isset)/#\1/" /var/www/html/core/class/system.class.php \
-    #remove unneeded package: no db server inside jeedom image, no chromium
+    #remove unneeded package: no db server inside jeedom image, no chromium \
     && sed -i '/mariadb-server/d' /var/www/html/install/packages.json \
     && sed -i "/chromium/d" /var/www/html/install/packages.json \
-    #v4 s7 = mariadb server conf: skipped
-    #v4 S8 = jeedom customization later in build: skipped
-    # s7 skipped: param maria svc
-    # s8 apache/php setting
+    #v4 s7 = mariadb server conf: skipped \
+    #v4 S8 = jeedom customization later in build: skipped \
+    # s7 skipped: param maria svc \
+    # s8 apache/php setting \
     && bash -x /root/install_docker.sh -s 8 -v ${VERSION} -i docker "${DATABASE}" \
-    # s9 create db
+    # s9 create db \
     && /root/install_docker.sh -s 9 -v ${VERSION} -i docker "${DATABASE}" \
     # s10 composer \
     && /root/install_docker.sh -s 10 -v ${VERSION} -i docker "${DATABASE}" \
-    # s11 jdm post
+    # s11 jdm post \
     && /root/install_docker.sh -s 11 -v ${VERSION} -i docker "${DATABASE}" \
-    # Add logs for http connections
+    # Add logs for http connections \
     && if [[ 0 -eq $(grep combined /etc/apache2/sites-available/000-default.conf) ]]; then \
     sed -i "$ i\CustomLog \${APACHE_LOG_DIR}/access.log combined" /etc/apache2/sites-available/000-default.conf ; fi \
     && echo "alias salias='source ~/.bashrc'" | tee -a ~/.bashrc \
@@ -152,12 +157,12 @@ RUN echo "Etape 6: install jeedom" \
     && echo "alias phpinstall='php /var/www/html/install/install.php'" | tee -a ~/.bashrc \
     && echo "alias pipupdate='pip3 list --outdated --format json |jq -r .[].name | xargs -I % apt install -y python3-%'" | tee -a ~/.bashrc \
     && echo "function pipinstall(){ pip3 install --break-system-packages --upgrade \${1} ; }" | tee -a ~/.bashrc \
-    # rpi
+    # rpi \
     && [[ ! -f /sbin/udevadm ]] && ln -sfn /bin/udevadm /sbin/udevadm || true \
     && apt-get remove -y x11-common \
-    # untouched data dir
+    # untouched data dir \
     && if [[ -d /var/www/html/data/ ]]; then cp -Rp /var/www/html/data/ /var/www/html/.data/ ; fi \
-    # clean caches
+    # clean caches \
     && apt-get autoremove -y --purge && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/* && echo >"${WEBSERVER_HOME}/initialisation" \
     && if [[ -n "$aptCacher" ]]; then echo "">/etc/apt/apt.conf.d/01proxy; fi
