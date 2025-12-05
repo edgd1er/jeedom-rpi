@@ -37,7 +37,7 @@ RUN if [[ -n ${aptCacher:-""} ]]; then printf "Acquire::http::Proxy \"http://%s:
     && apt-get update && apt-get install -y --no-install-recommends wget rsync lsof iproute2 \
 	curl apt-transport-https net-tools gettext snmp \
     # Trixie specific: ntpsec replaces ntp (older version of ntpsec-ntpdate also needed) \
-    && if [[ ${DISTRO} =~ trixie ]]; then apt-get install -y --no-install-recommends ntpsec-ntpdate ntpsec chronyd; else \
+    && if [[ ${DISTRO} =~ (trixie|13) ]]; then apt-get install -y --no-install-recommends ntpsec-ntpdate chrony; else \
     apt-get install -y --no-install-recommends software-properties-common ntpdate ntp && add-apt-repository non-free ; fi \
     && apt-get update && apt-get install -y --no-install-recommends supervisor \
 	python3 python3-pip python3-setuptools iputils-ping libcurl3-gnutls librsync-dev \
@@ -51,9 +51,9 @@ RUN if [[ -n ${aptCacher:-""} ]]; then printf "Acquire::http::Proxy \"http://%s:
     && npm install n -g && n 20 \
     && update-ca-certificates --fresh \
     #install python2 pip from boostrap as not in repo anymore for debian 10 \
-    && if [[ ${DISTRO} =~ buster ]]; then apt-get install -y --no-install-recommends python python2 snmp-mibs-downloader; \
+    && if [[ ${DISTRO} =~ (buster|10) ]]; then apt-get install -y --no-install-recommends python python2 snmp-mibs-downloader; \
     #install python2 pip from boostrap as not in repo anymore for debian 11 \
-    elif [[ ${DISTRO} =~ bullseye ]]; then apt-get install -y --no-install-recommends python; curl https://bootstrap.pypa.io/pip/2.7/get-pip.py | python - \
+    elif [[ ${DISTRO} =~ (bullseye|11) ]]; then apt-get install -y --no-install-recommends python; curl https://bootstrap.pypa.io/pip/2.7/get-pip.py | python - \
     ; apt-get install -y --no-install-recommends python2 snmp-mibs-downloader; fi \
     #cannot install php as php5 or 7 might be option. leave install.sh install needed php package \
     #clean temp files \
