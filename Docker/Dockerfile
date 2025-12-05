@@ -33,14 +33,11 @@ RUN if [[ -n ${aptCacher:-""} ]]; then printf "Acquire::http::Proxy \"http://%s:
     && printf "Acquire::https::Proxy \"http://%s:3142\";" "${aptCacher}">>/etc/apt/apt.conf.d/01proxy ; fi  \
     #&& echo "Dir::Cache \"\";\nDir::Cache::archives \"\";" | tee /etc/apt/apt.conf.d/02nocache && \
     && printf "#/etc/dpkg/dpkg.cfg.d/01_nodoc\n\n# Delete locales\npath-exclude=/usr/share/locale/*\n\n# Delete man pages\npath-exclude=/usr/share/man/*\n\n# Delete docs\npath-exclude=/usr/share/doc/*\npath-include=/usr/share/doc/*/copyright" | tee /etc/dpkg/dpkg.cfg.d/03nodoc \
-    #Massive apt install of jeedom requirements to optimise downloads \
+    #Massive apt install of jeedom requirements to optimise downloads: common to all versions \
     && apt-get update && apt-get install -y --no-install-recommends wget rsync lsof iproute2 \
 	curl apt-transport-https net-tools gettext snmp \
-    # Trixie specific: ntpsec replaces ntp (older version of ntpsec-ntpdate also needed) \
-    && if [[ ${DISTRO} =~ (trixie|13) ]]; then apt-get install -y --no-install-recommends ntpsec-ntpdate chrony; else \
-    apt-get install -y --no-install-recommends software-properties-common ntpdate ntp && add-apt-repository non-free ; fi \
     && apt-get update && apt-get install -y --no-install-recommends supervisor \
-	python3 python3-pip python3-setuptools iputils-ping libcurl3-gnutls librsync-dev \
+	python3 python3-pip python3-setuptools iputils-ping librsync-dev \
     passwd usbutils usb.ids ca-certificates unzip sudo cron locate tar telnet logrotate fail2ban dos2unix \
     htop vim smbclient git libexpat1 ssl-cert ffmpeg usbutils ssh \
     cutycapt at mariadb-client mariadb-common bzip2 gpg gpg-agent gpgconf xz-utils udev jq\
@@ -49,13 +46,18 @@ RUN if [[ -n ${aptCacher:-""} ]]; then printf "Acquire::http::Proxy \"http://%s:
     apache2 apache2-utils npm \
     # install npm, and node with fixed version \
     && npm install n -g && n 20 \
-    && update-ca-certificates --fresh \
-    #install python2 pip from boostrap as not in repo anymore for debian 10 \
-    && if [[ ${DISTRO} =~ (buster|10) ]]; then apt-get install -y --no-install-recommends python python2 snmp-mibs-downloader; \
+    && update-ca-certificates --fresh
+RUN    #install python2 pip from boostrap as not in repo anymore for debian 10 \
+    && if [[ ${DISTRO} =~ (buster|10) ]]; then apt-get install -y --no-install-recommends python python2 snmp-mibs-downloader software-properties-common \
+    ntpdate ntp && add-apt-repository non-free && \
     #install python2 pip from boostrap as not in repo anymore for debian 11 \
-    elif [[ ${DISTRO} =~ (bullseye|11) ]]; then apt-get install -y --no-install-recommends python; curl https://bootstrap.pypa.io/pip/2.7/get-pip.py | python - \
-    ; apt-get install -y --no-install-recommends python2 snmp-mibs-downloader; fi \
-    #cannot install php as php5 or 7 might be option. leave install.sh install needed php package \
+    elif [[ ${DISTRO} =~ (bullseye|11) ]]; then apt-get install -y --no-install-recommends python software-properties-common ntpdate ntp; \
+      curl https://bootstrap.pypa.io/pip/2.7/get-pip.py | python - ; add-apt-repository non-free && \
+    elif [[ ${DISTRO} =~ (bullseye|12) ]]; then apt-get install -y --no-install-recommends libcurl3-gnutls software-properties-common ntpdate ntp \
+    && add-apt-repository non-free && \
+    # Trixie specific: ntpsec replaces ntp (older version of ntpsec-ntpdate also needed) \
+    elif [[ ${DISTRO} =~ (trixie|13) ]]; then apt-get install -y --no-install-recommends ntpsec-ntpdate chrony libcurl3t64-gnutls; fi \
+        #cannot install php as php5 or 7 might be option. leave install.sh install needed php package \
     #clean temp files \
     && apt-get -y remove -y brltty  && apt-get upgrade -y \
     && apt-get autoremove -y --purge && apt-get autoclean \
