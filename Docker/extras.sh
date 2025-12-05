@@ -75,7 +75,7 @@ meross() {
     echo "install jq, g++, python3-dev, python3-venv and meross-iot"
     # Meross install venv package
     apt-get install -y --no-install-recommends jq g++ python3-dev python3-pycryptodome python3-venv
-    pip3 install ${BKS} --upgrade pip meross_iot==$(</var/www/html/plugins/MerosSync/resources/meross-iot_version.txt)
+    pip3 install ${BKS} --upgrade meross_iot==$(</var/www/html/plugins/MerosSync/resources/meross-iot_version.txt)
     # MerossSync
     sed -i "s/pip install me/pip install ${BKS} me/g" /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh
     /bin/bash /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh /tmp/jeedom/MerosSync/dependance
@@ -100,7 +100,6 @@ installDep() {
   #echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
   ${WEBSERVER_HOME}/resources/install_nodejs.sh
   apt-get install -y --no-install-recommends build-essential g++ python3-dev nodejs
-  python3 -m pip install ${BKS} --upgrade pip
   #remove unavailable package
   sed -E -i "s/python-dev/python-dev-is-python3/" /var/www/html/plugins/pushbullet/plugin_info/packages.json
   #old style dependencies
@@ -168,8 +167,8 @@ fixPipx() {
 
 #Main
 source /etc/os-release
-#Debian 12 does not allow installation through pip3 without
-if [[ $VERSION_ID == "12" ]]; then
+#Debian 12/13 does not allow installation through pip3 without
+if [[ $VERSION_ID =~ 1[23] ]]; then
   BKS="--break-system-packages"
 fi
 while getopts "dhpmvz" option; do
