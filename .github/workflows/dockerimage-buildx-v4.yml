@@ -28,4 +28,3 @@ jobs:
       build-dockerfile: './Docker/Dockerfile'
       push: true
     secrets: inherit
-

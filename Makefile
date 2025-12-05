@@ -18,31 +18,21 @@ lint: ## stop all containers
 	docker image pull hadolint/hadolint
 	docker run -i --rm hadolint/hadolint < Docker/Dockerfile
 
-buildv3: ## build v3 image
-	@echo -e "build image ...v3"
-	## docker compose -f compose-dev.yml build
-	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="release" --build-arg DISTRO="buster-slim" -f Docker/Dockerfile.v3 -t edgd1er/jeedom-rpi:v3-latest ./Docker
-
-buildt: ## build v4 image with trixie
+buildt: ## build v4 image with trixie/13
 	@echo -e "\n\nbuild image ...v4"
-	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="master" --build-arg DISTRO="trixie-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-latest ./Docker
+	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="master" --build-arg DISTRO="13-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-latest ./Docker
 
-build: ## build v4 image with bullseye
+build: ## build v4 image with bookworm/12
 	@echo -e "\n\nbuild image ...v4"
-	#docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="master" --build-arg DISTRO="bullseye-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-latest ./Docker
-	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="master" --build-arg DISTRO="bookworm-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-latest ./Docker
+	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="master" --build-arg DISTRO="12-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-latest ./Docker
 
-buildb: ## build v4 image with buster
-	@echo -e "\n\nbuild image ...v4 buster"
-	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="master" --build-arg DISTRO="buster-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:buster-v4-latest ./Docker
-
-alpha: ## build v4 alpha image --no-cache
+alpha: ## build v4 alpha image --no-cache with trixie/13
 	@echo -e "\n\nbuild image ...v4 alpha"
-	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="alpha" --build-arg DISTRO="trixie-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:alpha ./Docker
+	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="alpha" --build-arg DISTRO="13-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:alpha ./Docker
 
-beta: ## build v4 beta image --no-cache
+beta: ## build v4 beta image --no-cache with trixie/13
 	@echo -e "\n\nbuild image ...v4 beta" --no-cache
-	docker buildx build --load --progress plain  --build-arg aptCacher="${aptCacher}" --build-arg VERSION="beta" --build-arg DISTRO="bookworm-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:beta ./Docker
+	docker buildx build --load --progress plain  --build-arg aptCacher="${aptCacher}" --build-arg VERSION="beta" --build-arg DISTRO="13-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:beta ./Docker
 
 ver: ## check version
 	@JDM_VER=$$( grep -oP "(?<=v)4\.[0-9\.]+" README.md |head -1) ; \

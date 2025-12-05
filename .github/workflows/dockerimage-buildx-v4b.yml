@@ -15,7 +15,7 @@ on:
         type: string
       DISTRO:
         description: 'base image'
-        default: 'bookworm-slim'
+        default: '13-slim'
         required: true
         type: string
       PUSH:
