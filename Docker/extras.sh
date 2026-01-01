@@ -141,6 +141,7 @@ fixZwaveUI() {
   # remove yarn start / node is not local
   #echo fake package.json
   echo '{ "name": "zwave-js-ui", "version": "${E_ZWAVEVER}" }' > /var/www/html/plugins/zwavejs/resources/zwave-js-ui/package.json
+  npm install /var/www/html/plugins/zwavejs/resources/zwavejsd/
 
     # remove node modules check as project was not cloned.
   mkdir -p /var/www/html/plugins/zwavejs/resources/zwave-js-ui/
@@ -156,7 +157,7 @@ fixZwaveUI() {
 }
 
 fixPipx() {
-  if [[ 1 -eq $(grep -c "VERSION_ID=12" /etc/os-release) ]]; then
+  if [[ 1 -eq $(grep -cP "VERSION_ID=\"?1[23]" /etc/os-release) ]]; then
     sed -i "s/pipx install --force-reinstall --upgrade /pip3 install --break system-packages /g" /var/www/html/core/class/system.class.php
   else
     sed -i "s/pip3 install -force /pip3 install --break system-packages /g" /var/www/html/core/class/system.class.php
@@ -192,6 +193,9 @@ while getopts "dhpmvz" option; do
   v)
     set -x
     ;;
+  *)
+    usage
+    exit
   esac
 done
 
