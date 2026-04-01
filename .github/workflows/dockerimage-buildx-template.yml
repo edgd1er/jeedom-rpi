@@ -1,106 +1,168 @@
 name: reusable worflow template Docker buildx armhf+amd64
 
+permissions:
+  security-events: write  # Required for CodeQL
+  actions: read           # Required for some workflows
+  contents: read          # Required for checkout
+
 on:
   workflow_call:
     inputs:
-      image-name:
+      image_name:
+        default: 'jeedom-rpi'
+        description: 'image name'
         required: true
         type: string
-      build-context:
-        required: true
+      build_context:
+        default: './Docker'
+        required: false
         type: string
-      build-dockerfile:
+      build_dockerfile:
         description: 'Dockerfile'
-        default: './Docker/Dockerfile'
+        default: 'Dockerfile'
         type: string
       jdm_version:
         description: 'jeedom version'
         required: true
-        default: 'latest'
+        default: 'develop'
         type: string
       tag:
         description: 'docker tag'
         required: true
-        default: 'v4-latest'
+        default: 'develop'
         type: string
       push:
         description: 'push to registry'
         required: true
-        default: false
+        default: true
         type: boolean
       version:
-        description: 'master'
-        default: 'master'
+        description: 'develop'
+        default: 'develop'
         required: true
         type: string
       distro:
         description: 'base OS'
         required: true
         type: string
-        default: "bullseye-slim"
+        default: "13-slim"
 
 jobs:
-  buildx:
+  build-prepare:
     runs-on: ubuntu-latest
+    outputs:
+      image_name: ${{ inputs.image_name }}
+      jdm_version: ${{ inputs.jdm_version }}
+      build_context: ${{ inputs.build_context }}
+      build_dockerfile: ${{ inputs.build_dockerfile }}
+      distro: ${{ inputs.distro }}
+      push: ${{ inputs.push }}
+      tag: ${{ inputs.tag }}
+      version: ${{ inputs.version }}
     steps:
-      - name: env
-        run: env
-      - name: Checkout
-        uses: actions/checkout@v6
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          version: latest
-          install: true
-          use: true
-      - name: Builder instance name
-        run: echo ${{ steps.buildx.outputs.name }}
-      - name: Available platforms
-        run: echo ${{ steps.buildx.outputs.platforms }}
-      - name: Login to Docker hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          builder: ${{ steps.buildx.outputs.name }}
-          context: ${{ inputs.build-context }}
-          file: ${{ inputs.build-dockerfile }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          # removed linux/arm64
-          platforms: linux/amd64,linux/arm/v7,linux/arm64
-          push: ${{ inputs.push }}
-          no-cache-filters: final
+      # FIXME: can't use env object in reusable workflow inputs: https://github.com/orgs/community/discussions/26671
+      - run: |
+          echo "Exposing env vars for reusable workflow"
+          echo image_name: ${{ inputs.image_name }}
+          echo jdm_version: ${{ inputs.jdm_version }}
+          echo build_context: ${{ inputs.build_context }}
+          echo build_dockerfile: ${{ inputs.build_dockerfile }}
+          echo distro: ${{ inputs.distro }}
+          echo push: ${{ inputs.push }}
+          echo tag: ${{ inputs.tag }}
+          echo version: ${{ inputs.version }}
+          env
+
+  github-builder:
+      uses: docker/github-builder/.github/workflows/build.yml@v1
+      needs: build-prepare
+      permissions:
+          contents: read # same as global permissions
+          id-token: write # for signing attestation(s) with GitHub OIDC Token
+          #packages: write # required to push to GHCR
+      with:
+          setup-qemu: true
+          cache: true
+          cache-scope: build
+          fail-fast: true
+          context: ${{ needs.build-prepare.outputs.build_context }}
+          file: ${{ needs.build-prepare.outputs.build_dockerfile }}
+          output: image
           build-args: |
-            VERSION=${{ inputs.version }}
-            DISTRO=${{ inputs.distro }}
-            JDM_VERSION=${{ inputs.jdm_version }}
+            VERSION=${{ needs.build-prepare.outputs.version }}
+            DISTRO=${{ needs.build-prepare.outputs.distro }}
+            JDM_VERSION=${{ needs.build-prepare.outputs.jdm_version }}
             aptCacher: ''
-          tags: ${{ secrets.DOCKER_USER }}/${{ inputs.image-name }}:${{ inputs.tag }}
+          platforms: linux/amd64,linux/arm/v7,linux/arm64
+          push: ${{ needs.build-prepare.outputs.push == 'true' }}
+          set-meta-labels: true
+          meta-images: |
+            ${{ github.repository_owner }}/${{ needs.build-prepare.outputs.image_name }}
+          # ghcr.io/${{ github.repository_owner }}/jeedom-rpi
+          meta-tags: |
+            type=schedule,pattern=nightly
+            type=raw,value=develop,enable=${{ github.event_name == 'push' }}
+            type=raw,value=develop,enable=${{ github.event_name == 'workflow_dispatch' }}
+            type=ref,event=tag
+          meta-flavor: |
+            latest=${{ startsWith(github.ref, 'refs/tags/') }}
+          # FIXME: GHCR does not support the referrers API and spams the registry with sha-tagged images when cosigned: https://github.com/docker/github-builder/issues/109
+          sign: false
+      secrets:
+        registry-auths: |
+          - registry: docker.io
+            username: ${{ secrets.DOCKER_USER }}
+            password: ${{ secrets.DOCKER_TOKEN }}
 
   inspect-security:
     runs-on: ubuntu-latest
-    needs: buildx
+    needs: github-builder
+    permissions:
+      contents: read # same as global permissions
+      security-events: write
     steps:
+      - uses: actions/checkout@v6
+        with:
+            fetch-depth: 0  # Important for CodeQL
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ secrets.DOCKER_USER }}/${{ inputs.image-name }}:${{ inputs.tag }}
+          docker buildx imagetools inspect ${{ secrets.DOCKER_USER }}/${{ inputs.image_name }}:${{ inputs.tag }}
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Docker Scout Quickview, recommandations and CVEs
+        uses: docker/scout-action@v1
+        with:
+          command: quickview,cves,recommendations
+          image: ${{ secrets.DOCKER_USER }}/${{ inputs.image_name }}:${{ inputs.tag }}
+          sarif-file: sarif.output.json # This will generate the SARIF file
+          summary: true
+
+      - name: Docker Scout SBOM
+        uses: docker/scout-action@v1
+        with:
+          command: sbom
+          image: ${{ secrets.DOCKER_USER }}/${{ inputs.image_name }}:${{ inputs.tag }}
+          output: sbom.json
+
+      - name: Upload Docker Scout SARIF Report
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: sarif.output.json
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'docker.io/${{ secrets.DOCKER_USER }}/${{ inputs.image-name }}:${{ inputs.tag }}'
+          image-ref: '${{ secrets.DOCKER_USER }}/${{ inputs.image_name }}:${{ inputs.tag }}'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
+
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: 'trivy-results.sarif'

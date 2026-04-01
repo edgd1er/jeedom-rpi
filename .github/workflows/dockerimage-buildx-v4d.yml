@@ -1,0 +1,42 @@
+name: Docker buildx armhf+amd64 v4 develop
+
+on:
+  push:
+    branches:
+      - dev
+  schedule:
+    - cron: "15 20 * * 1"
+  workflow_dispatch:
+    inputs:
+      jdm_version:
+        description: 'jeedom version'
+        required: true
+        default: 'develop'
+        type: string
+      image_name:
+        description: 'image name'
+        required: true
+        default: 'jeedom-rpi'
+        type: string
+      distro:
+        description: 'base image'
+        required: true
+        default: '13-slim'
+        type: string
+      push:
+        description: 'push true/false'
+        required: true
+        default: true
+        type: boolean
+
+jobs:
+  build-v4-develop:
+    uses: ./.github/workflows/dockerimage-buildx-template.yml
+    with:
+      image_name: ${{ github.event_name == 'push' && 'jeedom-rpi' || inputs.image_name }}
+      jdm_version: ${{ github.event_name == 'push' && 'develop' || inputs.jdm_version }}
+      tag: ${{ github.event_name == 'push' && 'develop' || inputs.tag }}
+      version: ${{ github.event_name == 'push' && 'develop' || inputs.version }}
+      distro: ${{ github.event_name == 'push' && '13-slim' || inputs.distro }}
+      push: ${{ github.event_name == 'push' && true || inputs.push }}
+    secrets: inherit
