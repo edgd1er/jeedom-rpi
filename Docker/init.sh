@@ -41,10 +41,18 @@ setTimeZone() {
 }
 
 mysql_sql() {
+  local query="$*"
+
+  db_name=${DB_NAME:-}
+  # Si la requête est "SHOW GRANTS", ignorer DB_NAME
+  if [[ "${query,,}" =~ ^(show|create) ]]; then
+    db_name=""
+  fi
+
   if [ "localhost" == "${DB_HOST}" ]; then
-    echo "$@" | mysql -uroot -P${DB_PORT}
+    mysql -uroot -P${DB_PORT} ${db_name:+-D} ${DB_NAME} -B -s -e "\"$query\""
   else
-    echo "$@" | mysql -u${DB_USERNAME} -p${DB_PASSWORD} -h ${DB_HOST} -P${DB_PORT}
+    mysql -u${DB_USERNAME} -p${DB_PASSWORD} -h ${DB_HOST} -P${DB_PORT} ${db_name:+-D}  ${DB_NAME} -B -s -e "$query"
   fi
   if [ $? -ne 0 ]; then
     echo "${ROUGE}Ne peut exécuter $* dans MySQL - Annulation${NORMAL}"
@@ -341,7 +349,13 @@ fi
 sh ${WEBSERVER_HOME}/install/install.sh -s 12 -v ${VERSION} -w ${WEBSERVER_HOME} -i docker
 
 echo "Jeedom version: $(cat ${WEBSERVER_HOME}/core/config/version)"
-#echo "Jeedom db version: "$(mysql_sql  "select c.value from config c where c.plugin='core' and c.key='version';")
+# set jeedom branch according to build
+current_version=$(mysql_sql "select c.value from config c where c.plugin='core' and c.key='core::branch'")
+if [[ "${VERSION}" != "${current_version}" ]]; then
+  echo "setting core branch according, was ${current_version}, to build tag ${VERSION}"
+  res=$(mysql_sql "UPDATE jeedom.config SET value='develop' WHERE plugin='core' AND `key`='core::branch'")
+fi
+echo "Jeedom core branch: "$(mysql_sql "select c.value from config c where c.plugin='core' and c.key='core::branch'")
 
 #WIP: fix plugins, install dependancies
 if [[ 1 -eq ${E_DEP:-0} ]] || [[ 1 -eq ${E_MEROSS:-0} ]] || [[ ${E_PUSH=0:-0} ]] || [[ ${E_ZWAVE:-0} ]]; then

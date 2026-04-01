@@ -3,7 +3,7 @@ name: Docker buildx armhf+amd64 v4 stable
 on:
   workflow_dispatch:
     inputs:
-      JDM_VERSION:
+      jdm_version:
         description: 'jeedom version'
         required: true
         default: 'latest'
@@ -19,12 +19,10 @@ jobs:
     uses: ./.github/workflows/dockerimage-buildx-template.yml
     with:
       image-name: jeedom-rpi
-      build-context: './Docker'
       jdm_version: latest
-      tag: v4-latest
+      tag: latest
       version: master
       #12 bookworm stable
       distro: 12-slim
-      build-dockerfile: './Docker/Dockerfile'
       push: true
     secrets: inherit
