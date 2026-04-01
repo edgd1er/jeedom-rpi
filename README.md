@@ -31,7 +31,8 @@ Last version and major changes:
 | [v4.4.9](https://doc.jeedom.com/fr_FR/core/4.4/changelog)  | 24/07/24 major change in repo, master branch replace v4-stable. move to bookworm            |
 | [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02 / branch deleted on 2024/07/22. V3 build disabled                                  |
 
-/!\ Asof 2024/07/30, v4-latest docker tag is now based on bookworm (v12). many plugins are still migrating to v12.
+/!\ Asof 2026/04/01, v4-beta docker tag is now based on bookworm (v13), and based on develop branch. In jeedom core, beta branch is abandonned.
+/!\ Asof 2024/07/30, v4-latest docker tag is now based on bookworm (v12).
 https://community.jeedom.com/t/compatibilite-des-plugins-avec-debian-12-bookworm-php-8-python-3-11/126200/142
 /!\ Asof 2023/01/02, v4-latest docker tag is now based on bullseye (v11) as zwave plugin has migrated to zwave-js-ui
 plugin. v4-buster-latest (v10) is available for plugins not compatible with debian:bullseye (V11).
