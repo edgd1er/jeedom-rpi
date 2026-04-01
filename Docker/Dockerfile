@@ -48,12 +48,12 @@ RUN if [[ -n ${aptCacher:-""} ]]; then printf "Acquire::http::Proxy \"http://%s:
     && npm install n -g && n 20 \
     && update-ca-certificates --fresh \
     #install python2 pip from boostrap as not in repo anymore for debian 10 \
-    && if [[ ${DISTRO} =~ (buster|10) ]]; then apt-get install -y --no-install-recommends python python2 snmp-mibs-downloader \
+    && if [[ ${DISTRO} =~ (buster|10) ]]; then apt-get install -y --no-install-recommends software-properties-common python python2 snmp-mibs-downloader \
     ntpdate ntp && add-apt-repository non-free ; \
     #install python2 pip from boostrap as not in repo anymore for debian 11 \
-    elif [[ ${DISTRO} =~ (bullseye|11) ]]; then apt-get install -y --no-install-recommends python ntpdate ntp \
+    elif [[ ${DISTRO} =~ (bullseye|11) ]]; then apt-get install -y --no-install-recommends software-properties-common python ntpdate ntp \
       curl https://bootstrap.pypa.io/pip/2.7/get-pip.py | python - ; add-apt-repository non-free ; \
-    elif [[ ${DISTRO} =~ (bullseye|12) ]]; then apt-get install -y --no-install-recommends libcurl3-gnutls ntpdate ntp \
+    elif [[ ${DISTRO} =~ (bullseye|12) ]]; then apt-get install -y --no-install-recommends software-properties-common libcurl3-gnutls ntpdate ntp \
     && add-apt-repository non-free ; \
     # Trixie specific: ntpsec replaces ntp (older version of ntpsec-ntpdate also needed) \
     elif [[ ${DISTRO} =~ (trixie|13) ]]; then apt-get install -y --no-install-recommends ntpsec-ntpdate chrony libcurl3t64-gnutls ; fi \
