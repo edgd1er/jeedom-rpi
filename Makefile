@@ -42,7 +42,8 @@ ver: ## check version
 	echo "v4 Jeedom local: $${JDM_VER} remote: $${jdm}" ; \
 	jdmb=$$( curl -s "https://raw.githubusercontent.com/jeedom/core/beta/core/config/version"); \
 	jdma=$$( curl -s "https://raw.githubusercontent.com/jeedom/core/alpha/core/config/version"); \
-	echo "alpha: $${jdma}, beta: $${jdmb}" ; \
+	jdmd=$$( curl -s "https://raw.githubusercontent.com/jeedom/core/develop/core/config/version"); \
+	echo "alpha: $${jdma}, beta: $${jdmb}, develop: $${jdmd}" ; \
 	echo "Zwave-ui-js local: $${ZWAVE_VER} remote: $${zwave#v*}" ; \
 	if [[ $${jdm} != $${JDM_VER} ]]; then \
 	  echo "Jeedom update detected: https://raw.githubusercontent.com/jeedom/core/master/core/config/version" ;\

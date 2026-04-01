@@ -24,12 +24,12 @@ Forked from https://github.com/CodaFog/jeedom-rpi
 
 Last version and major changes:
 
-| Last Version                                               | Commit Date                                                                                                     |
-|------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
-| [v4.5.2](https://doc.jeedom.com/fr_FR/core/4.5/changelog)  | 01/01/26 changes in jeedom-core, no change in image.                                                            |
+| Last Version                                               | Commit Date                                                                                 |
+|------------------------------------------------------------|---------------------------------------------------------------------------------------------|
+| [v4.5.3](https://doc.jeedom.com/fr_FR/core/4.5/changelog) | 01/04/26 changes in jeedom-core.                                                           |
 | [v4.4.15](https://doc.jeedom.com/fr_FR/core/4.4/changelog) | 04/09/24 changes in vars to match newly added vars in jeedom/core docker image. MARIADB_* are stille supported. |
-| [v4.4.9](https://doc.jeedom.com/fr_FR/core/4.4/changelog)  | 24/07/24 major change in repo, master branch replace v4-stable. move to bookworm                                |
-| [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02 / branch deleted on 2024/07/22. V3 build disabled                                                      |
+| [v4.4.9](https://doc.jeedom.com/fr_FR/core/4.4/changelog)  | 24/07/24 major change in repo, master branch replace v4-stable. move to bookworm            |
+| [v3.3.60](https://doc.jeedom.com/en_US/core/3.3/changelog) | 23/01/02 / branch deleted on 2024/07/22. V3 build disabled                                  |
 
 /!\ Asof 2024/07/30, v4-latest docker tag is now based on bookworm (v12). many plugins are still migrating to v12.
 https://community.jeedom.com/t/compatibilite-des-plugins-avec-debian-12-bookworm-php-8-python-3-11/126200/142
