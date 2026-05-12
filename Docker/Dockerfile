@@ -43,7 +43,7 @@ RUN if [[ -n ${aptCacher:-""} ]]; then \
         passwd usbutils usb.ids ca-certificates unzip sudo cron plocate tar logrotate fail2ban \
         htop vim smbclient git libexpat1 ssl-cert ffmpeg usbutils ssh espeak-ng \
         at mariadb-client mariadb-common bzip2 gpg gpg-agent gpgconf xz-utils udev jq \
-        apache2 apache2-utils npm supervisor && \
+        apache2 apache2-utils npm supervisor python3-pip && \
     # Installation de Node.js via n
     npm install -g n && n 24 && \
     # Mise à jour des certificats CA
