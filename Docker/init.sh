@@ -15,6 +15,9 @@ if [[ ${VERSION} =~ (master|alpha|beta) ]]; then
   DATABASE="-d 0"
 fi
 
+#Get os information
+source /etc/os-release
+
 #Variable conversions
 JEEDOM_ENCRYPTION_KEY=${JEEDOM_ENCRYPTION_KEY:-${JEEDOM_ENC_KEY}}
 
@@ -353,9 +356,10 @@ echo "Jeedom version: $(cat ${WEBSERVER_HOME}/core/config/version)"
 current_version=$(mysql_sql "select c.value from config c where c.plugin='core' and c.key='core::branch'")
 if [[ "${VERSION}" != "${current_version}" ]]; then
   echo "setting core branch according, was ${current_version}, to build tag ${VERSION}"
-  res=$(mysql_sql "UPDATE jeedom.config SET value='develop' WHERE plugin='core' AND `key`='core::branch'")
+  res=$(mysql_sql "UPDATE jeedom.config SET value='develop' WHERE plugin='core' AND key='core::branch'")
 fi
-echo "Jeedom core branch: "$(mysql_sql "select c.value from config c where c.plugin='core' and c.key='core::branch'")
+echo "Jeedom core branch: $(mysql_sql "SELECT c.value FROM config c WHERE c.plugin='core' AND c.key='core::branch'")"
+#echo "Jeedom core branch: "$(mysql_sql "select c.value from config c where c.plugin='core' and c.key='core::branch'")
 
 #WIP: fix plugins, install dependancies
 if [[ 1 -eq ${E_DEP:-0} ]] || [[ 1 -eq ${E_MEROSS:-0} ]] || [[ ${E_PUSH=0:-0} ]] || [[ ${E_ZWAVE:-0} ]]; then
