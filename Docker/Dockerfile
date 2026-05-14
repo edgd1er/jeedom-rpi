@@ -67,7 +67,8 @@ RUN apt-get update && if [[ ${DISTRO} =~ (buster|10) ]]; then \
         apt-get install -y --no-install-recommends software-properties-common libcurl3-gnutls ntpdate ntp && \
         add-apt-repository non-free; \
     elif [[ ${DISTRO} =~ (trixie|13) ]]; then \
-        apt-get install -y --no-install-recommends ntpsec-ntpdate chrony libcurl3t64-gnutls; \
+        apt-get install -y --no-install-recommends ntpsec-ntpdate chrony libcurl3t64-gnutls && \
+        sed -i -E "s/^rtcsync/#rtcsync/" /etc/chrony/chrony.conf ; \
     fi && \
     apt-get autoremove -y --purge && \
     apt-get clean && \
