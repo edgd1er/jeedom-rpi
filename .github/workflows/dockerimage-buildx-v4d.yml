@@ -35,8 +35,8 @@ jobs:
     with:
       image_name: ${{ github.event_name == 'push' && 'jeedom-rpi' || inputs.image_name }}
       jdm_version: ${{ github.event_name == 'push' && 'develop' || inputs.jdm_version }}
-      tag: ${{ github.event_name == 'push' && 'develop' || inputs.tag }}
-      version: ${{ github.event_name == 'push' && 'develop' || inputs.version }}
+      tag: 'develop'
+      version: 'develop'
       distro: ${{ github.event_name == 'push' && '13-slim' || inputs.distro }}
-      push: ${{ github.event_name == 'push' && true || inputs.push }}
+      push: ${{ github.event_name == 'push' && 'true' == 'true' || inputs.push }}
     secrets: inherit

@@ -123,6 +123,11 @@ changeZwaveVersion() {
 # do not install nodejs, yarn, do not clone zwavejs-ui, change zwavejs-ui's expected version.
 # better option: https://github.com/lxrootard/zwavejs (allow remote zwavejs-ui)
 fixZwaveUI() {
+  php /var/www/html/core/class/../php/jeecli.php plugin install mqtt2
+  php /var/www/html/core/class/../php/jeecli.php plugin dependancy_end zwavejs
+  [[ -d /var/www/html/plugins/zwavejs ]] && git config --global --add safe.directory /var/www/html/plugins/zwavejs || return
+  cd /var/www/html/plugins/zwavejs
+  git fetch && git reset --hard
   echo "better option: https://github.com/lxrootard/zwavejs (allow remote zwavejs-ui)"
   changeZwaveVersion ${E_ZWAVEVER}
   #no health exists for zwavejsui
@@ -141,10 +146,11 @@ fixZwaveUI() {
   # remove yarn start / node is not local
   #echo fake package.json
   echo '{ "name": "zwave-js-ui", "version": "${E_ZWAVEVER}" }' > /var/www/html/plugins/zwavejs/resources/zwave-js-ui/package.json
+  cd /var/www/html/
   npm install /var/www/html/plugins/zwavejs/resources/zwavejsd/
-
     # remove node modules check as project was not cloned.
   mkdir -p /var/www/html/plugins/zwavejs/resources/zwave-js-ui/
+  [[ -d /var/www/html/plugins/zwavejs/resources/zwave-js-ui/node_modules ]] && rm -Rf /var/www/html/plugins/zwavejs/resources/zwave-js-ui/node_modules || true
   touch /var/www/html/plugins/zwavejs/resources/zwave-js-ui/node_modules
   # detect nodeID_XX as XX
   echo "in zwavejsui uncheck 'Use nodes name instead of numeric nodeIDs' in parameters"

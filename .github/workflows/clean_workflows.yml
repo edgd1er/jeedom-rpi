@@ -15,21 +15,21 @@ on:
   push:
     branches:
       - master
-      - docker
+      - dev
   pull_request:
     branches:
       - master
-      - docker
+      - dev
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
   clean:
-    #strategy:
-    #  matrix:
-    #    branch:
-    #      - master
-    #      - docker
+    strategy:
+      matrix:
+        branch:
+          - master
+          - dev
     #      - gh_pb
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -51,7 +51,7 @@ jobs:
             timed_out
           save_period: 1
           save_min_runs_number: 0
-          #branch: ${{ matrix.branch }}
+          branch: ${{ matrix.branch }}
           dry: ${{ github.event.inputs.dry || env.DRY }}
 
       - name: Delete workflow runs dmvict
@@ -60,7 +60,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           save_period: 30
           save_min_runs_number: 5
-          #branch: ${{ matrix.branch }}
+          branch: ${{ matrix.branch }}
           dry: ${{ github.event.inputs.dry || env.DRY }}
 
       - name: Delete workflow runs mattracks

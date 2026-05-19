@@ -359,9 +359,12 @@ if [[ "${VERSION}" != "${current_version}" ]]; then
   res=$(mysql_sql "UPDATE jeedom.config SET value='develop' WHERE plugin='core' AND key='core::branch'")
 fi
 echo "Jeedom core branch: $(mysql_sql "SELECT c.value FROM config c WHERE c.plugin='core' AND c.key='core::branch'")"
-#echo "Jeedom core branch: "$(mysql_sql "select c.value from config c where c.plugin='core' and c.key='core::branch'")
 
-#WIP: fix plugins, install dependancies
-if [[ 1 -eq ${E_DEP:-0} ]] || [[ 1 -eq ${E_MEROSS:-0} ]] || [[ ${E_PUSH=0:-0} ]] || [[ ${E_ZWAVE:-0} ]]; then
-  /root/extras.sh
-fi
+#WIP: fix plugins, install dependencies
+OPTIONS=""
+[[ 0 -ne ${E_DEP:-0} ]]  && OPTIONS+=" -d" || true
+[[ 0 -ne ${E_MEROSS:-0} ]] && OPTIONS+=" -m" || true
+[[ 0 -ne ${E_PUSH:-0} ]] && OPTIONS+=" -p" || true
+[[ 0 -ne ${E_ZWAVE:-0} ]] && OPTIONS++" -z" || true
+[[ -n ${OPTIONS} ]] && /root/extras.sh ${OPTIONS} || true
+
