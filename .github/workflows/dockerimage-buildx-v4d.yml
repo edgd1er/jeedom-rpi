@@ -33,10 +33,10 @@ jobs:
   build-v4-develop:
     uses: ./.github/workflows/dockerimage-buildx-template.yml
     with:
-      image_name: ${{ github.event_name == 'push' && 'jeedom-rpi' || inputs.image_name }}
-      jdm_version: ${{ github.event_name == 'push' && 'develop' || inputs.jdm_version }}
+      image_name: ${{ github.event_name == 'workflow' && inputs.image_name || 'jeedom-rpi'  }}
+      jdm_version: ${{ github.event_name == 'workflow' && inputs.jdm_version  || 'develop'}}
       tag: 'develop'
       version: 'develop'
-      distro: ${{ github.event_name == 'push' && '13-slim' || inputs.distro }}
-      push: ${{ github.event_name == 'push' && 'true' == 'true' || inputs.push }}
+      distro: ${{ github.event_name == 'workflow' && inputs.distro || '13-slim' }}
+      push: ${{ github.event_name == 'workflow' && inputs.push || 'true' == 'true' }}
     secrets: inherit

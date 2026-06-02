@@ -18,7 +18,7 @@ jobs:
   build-v4:
     uses: ./.github/workflows/dockerimage-buildx-template.yml
     with:
-      image-name: jeedom-rpi
+      image_name: jeedom-rpi
       jdm_version: latest
       tag: latest
       version: master
