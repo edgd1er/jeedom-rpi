@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: get J4 version
         id: getJ4version
         run: |
@@ -30,7 +30,7 @@ jobs:
       if: false
       steps:
         - name: Checkout
-          uses: actions/checkout@v6
+          uses: actions/checkout@v7
         - name: get J3 version
           id: getJ3version
           run: |
