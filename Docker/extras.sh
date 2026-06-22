@@ -178,6 +178,10 @@ source /etc/os-release
 if [[ $VERSION_ID =~ 1[23] ]]; then
   BKS="--break-system-packages"
 fi
+
+mkdir -p /var/www/.cache/pip
+chown -R www-data: /var/www/.cache/
+
 while getopts "dhpmvz" option; do
   case $option in
   d)
