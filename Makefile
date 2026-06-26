@@ -40,10 +40,10 @@ ver: ## check version
 	zwave=$$( curl -s "https://api.github.com/repos/zwave-js/zwave-js-ui/releases/latest" | jq -r .tag_name) ; \
 	ZWAVE_VER=$$(grep -oP "(?<=ZWAVE_VERSION: ).+" .github/workflows/checkVersion.yml) ; \
 	echo "v4 Jeedom local: $${JDM_VER} remote: $${jdm}" ; \
-	jdmb=$$( curl -s "https://raw.githubusercontent.com/jeedom/core/beta/core/config/version"); \
-	jdma=$$( curl -s "https://raw.githubusercontent.com/jeedom/core/alpha/core/config/version"); \
+	jdmm=$$( curl -s "https://raw.githubusercontent.com/jeedom/core/master/core/config/version"); \
+	jdmr=$$( curl -s "https://raw.githubusercontent.com/jeedom/core/release/core/config/version"); \
 	jdmd=$$( curl -s "https://raw.githubusercontent.com/jeedom/core/develop/core/config/version"); \
-	echo "alpha: $${jdma}, beta: $${jdmb}, develop: $${jdmd}" ; \
+	echo "master: $${jdmm}, release: $${jdmr}, develop: $${jdmd}" ; \
 	echo "Zwave-ui-js local: $${ZWAVE_VER} remote: $${zwave#v*}" ; \
 	if [[ $${jdm} != $${JDM_VER} ]]; then \
 	  echo "Jeedom update detected: https://raw.githubusercontent.com/jeedom/core/master/core/config/version" ;\

@@ -4,10 +4,16 @@ on:
   workflow_dispatch:
     inputs:
       jdm_version:
-        description: 'jeedom version'
+        description: 'jeedom tag'
         required: true
-        default: 'latest'
+        default: 'master'
         type: string
+      version:
+        description: 'branch'
+        required: true
+        default: 'master'
+        type: string
+
 #  push:
 #    branches:
 #      - master
@@ -19,9 +25,9 @@ jobs:
     uses: ./.github/workflows/dockerimage-buildx-template.yml
     with:
       image_name: jeedom-rpi
-      jdm_version: latest
-      tag: latest
-      version: master
+      jdm_version: ${{ github.event_name == 'workflow' && inputs.jdm_version  || 'master'}}
+      tag: ${{ github.event_name == 'workflow' && inputs.jdm_version  || 'master'}}
+      version: ${{ github.event_name == 'workflow' && inputs.version  || 'master'}}
       #12 bookworm stable
       distro: 12-slim
       push: true
