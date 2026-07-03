@@ -67,7 +67,7 @@ RUN apt-get update && if [[ ${DISTRO} =~ (buster|10) ]]; then \
         apt-get install -y --no-install-recommends software-properties-common libcurl3-gnutls ntpdate ntp && \
         add-apt-repository non-free; \
     elif [[ ${DISTRO} =~ (trixie|13) ]]; then \
-        apt-get install -y --no-install-recommends ntpsec-ntpdate chrony libcurl3t64-gnutls && \
+        apt-get install -y --no-install-recommends ntpsec-ntpdate chrony libcurl3t64-gnutls python-is-python3 python3-venv && \
         sed -i -E "s/^rtcsync/#rtcsync/" /etc/chrony/chrony.conf ; \
     fi && \
     apt-get autoremove -y --purge && \
@@ -113,7 +113,7 @@ RUN echo "Installation de Jeedom VERSION: ${VERSION} / ${JDM_VERSION}" && \
     if [[ ${VERSION,,} =~ (alpha|beta|develop|master|main) ]]; then \
         DATABASE="-d 0"; \
     fi && \
-    # Étapes d'installation
+    # Étapes d installation
     apt-get update && \
     /root/install_docker.sh -s 4 -v "${VERSION}" -i docker "${DATABASE}" && \
     /root/install_docker.sh -s 5 -v "${VERSION}" -i docker "${DATABASE}" && \
