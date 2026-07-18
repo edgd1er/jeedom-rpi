@@ -30,11 +30,17 @@ usage() {
   echo -e "\t-z\tzwave: remove zwavejs-ui installation, expect zwavejs-ui to run elsewhere, not aside with jeedom."
 }
 
+install_plugin(){
+  #install or dependancy_end
+  php /var/www/html/core/class/../php/jeecli.php plugin ${2:-install} ${1}
+}
+
 pushbullet() {
   if [[ -d /var/www/html/plugins/pushbullet ]]; then
+    install_plugin pushbullet
     [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall -y ${BKS} pushbullet-python || true
     [[ -n $(which pipx) ]] && pipx uninstall -y websocket-client || true
-    pip3 install ${BKS} websocket-client pushbullet.py
+    pip3 install ${BKS} websocket-client pushbullet.py pip legacy-cgi dummy
     #Fix listener
     lstnr=/usr/local/lib/python3.11/dist-packages/pushbullet/listener.py
     if [[ -f ${lstnr} ]] && [[ 0 -eq $(grep -c "on_message(self, t, message)" ${lstnr}) ]]; then
@@ -53,14 +59,20 @@ pushbullet() {
     fi
     # pushbullet: replace obsolete websocket
     if [[ -d /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket ]]; then
+      [[ -d /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket.old ]] && rm -Rf /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket || true;
       mv /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket.old
     fi
+    #python3.13 collections is collections.abc
+    sed -i -E "s#from collections #from collections.abc #" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/requests/packages/urllib3/_collections.py
+    sed -i -E "s#from collections #from collections.abc #" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/requests/packages/urllib3/_collections.py
   fi
 }
 
 meross() {
   # install meross iot as global package
   if [[ -d /var/www/html/plugins/MerosSync ]]; then
+    apt install -y python$(python --version | grep -oP "[0-9\.]{4}")-venv
+    install_plugin MerosSync
     #grep -P '\$cmd = dirname.*pip list' core/class/MerosSync.class.php
     mkdir -p /var/www/html/plugins/MerosSync/.venvs/merosssync/bin
     ln -sf /usr/bin/pip3 /var/www/html/plugins/MerosSync/.venvs/merosssync/bin/pip
@@ -123,8 +135,8 @@ changeZwaveVersion() {
 # do not install nodejs, yarn, do not clone zwavejs-ui, change zwavejs-ui's expected version.
 # better option: https://github.com/lxrootard/zwavejs (allow remote zwavejs-ui)
 fixZwaveUI() {
-  php /var/www/html/core/class/../php/jeecli.php plugin install mqtt2
-  php /var/www/html/core/class/../php/jeecli.php plugin dependancy_end zwavejs
+  install_plugin mqtt2
+  install_plugin zwavejs dependancy_end
   [[ -d /var/www/html/plugins/zwavejs ]] && git config --global --add safe.directory /var/www/html/plugins/zwavejs || return
   cd /var/www/html/plugins/zwavejs
   git fetch && git reset --hard
@@ -182,7 +194,7 @@ fi
 mkdir -p /var/www/.cache/pip
 chown -R www-data: /var/www/.cache/
 
-while getopts "dhpmvz" option; do
+while getopts "dhpmsvz" option; do
   case $option in
   d)
     E_DEP=1
@@ -196,6 +208,9 @@ while getopts "dhpmvz" option; do
     ;;
   m)
     E_MEROSS=1
+    ;;
+  s)
+    install_plugin speedtestByOokla
     ;;
   z)
     E_ZWAVE=1
