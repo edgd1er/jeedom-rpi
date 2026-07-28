@@ -37,34 +37,50 @@ install_plugin(){
 
 pushbullet() {
   if [[ -d /var/www/html/plugins/pushbullet ]]; then
-    install_plugin pushbullet
+    cd /var/www/html/plugins/pushbullet
+    #add fixed plugin source
+    if [[ 0 -ne $(git remote -v 2>&1 >/de/null) ]]; then
+      git init
+      git config --global --add safe.directory /var/www/html/plugins/pushbullet
+      git remote add origin https://github.com/edgd1er/jeedom_pushbullet.git
+    fi
+    git fetch && git reset --hard
+    #install_plugin pushbullet
     [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall -y ${BKS} pushbullet-python || true
     [[ -n $(which pipx) ]] && pipx uninstall -y websocket-client || true
-    pip3 install ${BKS} websocket-client pushbullet.py pip legacy-cgi dummy
+    pip3 install ${BKS} websocket-client pushbullet.py pip legacy-cgi
     #Fix listener
-    lstnr=/usr/local/lib/python3.11/dist-packages/pushbullet/listener.py
-    if [[ -f ${lstnr} ]] && [[ 0 -eq $(grep -c "on_message(self, t, message)" ${lstnr}) ]]; then
-      sed -i "s/on_message(self, message)/on_message(self, t, message)/" ${lstnr}
-    fi
+    #lstnr=/usr/local/lib/python3.11/dist-packages/pushbullet/listener.py
+    #if [[ -f ${lstnr} ]] && [[ 0 -eq $(grep -c "on_message(self, t, message)" ${lstnr}) ]]; then
+    #  sed -i "s/on_message(self, message)/on_message(self, t, message)/" ${lstnr}
+    #fi
     # pushbullet: replace object with jeeObject
-    sed -i 's/(object/(jeeObject/' /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
-    grep -iP "\((|jee)object" /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
+    #sed -i 's/(object/(jeeObject/' /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
+   # grep -iP "\((|jee)object" /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
 
-    if [[ -f /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py ]]; then
+    #if [[ -f /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py ]]; then
       # pushbullet: change tmp path
-      sed -i "s#path = os.path.dirname(os.path.realpath(__file__))+'/../../../../tmp'#path = '/tmp'#" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py
+      #sed -i "s#path = os.path.dirname(os.path.realpath(__file__))+'/../../../../tmp'#path = '/tmp'#" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py
       # pushbullet: activation du log du daemon
-      sed -i 's#/dev/null#/var/www/html/log/pushbullet_daemon.log#' /var/www/html/plugins/pushbullet/core/class/pushbullet.class.php
-      sed -i "s#/tmp/pushbullet.log#/var/www/html/log/pushbullet.log#" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py
-    fi
+      #sed -i 's#/dev/null#/var/www/html/log/pushbullet_daemon.log#' /var/www/html/plugins/pushbullet/core/class/pushbullet.class.php
+      #sed -i "s#/tmp/pushbullet.log#/var/www/html/log/pushbullet.log#" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py
+    #fi
     # pushbullet: replace obsolete websocket
     if [[ -d /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket ]]; then
       [[ -d /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket.old ]] && rm -Rf /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket || true;
       mv /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket.old
     fi
+    # pushbullet: replace obsolete requests
+    if [[ -d /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/requests ]]; then
+      [[ -d /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/requests.old ]] && rm -Rf /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/requests || true;
+      mv /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/requests /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/requests.old
+    fi
+
     #python3.13 collections is collections.abc
-    sed -i -E "s#from collections #from collections.abc #" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/requests/packages/urllib3/_collections.py
-    sed -i -E "s#from collections #from collections.abc #" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/requests/packages/urllib3/_collections.py
+    #sed -i -E "s#from collections #from collections.abc #" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/requests/packages/urllib3/_collections.py
+    #sed -i -E "s#from collections #from collections.abc #" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/requests/packages/urllib3/_collections.py
+    #replace file command
+    #sed -i -E "s#file\(#open\(#" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py
   fi
 }
 
@@ -141,37 +157,37 @@ fixZwaveUI() {
   cd /var/www/html/plugins/zwavejs
   git fetch && git reset --hard
   echo "better option: https://github.com/lxrootard/zwavejs (allow remote zwavejs-ui)"
-  changeZwaveVersion ${E_ZWAVEVER}
+  #changeZwaveVersion ${E_ZWAVEVER}
   #no health exists for zwavejsui
-  sed -i -r 's/(return )\(\$b\)/\1true/' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  #sed -i -r 's/(return )\(\$b\)/\1true/' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   # do not install zwave js, nor dependencies
-  echo -e "{\"plugin\": {\"mqtt2\": {}},\"apt\": {},\"pre-install\": {},\"post-install\": {}}" | jq . >/var/www/html/plugins/zwavejs/plugin_info/packages.json
+  #echo -e "{\"plugin\": {\"mqtt2\": {}},\"apt\": {},\"pre-install\": {},\"post-install\": {}}" | jq . >/var/www/html/plugins/zwavejs/plugin_info/packages.json
   # remove kill from plugin as no daemon are running.
-  sed -i '/isRunning() {/a \ \           return true;' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
-  sed -i '/deamon_stop() {/a \ \             return true;' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  #sed -i '/isRunning() {/a \ \           return true;' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  #sed -i '/deamon_stop() {/a \ \             return true;' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   #sed -i '232i        return $return;' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   # do not start daemon
-  sed -i "s/\$cmd .= ' yarn start';/#\$cmd .= ' yarn start';/" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
-  sed -i 's/ exec(\$cmd)/#exec(\$cmd)/' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  #sed -i "s/\$cmd .= ' yarn start';/#\$cmd .= ' yarn start';/" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  #sed -i 's/ exec(\$cmd)/#exec(\$cmd)/' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   # remove kill from plugin as no daemon are running.
-  sed -i 's% system::kill(%#system::kill(%' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  #sed -i 's% system::kill(%#system::kill(%' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   # remove yarn start / node is not local
   #echo fake package.json
-  echo '{ "name": "zwave-js-ui", "version": "${E_ZWAVEVER}" }' > /var/www/html/plugins/zwavejs/resources/zwave-js-ui/package.json
-  cd /var/www/html/
-  npm install /var/www/html/plugins/zwavejs/resources/zwavejsd/
-    # remove node modules check as project was not cloned.
-  mkdir -p /var/www/html/plugins/zwavejs/resources/zwave-js-ui/
-  [[ -d /var/www/html/plugins/zwavejs/resources/zwave-js-ui/node_modules ]] && rm -Rf /var/www/html/plugins/zwavejs/resources/zwave-js-ui/node_modules || true
-  touch /var/www/html/plugins/zwavejs/resources/zwave-js-ui/node_modules
+  #echo '{ "name": "zwave-js-ui", "version": "${E_ZWAVEVER}" }' > /var/www/html/plugins/zwavejs/resources/zwave-js-ui/package.json
+  #cd /var/www/html/
+  #npm install /var/www/html/plugins/zwavejs/resources/zwavejsd/
+  # remove node modules check as project was not cloned.
+  #mkdir -p /var/www/html/plugins/zwavejs/resources/zwave-js-ui/
+  #[[ -d /var/www/html/plugins/zwavejs/resources/zwave-js-ui/node_modules ]] && rm -Rf /var/www/html/plugins/zwavejs/resources/zwave-js-ui/node_modules || true
+  #touch /var/www/html/plugins/zwavejs/resources/zwave-js-ui/node_modules
   # detect nodeID_XX as XX
-  echo "in zwavejsui uncheck 'Use nodes name instead of numeric nodeIDs' in parameters"
+  #echo "in zwavejsui uncheck 'Use nodes name instead of numeric nodeIDs' in parameters"
   # log debug unknown key
-  sed -i "s/'\.__('Le message reçu est de type inconnu', __FILE__)/, key: '.\$key.__('. Le message reçu est de type inconnu', __FILE__)/" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  #sed -i "s/'\.__('Le message reçu est de type inconnu', __FILE__)/, key: '.\$key.__('. Le message reçu est de type inconnu', __FILE__)/" /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
   # remove port controle
-  if [[ $(grep -c 'if (@!file_exists($port)' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php) -eq 0 ]]; then
-    sed -i '/if (@!file_exists($port)) {/,+3d' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
-  fi
+  #if [[ $(grep -c 'if (@!file_exists($port)' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php) -eq 0 ]]; then
+  #  sed -i '/if (@!file_exists($port)) {/,+3d' /var/www/html/plugins/zwavejs/core/class/zwavejs.class.php
+  #fi
 }
 
 fixPipx() {
