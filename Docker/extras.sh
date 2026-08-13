@@ -25,7 +25,8 @@ usage() {
   echo -e "\t-h\tHelp: cette aide"
   echo -e "\t-d\tdependancies: install all dependancies of found plugins."
   echo -e "\t-m\tmeross: fix meross plugin installation"
-  echo -e "\t-p\tPushbullet: fix plugin's installation"
+  echo -e "\t-p\tpushbullet: fix pusgbullet's installation"
+  echo -e "\t-s\tspeedtestByOokla: fix speedtest's installation"
   echo -e "\t-v\tverbose: set -x for the bash, show executed commands"
   echo -e "\t-z\tzwave: remove zwavejs-ui installation, expect zwavejs-ui to run elsewhere, not aside with jeedom."
 }
@@ -39,11 +40,14 @@ pushbullet() {
   if [[ -d /var/www/html/plugins/pushbullet ]]; then
     cd /var/www/html/plugins/pushbullet
     #add fixed plugin source
-    if [[ 0 -ne $(git remote -v 2>&1 >/de/null) ]]; then
+    git remote -v
+    if [[ $? -ne 0 ]]; then
       git init
-      git config --global --add safe.directory /var/www/html/plugins/pushbullet
       git remote add origin https://github.com/edgd1er/jeedom_pushbullet.git
     fi
+    git config --global --add safe.directory /var/www/html/plugins/pushbullet
+    git fetch
+    git checkout rework
     git fetch && git reset --hard
     #install_plugin pushbullet
     [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall -y ${BKS} pushbullet-python || true
@@ -87,27 +91,29 @@ pushbullet() {
 meross() {
   # install meross iot as global package
   if [[ -d /var/www/html/plugins/MerosSync ]]; then
-    apt install -y python$(python --version | grep -oP "[0-9\.]{4}")-venv
-    install_plugin MerosSync
+    apt install -y python$(python3 --version | grep -oP "[0-9\.]{4}")-venv
     #grep -P '\$cmd = dirname.*pip list' core/class/MerosSync.class.php
-    mkdir -p /var/www/html/plugins/MerosSync/.venvs/merosssync/bin
-    ln -sf /usr/bin/pip3 /var/www/html/plugins/MerosSync/.venvs/merosssync/bin/pip
+    mkdir -p /var/www/html/plugins/MerosSync/resources/.venvs/merosssync/bin
+    #TODO vim plugins/MerosSync/core/class/MerosSync.class.php  start_daemon
     #sed -i 's#/tmp/jeedom/.venvs/merosssync/bin/pip#/tmp/jeedom/.venvs/merosssync/bin/python3 -m pip#' /var/www/html/plugins/MerosSync/core/class/MerosSync.class.php
     # remove  $cmd = $MerosSync_path.'/.venvs/merosssync/bin/python3
-    sed -i "s#\$MerosSync_path.'/.venvs/merosssync/bin/#'#" /var/www/html/plugins/MerosSync/core/class/MerosSync.class.php
+    sed -E -i "s#.*pip#/var/www/html/plugins/MerosSync/resources/.venvs/merosssync/bin/pip#" /var/www/html/plugins/MerosSync/core/class/MerosSync.class.php
     #do not install in venv
-    sed -i "s%\$BASEDIR/.venvs/merosssync/bin/%\#\$BASEDIR/.venvs/merosssync/bin/%" /var/www/html/plugins/MerosSync/resources/install_apt.sh
-
-    sed -i 's#/tmp/jeedom/.venvs/merosssync/bin/##' /var/www/html/plugins/MerosSync/resources/install_apt.sh
-    sed -i "s#\$cmd = dirname(__FILE__) . '/../../resources/.venvs/merosssync/bin/pip list#\$cmd = 'pip list#" /var/www/html/plugins/MerosSync/core/class/MerosSync.class.php
+    #sed -E -i "s%#?\\\$BASEDIR/.venvs/merosssync/bin/pip install %pip3 install ${BKS}%" /var/www/html/plugins/MerosSync/resources/install_apt.sh
+    #sed -i 's#/tmp/jeedom/.venvs/merosssync/bin/##' /var/www/html/plugins/MerosSync/resources/install_apt.sh
+    # daemon_info check a venv pip list
+    sed -i "s#\$cmd = dirname(__FILE__) . '/../../resources/.venvs/merosssync/bin/pip list#\$cmd = '/var/www/html/plugins/MerosSync/resources/.venvs/merosssync/bin/pip list#" /var/www/html/plugins/MerosSync/core/class/MerosSync.class.php
     echo "install jq, g++, python3-dev, python3-venv and meross-iot"
-    # Meross install venv package
+    # Meross install dependances + venv
     apt-get install -y --no-install-recommends jq g++ python3-dev python3-pycryptodome python3-venv
-    pip3 install ${BKS} --upgrade meross_iot==$(</var/www/html/plugins/MerosSync/resources/meross-iot_version.txt)
     # MerossSync
-    sed -i "s/pip install me/pip install ${BKS} me/g" /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh
-    /bin/bash /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh /tmp/jeedom/MerosSync/dependance
-    #/tmp/jeedom/.venvs/merosssync/bin/python3 -m pip install pyCipher pyCryptodome
+    # install pip globally
+    #sed -i "s/pip install me/pip install ${BKS} me/g" /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh
+    #sed -i "s%'.*pip install me/'/var/www/html/plugins/MerosSync/resources/.venvs/merosssync/bin/pip install me/g" /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh
+    sed -i "s%'.*pip install me/'/var/www/html/plugins/MerosSync/resources/.venvs/merosssync/bin/pip install me/g" /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh
+    # pip3 install ${BKS} --upgrade meross_iot==$(</var/www/html/plugins/MerosSync/resources/meross-iot_version.txt)
+    install_plugin MerosSync
+    #/bin/bash /var/www/html/plugins/MerosSync/core/class/../../resources/install_apt.sh /tmp/jeedom/MerosSync/dependance
   fi
 }
 
@@ -155,6 +161,7 @@ fixZwaveUI() {
   install_plugin zwavejs dependancy_end
   [[ -d /var/www/html/plugins/zwavejs ]] && git config --global --add safe.directory /var/www/html/plugins/zwavejs || return
   cd /var/www/html/plugins/zwavejs
+  git config --global --add safe.directory /var/www/html/plugins/zwavejs
   git fetch && git reset --hard
   echo "better option: https://github.com/lxrootard/zwavejs (allow remote zwavejs-ui)"
   #changeZwaveVersion ${E_ZWAVEVER}
