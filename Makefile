@@ -19,20 +19,17 @@ lint: ## stop all containers
 	docker run -i --rm hadolint/hadolint < Docker/Dockerfile
 
 buildt: ## build v4 image with trixie/13
-	@echo -e "\n\nbuild image ...v4"
-	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="master" --build-arg DISTRO="13-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-latest ./Docker
+	@echo -e "\n\nbuild image ...v4 release trixie"
+	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="release" --build-arg DISTRO="13-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-latest ./Docker
 
-build: ## build v4 image with bookworm/12
-	@echo -e "\n\nbuild image ...v4"
-	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="master" --build-arg DISTRO="12-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-latest ./Docker
+builb: ## build v4 image with bookworm/12
+	@echo -e "\n\nbuild image ...v4 master bookworm"
+	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="master" --build-arg DISTRO="12-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-12 ./Docker
 
-alpha: ## build v4 alpha image --no-cache with trixie/13
-	@echo -e "\n\nbuild image ...v4 alpha"
-	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="alpha" --build-arg DISTRO="13-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:alpha ./Docker
+buildd: ## build v4 develop image with trixie/13
+	@echo -e "\n\nbuild image ...v4 develop trixie"
+	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="develop" --build-arg DISTRO="13-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-develop ./Docker
 
-beta: ## build v4 beta image --no-cache with trixie/13
-	@echo -e "\n\nbuild image ...v4 beta" --no-cache
-	docker buildx build --load --progress plain  --build-arg aptCacher="${aptCacher}" --build-arg VERSION="beta" --build-arg DISTRO="13-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:beta ./Docker
 
 ver: ## check version
 	@JDM_VER=$$( grep -oP "(?<=v)4\.[0-9\.]+" README.md |head -1) ; \
@@ -53,6 +50,18 @@ ver: ## check version
 	  echo "zwave-js-ui update detected: https://raw.githubusercontent.com/zwave-js/zwave-js-ui/"; \
 	  sed -i -E "s/ ZWAVE_VERSION:.+/ ZWAVE_VERSION: $${zwave#v*}/" .github/workflows/checkVersion.yml; \
 	  sed -i -E "s/E_ZWAVEVER:-\".+/E_ZWAVEVER:-\"$${zwave#v*}\"}/" Docker/extras.sh; fi ;
+
+downup:
+	@echo "down/build/up" ; \
+	docker compose down -v ;\
+	docker compose up -d mysql ; \
+	docker compose build web
+	sleep 2 ;
+	docker compose up -d web ; \
+  	docker compose logs -f web
+
+bash:
+	docker compose exec web bash
 
 run:
 	@echo "run container"

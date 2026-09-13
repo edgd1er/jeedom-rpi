@@ -15,7 +15,7 @@ E_PUSH=${E_PUSH:-0}
 # force zwave-ui as external container + version
 E_ZWAVE=${E_ZWAVE:-0}
 #Default zwavejs-ui version
-E_ZWAVEVER=${E_ZWAVEVER:-"11.21.1"}
+E_ZWAVEVER=${E_ZWAVEVER:-"11.24.0"}
 #Debian 12 needs --break-system-packages
 BKS=""
 
@@ -37,54 +37,32 @@ install_plugin(){
 }
 
 pushbullet() {
-  if [[ -d /var/www/html/plugins/pushbullet ]]; then
-    cd /var/www/html/plugins/pushbullet
+  pushbullet_dir=/var/www/html/plugins/pushbullet
+  if [[ -d ${pushbullet_dir} ]]; then
+    cd ${pushbullet_dir}
     #add fixed plugin source
+    git config --global --add safe.directory ${pushbullet_dir}
     git remote -v
     if [[ $? -ne 0 ]]; then
       git init
       git remote add origin https://github.com/edgd1er/jeedom_pushbullet.git
     fi
-    git config --global --add safe.directory /var/www/html/plugins/pushbullet
     git fetch
     git checkout rework
-    git fetch && git reset --hard
-    #install_plugin pushbullet
+    git reset --hard
+    #install_plugin pushbullet websocket-client globally
     [[ 0 -ne $(pip3 list | grep -c pushbullet-python) ]] && pip3 uninstall -y ${BKS} pushbullet-python || true
     [[ -n $(which pipx) ]] && pipx uninstall -y websocket-client || true
-    pip3 install ${BKS} websocket-client pushbullet.py pip legacy-cgi
-    #Fix listener
-    #lstnr=/usr/local/lib/python3.11/dist-packages/pushbullet/listener.py
-    #if [[ -f ${lstnr} ]] && [[ 0 -eq $(grep -c "on_message(self, t, message)" ${lstnr}) ]]; then
-    #  sed -i "s/on_message(self, message)/on_message(self, t, message)/" ${lstnr}
-    #fi
-    # pushbullet: replace object with jeeObject
-    #sed -i 's/(object/(jeeObject/' /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
-   # grep -iP "\((|jee)object" /var/www/html/plugins/pushbullet/desktop/php/pushbullet.php
+    ${pushbullet_dir}/resources/python_venv/bin/pip3 install websocket-client pushbullet.py pip legacy-cgi
 
-    #if [[ -f /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py ]]; then
-      # pushbullet: change tmp path
-      #sed -i "s#path = os.path.dirname(os.path.realpath(__file__))+'/../../../../tmp'#path = '/tmp'#" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py
-      # pushbullet: activation du log du daemon
-      #sed -i 's#/dev/null#/var/www/html/log/pushbullet_daemon.log#' /var/www/html/plugins/pushbullet/core/class/pushbullet.class.php
-      #sed -i "s#/tmp/pushbullet.log#/var/www/html/log/pushbullet.log#" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py
-    #fi
-    # pushbullet: replace obsolete websocket
-    if [[ -d /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket ]]; then
-      [[ -d /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket.old ]] && rm -Rf /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket || true;
-      mv /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/websocket.old
-    fi
     # pushbullet: replace obsolete requests
-    if [[ -d /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/requests ]]; then
-      [[ -d /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/requests.old ]] && rm -Rf /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/requests || true;
-      mv /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/requests /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/requests.old
-    fi
-
-    #python3.13 collections is collections.abc
-    #sed -i -E "s#from collections #from collections.abc #" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/requests/packages/urllib3/_collections.py
-    #sed -i -E "s#from collections #from collections.abc #" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/requests/packages/urllib3/_collections.py
-    #replace file command
-    #sed -i -E "s#file\(#open\(#" /var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/pushbullet.py
+    pushb_daemon_dir=${pushbullet_dir}/ressources/pushbullet_daemon
+    for d in websocket requests; do
+      if [[ -d ${pushb_daemon_dir}/${d} ]]; then
+      [[ -d ${pushb_daemon_dir}/${d}.old ]] && rm -Rf ${pushb_daemon_dir}/${d} || true;
+      mv ${pushb_daemon_dir}/${d} ${pushb_daemon_dir}/${d}.old
+      fi
+    done
   fi
 }
 
