@@ -22,8 +22,17 @@ ENV WEBSERVER_HOME=/var/www/html \
 
 EXPOSE 80 443
 
-LABEL maintainer="edgd1er@hotmail.com" \
-      description="Jeedom Docker image"
+LABEL org.opencontainers.image.authors='edgd1er@hotmail.com'
+LABEL org.opencontainers.image.description='Optimised Jeedom Docker image'
+
+# labels follows opencontainers convention
+LABEL org.opencontainers.image.title='Jeedom'
+LABEL org.opencontainers.image.url='https://www.jeedom.com/'
+LABEL org.opencontainers.image.documentation='https://doc.jeedom.com/'
+LABEL org.opencontainers.image.source='https://github.com/jeedom/core'
+LABEL org.opencontainers.image.vendor='Jeedom SAS'
+LABEL org.opencontainers.image.licenses='GNU GENERAL PUBLIC LICENSE'
+LABEL org.opencontainers.image.version='${VERSION}-${DISTRO}'
 
 # Optimisation des couches
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -37,7 +46,7 @@ RUN if [[ -n ${aptCacher:-""} ]]; then \
     # Suppression des fichiers inutiles pour réduire la taille de l'image
     printf "#/etc/dpkg/dpkg.cfg.d/01_nodoc\n\n# Suppression des locales\npath-exclude=/usr/share/locale/*\n\n# Suppression des pages de manuel\npath-exclude=/usr/share/man/*\n\n# Suppression de la documentation\npath-exclude=/usr/share/doc/*\npath-include=/usr/share/doc/*/copyright" | tee /etc/dpkg/dpkg.cfg.d/03nodoc && \
     # Installation des dépendances de base
-    apt-get update && apt-get install -y --no-install-recommends \
+    apt-get update && apt-get install -o Dpkg::Options::="--force-confdef" -y --no-install-recommends \
         wget rsync lsof iproute2 curl net-tools gettext snmp \
         curl net-tools gettext snmp iputils-ping librsync-dev \
         passwd usbutils usb.ids ca-certificates unzip sudo cron plocate tar logrotate fail2ban \
@@ -76,16 +85,15 @@ RUN apt-get update && if [[ ${DISTRO} =~ (buster|10) ]]; then \
 
 FROM base AS final
 
-ARG VERSION
-ARG JDM_VERSION=latest
 ARG aptCacher
+ARG VERSION
 ENV VERSION=${VERSION}
 
 WORKDIR /var/www/html
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Préparation de l'installation de Jeedom
-RUN echo "Installation de Jeedom VERSION: ${VERSION} / ${JDM_VERSION}" && \
+RUN echo "Installation de Jeedom VERSION: ${VERSION}" && \
     wget -qO /root/.bashrc https://raw.githubusercontent.com/jeedom/core/${VERSION}/install/bashrc && \
     wget -qO /etc/motd https://raw.githubusercontent.com/jeedom/core/${VERSION}/install/motd && \
     # Téléchargement du script d'installation
@@ -106,19 +114,19 @@ RUN echo "Installation de Jeedom VERSION: ${VERSION} / ${JDM_VERSION}" && \
     sed -ri '/systemctl (start|stop|status|restart).*/d' /root/install_docker.sh && \
     # Configuration de la version
     echo 'Configuration de la version' && \
-    sed -i "s/VERSION=master/VERSION=\${VERSION}/g" /root/install_docker.sh && \
+    sed -i "s/VERSION=.*/VERSION=\${VERSION}/g" /root/install_docker.sh && \
     # Installation de Jeedom
-    echo "Installation de Jeedom version: ${VERSION} / ${JDM_VERSION}" && \
+    echo "Installation de Jeedom version: ${VERSION}" && \
     DATABASE="" && \
-    if [[ ${VERSION,,} =~ (alpha|beta|develop|master|main) ]]; then \
+    if [[ ${VERSION,,} =~ (develop|master|main) ]]; then \
         DATABASE="-d 0"; \
     fi && \
-    # Étapes d installation
+    # Étapes d installation (skip 1=dist-upgrade, 2=install packages, 3=install sql server )
     apt-get update && \
     /root/install_docker.sh -s 4 -v "${VERSION}" -i docker "${DATABASE}" && \
     /root/install_docker.sh -s 5 -v "${VERSION}" -i docker "${DATABASE}" && \
     bash -x /root/install_docker.sh -s 6 -v "${VERSION}" -i docker "${DATABASE}" && \
-    ls -al /var/www/html && \
+    mkdir /var/www/html/.cache && ls -al /var/www/html && \
     # Nettoyage et configuration finale
     find /var/www/html/ -type f -iname "*.sh" -exec chmod +x {} \; && \
     sed -i "s/'version' => \$npm/'version' => rtrim(\$npm)/" /var/www/html/core/class/system.class.php && \
@@ -128,7 +136,7 @@ RUN echo "Installation de Jeedom VERSION: ${VERSION} / ${JDM_VERSION}" && \
     /root/install_docker.sh -s 9 -v ${VERSION} -i docker "${DATABASE}" && \
     /root/install_docker.sh -s 10 -v ${VERSION} -i docker "${DATABASE}" && \
     /root/install_docker.sh -s 11 -v ${VERSION} -i docker "${DATABASE}" && \
-    # Configuration d'Apache
+    # Configuration d apache
     if [[ 0 -eq $(grep combined /etc/apache2/sites-available/000-default.conf) ]]; then \
         sed -i "$ i\CustomLog \${APACHE_LOG_DIR}/access.log combined" /etc/apache2/sites-available/000-default.conf; \
     fi && \
@@ -149,7 +157,7 @@ RUN echo "Installation de Jeedom VERSION: ${VERSION} / ${JDM_VERSION}" && \
     apt-get autoremove -y --purge && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
-    echo >"${WEBSERVER_HOME}/initialisation" && \
+    touch "/var/www/html/initialisation" && \
     if [[ -n "$aptCacher" ]]; then \
         echo "" > /etc/apt/apt.conf.d/01proxy; \
     fi
@@ -168,6 +176,7 @@ HEALTHCHECK --interval=60s --timeout=3s --retries=3 --start-period=40s \
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
 
 # Volumes persistants
+VOLUME /var/www/html/.cache
 VOLUME /var/www/html/data
 VOLUME /var/www/html/backup
 VOLUME /var/www/html/tmp

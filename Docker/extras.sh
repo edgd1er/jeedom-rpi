@@ -15,7 +15,7 @@ E_PUSH=${E_PUSH:-0}
 # force zwave-ui as external container + version
 E_ZWAVE=${E_ZWAVE:-0}
 #Default zwavejs-ui version
-E_ZWAVEVER=${E_ZWAVEVER:-"11.21.1"}
+E_ZWAVEVER=${E_ZWAVEVER:-"11.24.0"}
 #Debian 12 needs --break-system-packages
 BKS=""
 
@@ -40,12 +40,12 @@ pushbullet() {
   if [[ -d /var/www/html/plugins/pushbullet ]]; then
     cd /var/www/html/plugins/pushbullet
     #add fixed plugin source
+    git config --global --add safe.directory /var/www/html/plugins/pushbullet
     git remote -v
     if [[ $? -ne 0 ]]; then
       git init
       git remote add origin https://github.com/edgd1er/jeedom_pushbullet.git
     fi
-    git config --global --add safe.directory /var/www/html/plugins/pushbullet
     git fetch
     git checkout rework
     git fetch && git reset --hard
