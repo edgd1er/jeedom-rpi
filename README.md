@@ -145,7 +145,7 @@ Variables containing sensitive data should be replaced by secrets.
       - DB_PORT mysql port
       - DB_NAME mysql Database name
       - DB_USERNAME mysql jeedom username
-      - DB_PASSWORD mysql username password
+      - DB_PASSWD mysql username password
 ```
 
 ### Upgrade
@@ -175,8 +175,8 @@ the hereunder variables may be replaced by secrets:
 
 - JEEDOM_ENCRYPTION_KEY
 - ROOT_PASSWD
-- DB_ROOTPASSWORD
-- DB_PASSWORD
+- DB_ROOTPASSWD
+- DB_PASSWD
 
 create a file with that name in the docker-compose.yml's directory.
 
@@ -243,8 +243,8 @@ services:
       - DB_USERNAME=jeedom
     secrets:
       - JEEDOM_ENCRYPTION_KEY
-      - DB_ROOTPASSWORD
-      - DB_PASSWORD
+      - DB_ROOTPASSWD
+      - DB_PASSWD
       - ROOT_PASSWD
     #   devices:
     #   - "/dev/ttyUSB0:/dev/ttyUSB0
@@ -260,22 +260,22 @@ services:
       - "3316:3306"
     environment:
       - TZ=Europe/Paris
-      - DB_ROOTPASSWORD=changeIt
+      - DB_ROOTPASSWD=changeIt
       - DB_DATABASE=jeedom_test
       - DB_USER=jeedom
-      - DB_PASSWORD=jeedom
+      - DB_PASSWD=jeedom
     volumes:
       - sqldata:/var/lib/mysql
 
 secrets:
   JEEDOM_ENCRYPTION_KEY:
     file: ./JEEDOM_ENCRYPTION_KEY
-  DB_ROOTPASSWORD:
-    file: ./DB_ROOTPASSWORD
-  DB_PASSWORD:
-    file: ./DB_PASSWORD
+  DB_ROOTPASSWD:
+    file: ./DB_ROOTPASSWD
+  DB_PASSWD:
+    file: ./DB_PASSWD
   ROOT_PASSWD:
-    file: ./ROOT_PASSWORD
+    file: ./ROOT_PASSD
 ```
 
 ### Upgrade

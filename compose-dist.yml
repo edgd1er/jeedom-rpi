@@ -8,15 +8,15 @@ services:
       - "3316:3306"
     environment:
       - TZ=Europe/Paris
-      - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/DB_ROOTPASSWORD
+      - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/DB_ROOTPASSWD
       #- MYSQL_ROOT_PASSWORD=changeIt # deprecated
       - MYSQL_DATABASE=jeedom
       - MYSQL_USER=jeedom
       #- MYSQL_PASSWORD=changeIt # deprecated
-      - FILE__MYSQL_PASSWORD=/run/secrets/DB_PASSWORD
+      - FILE__MYSQL_PASSWORD=/run/secrets/DB_PASSWD
     secrets:
-      - DB_ROOTPASSWORD
-      - DB_PASSWORD
+      - DB_ROOTPASSWD
+      - DB_PASSWD
     volumes:
       - ./sqldata:/config
       - run_mysql:/run
@@ -54,17 +54,17 @@ services:
       - TZ=Europe/Paris
       - JEEDOM_ENCRYPTION_KEY= #<get key from /var/www/html/data/jeedom_encryption.key to keep database secrets consistent>
       - ROOT_PASSWD= # deprecated, replaced by secrets
-      - DB_ROOTPASSWORD= # deprecated, replaced by secrets
+      - DB_ROOTPASSWD= # deprecated, replaced by secrets
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_NAME=jeedom
       - DB_USERNAME=jeedom
-      - DB_PASSWORD= # deprecated, replaced by secrets
+      - DB_PASSWD= # deprecated, replaced by secrets
       - LOGS_TO_STDOUT=y
     secrets:
       - JEEDOM_ENCRYPTION_KEY
-      - DB_ROOTPASSWORD
-      - DB_PASSWORD
+      - DB_ROOTPASSWD
+      - DB_PASSWD
       - ROOT_PASSWD
     #devices:
     #  - "/dev/ttyUSB0:/dev/ttyUSB0"
@@ -78,12 +78,12 @@ services:
 secrets:
   JEEDOM_ENCRYPTION_KEY:
     file: ./JEEDOM_ENCRYPTION_KEY
-  DB_ROOTPASSWORD:
-    file: ./DB_ROOTPASSWORD
+  DB_ROOTPASSWD:
+    file: ./DB_ROOTPASSWD
   DB_PASSWORD:
-    file: ./DB_PASSWORD
+    file: ./DB_PASSWD
   ROOT_PASSWD:
-    file: ./ROOT_PASSWORD
+    file: ./ROOT_PASSWD
 volumes:
   tmpfs_root_cache:
     driver_opts:
