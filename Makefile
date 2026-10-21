@@ -22,7 +22,7 @@ buildt: ## build v4 image with trixie/13
 	@echo -e "\n\nbuild image ...v4 release trixie"
 	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="release" --build-arg DISTRO="13-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-latest ./Docker
 
-builb: ## build v4 image with bookworm/12
+buildb: ## build v4 image with bookworm/12
 	@echo -e "\n\nbuild image ...v4 master bookworm"
 	docker buildx build --load --progress plain --build-arg aptCacher="${aptCacher}" --build-arg VERSION="master" --build-arg DISTRO="12-slim" -f Docker/Dockerfile -t edgd1er/jeedom-rpi:v4-12 ./Docker
 

@@ -63,6 +63,7 @@ pushbullet() {
       mv ${pushb_daemon_dir}/${d} ${pushb_daemon_dir}/${d}.old
       fi
     done
+    apt update && apt install -y --no-install-recommands python3-websocket
   fi
 }
 
