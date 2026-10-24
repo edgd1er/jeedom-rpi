@@ -4,6 +4,7 @@ FROM debian:${DISTRO} AS base
 
 ARG DISTRO
 ARG aptCacher
+# hadolint ignore=DL3064
 ENV WEBSERVER_HOME=/var/www/html \
     APACHE_HTTP_PORT=80 \
     APACHE_HTTPS_PORT=443 \
@@ -171,7 +172,7 @@ COPY jeedom_plugin /etc/logrotate.d/jeedom_plugin
 
 WORKDIR /var/www/html/
 HEALTHCHECK --interval=60s --timeout=3s --retries=3 --start-period=40s \
-    CMD curl -s --fail http://localhost/here.html || exit 1
+    CMD [ "curl","-s","--fail","http://localhost/here.html" ]
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
 

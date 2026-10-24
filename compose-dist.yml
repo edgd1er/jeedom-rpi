@@ -80,7 +80,7 @@ secrets:
     file: ./JEEDOM_ENCRYPTION_KEY
   DB_ROOTPASSWD:
     file: ./DB_ROOTPASSWD
-  DB_PASSWORD:
+  DB_PASSWD:
     file: ./DB_PASSWD
   ROOT_PASSWD:
     file: ./ROOT_PASSWD

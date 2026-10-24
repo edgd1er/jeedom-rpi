@@ -82,7 +82,7 @@ jobs:
           #packages: write # required to push to GHCR
       with:
           setup-qemu: true
-          cache: true
+          cache: false
           cache-scope: build
           fail-fast: true
           context: ${{ needs.build-prepare.outputs.build_context }}

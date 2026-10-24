@@ -15,7 +15,7 @@ E_PUSH=${E_PUSH:-0}
 # force zwave-ui as external container + version
 E_ZWAVE=${E_ZWAVE:-0}
 #Default zwavejs-ui version
-E_ZWAVEVER=${E_ZWAVEVER:-"11.24.0"}
+E_ZWAVEVER=${E_ZWAVEVER:-"11.25.1"}
 #Debian 12 needs --break-system-packages
 BKS=""
 
@@ -63,7 +63,8 @@ pushbullet() {
       mv ${pushb_daemon_dir}/${d} ${pushb_daemon_dir}/${d}.old
       fi
     done
-    apt update && apt install -y --no-install-recommands python3-websocket
+    apt update && apt remove -y python3-websocket
+    python3 -m pip install --break-system-packages websocket pushbullet.py
   fi
 }
 
