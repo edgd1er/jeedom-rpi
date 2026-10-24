@@ -15,7 +15,7 @@ E_PUSH=${E_PUSH:-0}
 # force zwave-ui as external container + version
 E_ZWAVE=${E_ZWAVE:-0}
 #Default zwavejs-ui version
-E_ZWAVEVER=${E_ZWAVEVER:-"11.24.0"}
+E_ZWAVEVER=${E_ZWAVEVER:-"11.25.1"}
 #Debian 12 needs --break-system-packages
 BKS=""
 
@@ -31,7 +31,7 @@ usage() {
   echo -e "\t-z\tzwave: remove zwavejs-ui installation, expect zwavejs-ui to run elsewhere, not aside with jeedom."
 }
 
-install_plugin(){
+install_plugin() {
   #install or dependancy_end
   php /var/www/html/core/class/../php/jeecli.php plugin ${2:-install} ${1}
 }
@@ -59,11 +59,25 @@ pushbullet() {
     pushb_daemon_dir=${pushbullet_dir}/ressources/pushbullet_daemon
     for d in websocket requests; do
       if [[ -d ${pushb_daemon_dir}/${d} ]]; then
-      [[ -d ${pushb_daemon_dir}/${d}.old ]] && rm -Rf ${pushb_daemon_dir}/${d} || true;
-      mv ${pushb_daemon_dir}/${d} ${pushb_daemon_dir}/${d}.old
+        [[ -d ${pushb_daemon_dir}/${d}.old ]] && rm -Rf ${pushb_daemon_dir}/${d} || true
+        mv ${pushb_daemon_dir}/${d} ${pushb_daemon_dir}/${d}.old
       fi
     done
-    apt update && apt install -y --no-install-recommands python3-websocket
+    #remove global and venv wrong packages
+    BKS="--break-system-packages"
+    apt remove -y python3-websocket
+    for d in requests websocket; do
+      todelete=/var/www/html/plugins/pushbullet/ressources/pushbullet_daemon/${d}
+      [[ -f ${todelete} ]] && rm -Rf || true
+    done
+    for p in pushbullet-python websocket pushbullet.py websocket-client; do
+      [[ 0 -ne $(pip3 list | grep -c ${p}) ]] && pip3 uninstall -y ${BKS} ${p} || true
+      if [[ 0 -ne $(/var/www/html/plugins/pushbullet/resources/python_venv/bin/pip3 list | grep -c ${p}) ]]; then
+        /var/www/html/plugins/pushbullet/resources/python_venv/bin/pip3 uninstall -y ${BKS} ${p}
+      fi
+    done
+    /var/www/html/plugins/pushbullet/resources/python_venv/bin/python3 -m pip install --upgrade --force-reinstall pushbullet.py pip
+    # python3 -m pip install --break-system-packages websocket pushbullet.py
   fi
 }
 
@@ -223,6 +237,7 @@ while getopts "dhpmsvz" option; do
   *)
     usage
     exit
+    ;;
   esac
 done
 

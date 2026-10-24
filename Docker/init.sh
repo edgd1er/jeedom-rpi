@@ -10,7 +10,7 @@ SETX=""
 XDEBUG=${XDEBUG:-0}
 # external database arg for install
 DATABASE=""
-# alpha, beta replaced with release / master 4.6.1 / develop = 4.6.2
+# alpha, beta replaced with release / master 4.6.2 / develop = 4.6.3
 if [[ ${VERSION} =~ (release/master|develop) ]]; then
   DATABASE="-d 0"
 fi
@@ -387,6 +387,9 @@ New name: DB_HOST, was MARIADB_JEEDOM_HOST
 
   supervisorctl start apache2
 
+  #start chrony
+  [[ $(which chronyd) ]] && supervisorctl start chrony || true
+
   #cannot start fail2ban when logs are redirected
   if [[ ${LOGS_TO_STDOUT,,} =~ n ]]; then
     supervisorctl start fail2ban
@@ -401,8 +404,8 @@ New name: DB_HOST, was MARIADB_JEEDOM_HOST
   echo "Jeedom version: ${VERSION} - ${file_version} / ${current_version}"
   if [[ "${VERSION}" != "${current_version}" ]]; then
     echo "setting core branch according, was ${current_version}, to build tag ${VERSION}"
-    res=$(mysql_sql "INSERT INTO config (plugin, \`key\`, value) VALUES ('core', 'core::branch', 'develop')
-      ON DUPLICATE KEY UPDATE value = 'develop';")
+    res=$(mysql_sql "INSERT INTO config (plugin, \`key\`, value) VALUES ('core', 'core::branch', '${VERSION}')
+      ON DUPLICATE KEY UPDATE value = '${VERSION}';")
   fi
   current_version=$(mysql_sql "select c.value from config c where c.plugin='core' and c.key='core::branch';")
   echo "Jeedom core branch: ${current_version}"
