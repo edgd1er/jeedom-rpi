@@ -26,6 +26,7 @@ Last version and major changes:
 
 | Last Version                                               | Commit Date                                                                                                     |
 |------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| [v4.6.2](https://doc.jeedom.com/fr_FR/core/4.6/changelog)  | 21/10/26 php2shell mitigation.                                                                                |
 | [v4.6.1](https://doc.jeedom.com/fr_FR/core/4.6/changelog)  | 26/06/26 changes in jeedom-core.                                                                                |
 | [v4.4.15](https://doc.jeedom.com/fr_FR/core/4.4/changelog) | 04/09/24 changes in vars to match newly added vars in jeedom/core docker image. MARIADB_* are stille supported. |
 | [v4.4.9](https://doc.jeedom.com/fr_FR/core/4.4/changelog)  | 24/07/24 major change in repo, master branch replace v4-stable. move to bookworm                                |
