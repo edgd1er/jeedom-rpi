@@ -155,7 +155,7 @@ jobs:
           output: sbom.json
 
       - name: Upload Docker Scout SARIF Report
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@v4.37.4
         with:
           sarif_file: sarif.output.json
 
@@ -168,6 +168,6 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@v4.37.4
         with:
           sarif_file: 'trivy-results.sarif'
