@@ -5,7 +5,7 @@
 # installation. this scripts will scan plugin dir, fetch information (json/sh) and install all packages.
 # IF ever you update your container through jeedom's interface, this script has no use.
 
-set -eu -o pipefail
+set -u -o pipefail
 # install dependancies
 E_DEP=${E_DEP:-0}
 # fix meross installation
@@ -15,7 +15,7 @@ E_PUSH=${E_PUSH:-0}
 # force zwave-ui as external container + version
 E_ZWAVE=${E_ZWAVE:-0}
 #Default zwavejs-ui version
-E_ZWAVEVER=${E_ZWAVEVER:-"11.25.1"}
+E_ZWAVEVER=${E_ZWAVEVER:-"11.27.0"}
 #Debian 12 needs --break-system-packages
 BKS=""
 
@@ -42,7 +42,7 @@ pushbullet() {
     cd ${pushbullet_dir}
     #add fixed plugin source
     git config --global --add safe.directory ${pushbullet_dir}
-    git remote -v
+    git remote -v 2>/dev/null
     if [[ $? -ne 0 ]]; then
       git init
       git remote add origin https://github.com/edgd1er/jeedom_pushbullet.git
@@ -150,12 +150,18 @@ changeZwaveVersion() {
 # do not install nodejs, yarn, do not clone zwavejs-ui, change zwavejs-ui's expected version.
 # better option: https://github.com/lxrootard/zwavejs (allow remote zwavejs-ui)
 fixZwaveUI() {
-  install_plugin mqtt2
-  install_plugin zwavejs dependancy_end
   [[ -d /var/www/html/plugins/zwavejs ]] && git config --global --add safe.directory /var/www/html/plugins/zwavejs || return
   cd /var/www/html/plugins/zwavejs
   git config --global --add safe.directory /var/www/html/plugins/zwavejs
+  git remote -v 2>/dev/null
+  if [[ $? -ne 0 ]]; then
+    git init
+    git remote add origin https://github.com/edgd1er/zwavejs.git
+  fi
   git fetch && git reset --hard
+  composer install
+  install_plugin mqtt2
+  install_plugin zwavejs dependancy_end
   echo "better option: https://github.com/lxrootard/zwavejs (allow remote zwavejs-ui)"
   #changeZwaveVersion ${E_ZWAVEVER}
   #no health exists for zwavejsui

@@ -112,7 +112,7 @@ first_run() {
     JEEDOM_INSTALL=0
     [[ ! -f /root/install_docker.sh ]] && echo -e "\n*************** ERROR, no /root/install_docker.sh file ***********\n" && exit
     #recreate tmp plugins dir
-    for d in plugins/*; do mkdir -p /tmp/jeedom/${d#*/}; done
+    for d in plugins/*; do mkdir -p $(dirname /tmp/jeedom/${d#*/}); done
     rm -f "${WEBSERVER_HOME}/initialisation"
     #allow fail2ban to start even on docker
     touch /var/log/auth.log
